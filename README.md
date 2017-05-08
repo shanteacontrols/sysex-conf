@@ -1,0 +1,1 @@
+# MIDI SysEx configuration protocol
