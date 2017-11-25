@@ -26,6 +26,7 @@ SysEx::SysEx()
     sendGetCallback             = NULL;
     sendSetCallback             = NULL;
     sendCustomRequestCallback   = NULL;
+    sendSysExWriteCallback      = NULL;
 
     sysExEnabled = false;
     forcedSend = false;
@@ -153,7 +154,7 @@ void SysEx::handleMessage(uint8_t *array, uint8_t size)
         sysExArray[responseSize] = 0xF7;
         responseSize++;
 
-        midi.sendSysEx(responseSize, sysExArray, true);
+        sendSysExWriteCallback(sysExArray, responseSize);
     }
 
     forcedSend = false;
@@ -521,7 +522,7 @@ bool SysEx::checkParameters()
             sysExArray[responseSize] = 0xF7;
             responseSize++;
 
-            midi.sendSysEx(responseSize, sysExArray, true);
+            sendSysExWriteCallback(sysExArray, responseSize);
         }
     }
 
@@ -541,7 +542,7 @@ bool SysEx::checkParameters()
         addToResponse(decodedMessage.section);
         addToResponse(0xF7);
 
-        midi.sendSysEx(responseSize, sysExArray, true);
+        sendSysExWriteCallback(sysExArray, responseSize);
     }
 
     return true;
@@ -765,7 +766,7 @@ void SysEx::sendResponse()
     sysExArray[responseSize] = 0xF7;
     responseSize++;
 
-    midi.sendSysEx(responseSize, sysExArray, true);
+    sendSysExWriteCallback(sysExArray, responseSize);
 }
 
 void SysEx::setStatus(sysExStatus_t status)
@@ -797,4 +798,10 @@ void SysEx::setHandleCustomRequest(bool(*fptr)(uint8_t value))
     sendCustomRequestCallback = fptr;
 }
 
-SysEx sysEx;
+///
+/// \brief Handler used to set callback function for handling assembled SysEx array.
+///
+void SysEx::setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size))
+{
+    sendSysExWriteCallback = fptr;
+}

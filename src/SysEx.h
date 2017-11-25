@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include "Config.h"
-#include "../../midi/src/MIDI.h"
 #include "DataTypes.h"
 
 ///
 /// \brief Configuration protocol created using custom SysEx MIDI messages.
-/// \ingroup conf
 /// @{
 ///
+
 class SysEx
 {
     public:
@@ -42,6 +40,7 @@ class SysEx
     void setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index));
     void setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue));
     void setHandleCustomRequest(bool(*fptr)(uint8_t value));
+    void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));
 
     bool addBlock();
     bool addBlocks(uint8_t numberOfBlocks);
@@ -67,6 +66,7 @@ class SysEx
     sysExParameter_t (*sendGetCallback)(uint8_t block, uint8_t section, uint16_t index);
     bool (*sendSetCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue);
     bool (*sendCustomRequestCallback)(uint8_t value);
+    void (*sendSysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
 
     bool                sysExEnabled,
                         forcedSend;
@@ -80,5 +80,4 @@ class SysEx
                         responseSize;
 };
 
-extern SysEx sysEx;
 /// @}
