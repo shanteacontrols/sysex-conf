@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <inttypes.h>
+
 #define MAX_NUMBER_OF_BLOCKS    7
 #define MAX_NUMBER_OF_SECTIONS  7
 #define MAX_CUSTOM_REQUESTS     10
