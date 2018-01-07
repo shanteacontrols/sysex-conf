@@ -31,12 +31,12 @@ SysEx::SysEx()
     sysExEnabled = false;
     forcedSend = false;
 
-    for (int i=0; i<MAX_NUMBER_OF_BLOCKS; i++)
+    for (int i=0; i<SYSEX_MAX_BLOCKS; i++)
     {
         sysExMessage[i].numberOfSections = INVALID_VALUE;
         sysExMessage[i].sectionCounter = 0;
 
-        for (int j=0; j<MAX_NUMBER_OF_SECTIONS; j++)
+        for (int j=0; j<SYSEX_MAX_SECTIONS; j++)
         {
             sysExMessage[i].section[j].numberOfParameters = INVALID_VALUE;
             sysExMessage[i].section[j].minValue = INVALID_VALUE;
@@ -86,7 +86,7 @@ bool SysEx::addCustomRequest(uint8_t value)
 ///
 bool SysEx::addBlock()
 {
-    if (sysExBlockCounter >= MAX_NUMBER_OF_BLOCKS)
+    if (sysExBlockCounter >= SYSEX_MAX_BLOCKS)
         return false;
 
     sysExBlockCounter++;
@@ -100,7 +100,7 @@ bool SysEx::addBlock()
 ///
 bool SysEx::addBlocks(uint8_t numberOfBlocks)
 {
-    if (sysExBlockCounter+numberOfBlocks >= MAX_NUMBER_OF_BLOCKS)
+    if (sysExBlockCounter+numberOfBlocks >= SYSEX_MAX_BLOCKS)
         return false;
 
     sysExBlockCounter += numberOfBlocks;
@@ -115,7 +115,7 @@ bool SysEx::addBlocks(uint8_t numberOfBlocks)
 ///
 bool SysEx::addSection(uint8_t blockID, sysExSection section)
 {
-    if (sysExMessage[blockID].sectionCounter >= MAX_NUMBER_OF_SECTIONS)
+    if (sysExMessage[blockID].sectionCounter >= SYSEX_MAX_SECTIONS)
         return false;
 
     sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters = section.numberOfParameters;

@@ -20,12 +20,8 @@
 
 #include <inttypes.h>
 
-#define MAX_NUMBER_OF_BLOCKS    7
-#define MAX_NUMBER_OF_SECTIONS  7
 #define MAX_CUSTOM_REQUESTS     10
-
 #define INVALID_VALUE           128
-
 #define PARAMETERS_PER_MESSAGE  32
 
 //1 - one byte size for parameter index and new value (uint8_t)

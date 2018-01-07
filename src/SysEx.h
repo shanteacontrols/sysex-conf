@@ -71,7 +71,7 @@ class SysEx
 
     bool                sysExEnabled,
                         forcedSend;
-    sysExBlock          sysExMessage[MAX_NUMBER_OF_BLOCKS];
+    sysExBlock          sysExMessage[SYSEX_MAX_BLOCKS];
     decodedMessage_t    decodedMessage;
     uint8_t             *sysExArray,
                         sysExArraySize,

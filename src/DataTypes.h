@@ -39,7 +39,7 @@ typedef struct
 {
     uint8_t numberOfSections;
     uint8_t sectionCounter;
-    sysExSection section[MAX_NUMBER_OF_SECTIONS];
+    sysExSection section[SYSEX_MAX_SECTIONS];
 } sysExBlock;
 
 ///
