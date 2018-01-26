@@ -18,6 +18,22 @@
 
 #include "SysEx.h"
 
+sysExParameter_t (*sendGetCallback)(uint8_t block, uint8_t section, uint16_t index);
+bool (*sendSetCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue);
+bool (*sendCustomRequestCallback)(uint8_t value);
+void (*sendSysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
+
+bool                sysExEnabled,
+                    forcedSend;
+sysExBlock          sysExMessage[SYSEX_MAX_BLOCKS];
+decodedMessage_t    decodedMessage;
+uint8_t             *sysExArray,
+                    sysExArraySize,
+                    customRequests[MAX_CUSTOM_REQUESTS],
+                    customRequestCounter,
+                    sysExBlockCounter,
+                    responseSize;
+
 ///
 /// \brief Default constructor.
 ///

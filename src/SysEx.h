@@ -30,55 +30,39 @@ class SysEx
 {
     public:
     SysEx();
-    void handleMessage(uint8_t *sysExArray, uint8_t size);
-    void decode();
-    bool configurationEnabled();
-    bool addCustomRequest(uint8_t value);
-    void startResponse();
-    void addToResponse(sysExParameter_t value);
-    void sendResponse();
+    static void handleMessage(uint8_t *sysExArray, uint8_t size);
+    static void decode();
+    static bool configurationEnabled();
+    static bool addCustomRequest(uint8_t value);
+    static void startResponse();
+    static void addToResponse(sysExParameter_t value);
+    static void sendResponse();
 
-    void setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index));
-    void setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue));
-    void setHandleCustomRequest(bool(*fptr)(uint8_t value));
-    void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));
+    static void setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index));
+    static void setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue));
+    static void setHandleCustomRequest(bool(*fptr)(uint8_t value));
+    static void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));
 
-    bool addBlock();
-    bool addBlocks(uint8_t numberOfBlocks);
-    bool addSection(uint8_t blockID, sysExSection section);
+    static bool addBlock();
+    static bool addBlocks(uint8_t numberOfBlocks);
+    static bool addSection(uint8_t blockID, sysExSection section);
 
-    bool checkRequest();
-    bool checkParameters();
+    static bool checkRequest();
+    static bool checkParameters();
 
     private:
-    bool checkID();
-    bool checkSpecialRequests();
-    bool checkWish();
-    bool checkAmount();
-    bool checkBlock();
-    bool checkSection();
-    bool checkPart();
-    bool checkParameterIndex();
-    bool checkNewValue();
+    static bool checkID();
+    static bool checkSpecialRequests();
+    static bool checkWish();
+    static bool checkAmount();
+    static bool checkBlock();
+    static bool checkSection();
+    static bool checkPart();
+    static bool checkParameterIndex();
+    static bool checkNewValue();
 
-    uint8_t generateMinMessageLenght();
-    void setStatus(sysExStatus_t status);
-
-    sysExParameter_t (*sendGetCallback)(uint8_t block, uint8_t section, uint16_t index);
-    bool (*sendSetCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue);
-    bool (*sendCustomRequestCallback)(uint8_t value);
-    void (*sendSysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
-
-    bool                sysExEnabled,
-                        forcedSend;
-    sysExBlock          sysExMessage[SYSEX_MAX_BLOCKS];
-    decodedMessage_t    decodedMessage;
-    uint8_t             *sysExArray,
-                        sysExArraySize,
-                        customRequests[MAX_CUSTOM_REQUESTS],
-                        customRequestCounter,
-                        sysExBlockCounter,
-                        responseSize;
+    static uint8_t generateMinMessageLenght();
+    static void setStatus(sysExStatus_t status);
 };
 
 /// @}
