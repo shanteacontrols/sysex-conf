@@ -55,8 +55,8 @@ SysEx::SysEx()
         for (int j=0; j<SYSEX_MAX_SECTIONS; j++)
         {
             sysExMessage[i].section[j].numberOfParameters = INVALID_VALUE;
-            sysExMessage[i].section[j].minValue = INVALID_VALUE;
-            sysExMessage[i].section[j].maxValue = INVALID_VALUE;
+            sysExMessage[i].section[j].newValueMin = INVALID_VALUE;
+            sysExMessage[i].section[j].newValueMax = INVALID_VALUE;
         }
     }
 
@@ -128,15 +128,15 @@ bool SysEx::addBlocks(uint8_t numberOfBlocks)
 /// @param [in] blockID Block on which to add section.
 /// @param [in] section Structure holding description of section.
 /// \returns True on success, false otherwise.
-///
+/// 
 bool SysEx::addSection(uint8_t blockID, sysExSection section)
 {
     if (sysExMessage[blockID].sectionCounter >= SYSEX_MAX_SECTIONS)
         return false;
 
     sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters = section.numberOfParameters;
-    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].minValue = section.minValue;
-    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].maxValue = section.maxValue;
+    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].newValueMin = section.newValueMin;
+    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].newValueMax = section.newValueMax;
 
     //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
     sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].parts = sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters / PARAMETERS_PER_MESSAGE;
@@ -724,8 +724,8 @@ bool SysEx::checkParameterIndex()
 ///
 bool SysEx::checkNewValue()
 {
-    sysExParameter_t minValue = sysExMessage[decodedMessage.block].section[decodedMessage.section].minValue;
-    sysExParameter_t maxValue = sysExMessage[decodedMessage.block].section[decodedMessage.section].maxValue;
+    sysExParameter_t minValue = sysExMessage[decodedMessage.block].section[decodedMessage.section].newValueMin;
+    sysExParameter_t maxValue = sysExMessage[decodedMessage.block].section[decodedMessage.section].newValueMax;
 
     if (minValue != maxValue)
         return ((decodedMessage.newValue >= minValue) && (decodedMessage.newValue <= maxValue));
