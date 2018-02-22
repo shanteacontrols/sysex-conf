@@ -37,6 +37,7 @@ class SysEx
     static void startResponse();
     static void addToResponse(sysExParameter_t value);
     static void sendResponse();
+    static void setError(sysExStatus_t status);
 
     static void setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index));
     static void setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue));

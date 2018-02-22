@@ -25,14 +25,19 @@ void (*sendSysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
 
 bool                sysExEnabled,
                     forcedSend;
+
 sysExBlock          sysExMessage[SYSEX_MAX_BLOCKS];
+
 decodedMessage_t    decodedMessage;
+
 uint8_t             *sysExArray,
                     sysExArraySize,
                     customRequests[MAX_CUSTOM_REQUESTS],
                     customRequestCounter,
                     sysExBlockCounter,
                     responseSize;
+
+sysExStatus_t       userStatus;
 
 ///
 /// \brief Default constructor.
@@ -167,6 +172,7 @@ void SysEx::handleMessage(uint8_t *array, uint8_t size)
 
     if (!forcedSend)
     {
+        //if forcedSend is set to true, response has already been sent
         sysExArray[responseSize] = 0xF7;
         responseSize++;
 
@@ -391,6 +397,7 @@ bool SysEx::checkParameters()
 
     if (decodedMessage.amount == sysExAmount_single)
     {
+        //param size should be handled here - relevant only on single param amount
         #if PARAM_SIZE == 2
         encDec_14bit decoded;
         //index
@@ -470,13 +477,37 @@ bool SysEx::checkParameters()
                     }
                     else
                     {
-                        addToResponse(sendGetCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index));
+                        sysExParameter_t value = sendGetCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index);
+
+                        //check for custom error
+                        if (userStatus)
+                        {
+                            setStatus(userStatus);
+                            //clear user status
+                            userStatus = (sysExStatus_t)0;
+                            return false;
+                        }
+                        else
+                        {
+                            addToResponse(value);
+                        }
                     }
                 }
                 else
                 {
                     //get all params - no index is specified
-                    addToResponse(sendGetCallback(decodedMessage.block, decodedMessage.section, i));
+                    sysExParameter_t value = sendGetCallback(decodedMessage.block, decodedMessage.section, i);
+
+                    if (userStatus)
+                    {
+                        setStatus(userStatus);
+                        userStatus = (sysExStatus_t)0;
+                        return false;
+                    }
+                    else
+                    {
+                        addToResponse(value);
+                    }
                 }
                 break;
 
@@ -496,7 +527,24 @@ bool SysEx::checkParameters()
                     }
 
                     if (sendSetCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, decodedMessage.newValue))
+                    {
+                        //no further checks are required
                         return true;
+                    }
+                    else
+                    {
+                        if (userStatus)
+                        {
+                            setStatus(userStatus);
+                            userStatus = (sysExStatus_t)0;
+                        }
+                        else
+                        {
+                            setStatus(ERROR_WRITE);
+                        }
+
+                        return false;
+                    }
                 }
                 else
                 {
@@ -521,7 +569,18 @@ bool SysEx::checkParameters()
 
                     if (!sendSetCallback(decodedMessage.block, decodedMessage.section, i, decodedMessage.newValue))
                     {
-                        setStatus(ERROR_WRITE);
+                        //check for custom error
+                        if (userStatus)
+                        {
+                            setStatus(userStatus);
+                            //clear user status
+                            userStatus = (sysExStatus_t)0;
+                        }
+                        else
+                        {
+                            setStatus(ERROR_WRITE);
+                        }
+
                         return false;
                     }
                 }
@@ -785,9 +844,43 @@ void SysEx::sendResponse()
     sendSysExWriteCallback(sysExArray, responseSize);
 }
 
+///
+/// \brief Sets status byte in SysEx response.
+/// @param [in] status New status value. See sysExStatus_t enum.
+///
 void SysEx::setStatus(sysExStatus_t status)
 {
     sysExArray[statusByte] = (uint8_t)status;
+}
+
+///
+/// \brief Sets error in status byte in response specified by user.
+/// @param [in] status New error value. See sysExStatus_t enum.
+///
+void SysEx::setError(sysExStatus_t status)
+{
+    switch(status)
+    {
+        case ERROR_STATUS:
+        case ERROR_HANDSHAKE:
+        case ERROR_WISH:
+        case ERROR_AMOUNT:
+        case ERROR_BLOCK:
+        case ERROR_SECTION:
+        case ERROR_PART:
+        case ERROR_INDEX:
+        case ERROR_NEW_VALUE:
+        case ERROR_MESSAGE_LENGTH:
+        case ERROR_WRITE:
+        case ERROR_NOT_SUPPORTED:
+        //any of these values are fine
+        userStatus = status;
+        break;
+
+        default:
+        //no action
+        break;
+    }
 }
 
 ///

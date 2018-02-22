@@ -111,7 +111,8 @@ typedef enum
     ERROR_INDEX,            //0x09
     ERROR_NEW_VALUE,        //0x0A
     ERROR_MESSAGE_LENGTH,   //0x0B
-    ERROR_WRITE             //0x0C
+    ERROR_WRITE,            //0x0C
+    ERROR_NOT_SUPPORTED     //0x0D
 } sysExStatus_t;
 
 ///
