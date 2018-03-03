@@ -124,7 +124,7 @@ bool SysEx::addBlock()
 ///
 bool SysEx::addBlocks(uint8_t numberOfBlocks)
 {
-    if (sysExBlockCounter+numberOfBlocks >= SYSEX_MAX_BLOCKS)
+    if (sysExBlockCounter+numberOfBlocks > SYSEX_MAX_BLOCKS)
         return false;
 
     sysExBlockCounter += numberOfBlocks;
@@ -139,7 +139,7 @@ bool SysEx::addBlocks(uint8_t numberOfBlocks)
 /// 
 bool SysEx::addSection(uint8_t blockID, sysExSection section)
 {
-    if (sysExMessage[blockID].sectionCounter >= SYSEX_MAX_SECTIONS)
+    if (sysExMessage[blockID].sectionCounter > SYSEX_MAX_SECTIONS)
         return false;
 
     sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters = section.numberOfParameters;
