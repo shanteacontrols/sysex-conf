@@ -396,7 +396,6 @@ bool SysEx::checkParameters()
 
     uint8_t loops = 1, responseSize_ = responseSize;
     uint16_t startIndex = 0, endIndex = 1;
-    bool allParts = false;
 
     if (decodedMessage.amount == sysExAmount_single)
     {
@@ -431,7 +430,6 @@ bool SysEx::checkParameters()
         {
             loops = sysExMessage[decodedMessage.block].section[decodedMessage.section].parts;
             forcedSend = true;
-            allParts = true;
         }
 
         if (decodedMessage.wish == sysExWish_backup)
@@ -602,25 +600,6 @@ bool SysEx::checkParameters()
 
             sendSysExWriteCallback(sysExArray, responseSize);
         }
-    }
-
-    if (allParts)
-    {
-        //send ACK message at the end
-        responseSize = 0;
-        addToResponse(0xF0);
-        addToResponse(SYS_EX_M_ID_0);
-        addToResponse(SYS_EX_M_ID_1);
-        addToResponse(SYS_EX_M_ID_2);
-        addToResponse(ACK);
-        addToResponse(0x7F);
-        addToResponse(decodedMessage.wish);
-        addToResponse(decodedMessage.amount);
-        addToResponse(decodedMessage.block);
-        addToResponse(decodedMessage.section);
-        addToResponse(0xF7);
-
-        sendSysExWriteCallback(sysExArray, responseSize);
     }
 
     return true;
