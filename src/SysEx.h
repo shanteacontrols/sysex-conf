@@ -33,6 +33,7 @@ class SysEx
 {
     public:
     SysEx();
+    static void init();
     static void handleMessage(uint8_t *sysExArray, uint8_t size);
     static void decode();
     static bool configurationEnabled();
@@ -47,7 +48,6 @@ class SysEx
     static void setHandleCustomRequest(bool(*fptr)(uint8_t value));
     static void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));
 
-    static bool addBlock();
     static bool addBlocks(uint8_t numberOfBlocks);
     static bool addSection(uint8_t blockID, sysExSection section);
 

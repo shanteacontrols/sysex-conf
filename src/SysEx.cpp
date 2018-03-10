@@ -47,6 +47,11 @@ sysExStatus_t       userStatus;
 ///
 SysEx::SysEx()
 {
+    
+}
+
+void SysEx::init()
+{
     sendGetCallback             = NULL;
     sendSetCallback             = NULL;
     sendCustomRequestCallback   = NULL;
@@ -92,7 +97,7 @@ bool SysEx::configurationEnabled()
 ///
 bool SysEx::addCustomRequest(uint8_t value)
 {
-    if (customRequestCounter >= MAX_CUSTOM_REQUESTS)
+    if (customRequestCounter > MAX_CUSTOM_REQUESTS)
         return false;
 
     //don't add custom string if it's already defined as one of default strings
@@ -101,19 +106,6 @@ bool SysEx::addCustomRequest(uint8_t value)
 
     customRequests[customRequestCounter] = value;
     customRequestCounter++;
-    return true;
-}
-
-///
-/// \brief Adds single SysEx block.
-/// \returns True on success, false otherwise.
-///
-bool SysEx::addBlock()
-{
-    if (sysExBlockCounter >= SYSEX_MAX_BLOCKS)
-        return false;
-
-    sysExBlockCounter++;
     return true;
 }
 
@@ -139,6 +131,10 @@ bool SysEx::addBlocks(uint8_t numberOfBlocks)
 /// 
 bool SysEx::addSection(uint8_t blockID, sysExSection section)
 {
+    //make sure block exists
+    if (blockID >= SYSEX_MAX_BLOCKS)
+        return false;
+
     if (sysExMessage[blockID].numberOfSections > SYSEX_MAX_SECTIONS)
         return false;
 
@@ -179,7 +175,10 @@ void SysEx::handleMessage(uint8_t *array, uint8_t size)
         sysExArray[responseSize] = 0xF7;
         responseSize++;
 
-        sendSysExWriteCallback(sysExArray, responseSize);
+        if (sendSysExWriteCallback != NULL)
+        {
+            sendSysExWriteCallback(sysExArray, responseSize);
+        }
     }
 
     forcedSend = false;
@@ -200,7 +199,11 @@ void SysEx::decode()
     }
 
     if (!checkID())
+    {
+        //set this variable to true to avoid incorrect sending of additional data
+        forcedSend = true;
         return; //don't send response to wrong ID
+    }
 
     if (checkSpecialRequests())
         return; //special request was handled by now
@@ -249,9 +252,6 @@ void SysEx::decode()
 ///
 bool SysEx::checkID()
 {
-    if (sysExArraySize < (idByte_3+1))
-        return false;
-
     return
     (
         (sysExArray[idByte_1] == SYS_EX_M_ID_0)    &&
@@ -339,6 +339,7 @@ bool SysEx::checkSpecialRequests()
 
             return true;
         }
+
         //custom string not found
         setStatus(ERROR_WISH);
         return true;
@@ -394,7 +395,7 @@ bool SysEx::checkParameters()
     //start building response
     setStatus(ACK);
 
-    uint8_t loops = 1, responseSize_ = responseSize;
+    uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
     uint16_t startIndex = 0, endIndex = 1;
 
     if (decodedMessage.amount == sysExAmount_single)
@@ -428,7 +429,7 @@ bool SysEx::checkParameters()
     {
         if (decodedMessage.part == 127)
         {
-            loops = sysExMessage[decodedMessage.block].section[decodedMessage.section].parts;
+            msgPartsLoop = sysExMessage[decodedMessage.block].section[decodedMessage.section].parts;
             forcedSend = true;
         }
 
@@ -445,7 +446,7 @@ bool SysEx::checkParameters()
         }
     }
 
-    for (int j=0; j<loops; j++)
+    for (int j=0; j<msgPartsLoop; j++)
     {
         responseSize = responseSize_;
 
