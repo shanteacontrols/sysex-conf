@@ -41,7 +41,6 @@ typedef struct
 typedef struct
 {
     uint8_t numberOfSections;
-    uint8_t sectionCounter;
     sysExSection section[SYSEX_MAX_SECTIONS];
 } sysExBlock;
 

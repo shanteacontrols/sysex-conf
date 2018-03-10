@@ -65,7 +65,7 @@ class SysEx
     static bool checkParameterIndex();
     static bool checkNewValue();
 
-    static uint8_t generateMinMessageLenght();
+    static uint8_t generateMessageLenght();
     static void setStatus(sysExStatus_t status);
 };
 

@@ -57,8 +57,7 @@ SysEx::SysEx()
 
     for (int i=0; i<SYSEX_MAX_BLOCKS; i++)
     {
-        sysExMessage[i].numberOfSections = INVALID_VALUE;
-        sysExMessage[i].sectionCounter = 0;
+        sysExMessage[i].numberOfSections = 0;
 
         for (int j=0; j<SYSEX_MAX_SECTIONS; j++)
         {
@@ -73,6 +72,7 @@ SysEx::SysEx()
 
     customRequestCounter = 0;
     sysExBlockCounter = 0;
+    userStatus = (sysExStatus_t)0;
 }
 
 ///
@@ -139,20 +139,20 @@ bool SysEx::addBlocks(uint8_t numberOfBlocks)
 /// 
 bool SysEx::addSection(uint8_t blockID, sysExSection section)
 {
-    if (sysExMessage[blockID].sectionCounter > SYSEX_MAX_SECTIONS)
+    if (sysExMessage[blockID].numberOfSections > SYSEX_MAX_SECTIONS)
         return false;
 
-    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters = section.numberOfParameters;
-    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].newValueMin = section.newValueMin;
-    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].newValueMax = section.newValueMax;
+    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].numberOfParameters = section.numberOfParameters;
+    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].newValueMin = section.newValueMin;
+    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].newValueMax = section.newValueMax;
 
     //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
-    sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].parts = sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters / PARAMETERS_PER_MESSAGE;
+    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].parts = sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].numberOfParameters / PARAMETERS_PER_MESSAGE;
 
-    if (sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].numberOfParameters % PARAMETERS_PER_MESSAGE)
-        sysExMessage[blockID].section[sysExMessage[blockID].sectionCounter].parts++;
+    if (sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].numberOfParameters % PARAMETERS_PER_MESSAGE)
+        sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].parts++;
 
-    sysExMessage[blockID].sectionCounter++;
+    sysExMessage[blockID].numberOfSections++;
     return true;
 }
 
@@ -229,9 +229,9 @@ void SysEx::decode()
     if (!checkRequest())
         return;
 
-    uint16_t minLength = generateMinMessageLenght();
+    uint16_t length = generateMessageLenght();
 
-    if (sysExArraySize < minLength || !minLength)
+    if (sysExArraySize != length)
     {
         setStatus(ERROR_MESSAGE_LENGTH);
         return;
@@ -606,10 +606,10 @@ bool SysEx::checkParameters()
 }
 
 ///
-/// \brief Generates minimum message length based on other parameters in message.
+/// \brief Generates message length based on other parameters in message.
 /// \returns    Message length in bytes.
 ///
-uint8_t SysEx::generateMinMessageLenght()
+uint8_t SysEx::generateMessageLenght()
 {
     uint16_t size = 0;
 
