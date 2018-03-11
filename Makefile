@@ -4,14 +4,14 @@ GTEST_DIR := ../googletest/googletest
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
-CPPFLAGS += -isystem $(GTEST_DIR)/include
+CPPFLAGS += -isystem $(GTEST_DIR)/include --coverage
 
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -pthread
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS := SysEx_Test_Build SysEx_Test_InvalidReq
+TESTS := Tests
 
 # needed to build sysex library
 DEFINES := \
@@ -32,7 +32,7 @@ all: $(TESTS)
 
 clean :
 	@echo Cleaning up.
-	@rm -f $(TESTS) gtest.a gtest_main.a *.o
+	@rm -f $(TESTS) *.o *.info *.gcda *.gcno *.a
 
 # Builds gtest.a and gtest_main.a.
 
@@ -63,7 +63,7 @@ gtest_main.a: gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-SysEx_Test_%.o: $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES) $(GTEST_HEADERS)
+Tests.o: $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES) $(GTEST_HEADERS)
 	@$(CXX) $(CPPFLAGS) -std=c++11 $(addprefix -D,$(DEFINES)) $(CXXFLAGS) -c $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES)
 
 $(TESTS): %:%.o $(COMMON_REQS)
