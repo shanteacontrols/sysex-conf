@@ -60,8 +60,8 @@ typedef enum
     sectionByte,    //9
     REQUEST_SIZE,
     RESPONSE_SIZE = partByte + 1,
-    MIN_MESSAGE_LENGTH = wishByte + 1 + 1,  //add next byte and end
-    ML_REQ_STANDARD = REQUEST_SIZE + 1      //add end byte
+    MIN_MESSAGE_LENGTH = (wishByte + 1) + 1,    //special requests
+    ML_REQ_STANDARD = REQUEST_SIZE + 1          //add end byte
 } sysExRequestByteOrder;
 
 ///
@@ -113,7 +113,8 @@ typedef enum
     ERROR_NEW_VALUE,        //0x0A
     ERROR_MESSAGE_LENGTH,   //0x0B
     ERROR_WRITE,            //0x0C
-    ERROR_NOT_SUPPORTED     //0x0D
+    ERROR_NOT_SUPPORTED,    //0x0D
+    NUMBER_OF_ERRORS
 } sysExStatus_t;
 
 ///
