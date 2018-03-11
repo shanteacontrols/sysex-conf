@@ -216,7 +216,7 @@ void SysEx::decode()
         return;
     }
 
-    if (sysExArraySize < REQUEST_SIZE)
+    if (sysExArraySize <= REQUEST_SIZE)
     {
         setStatus(ERROR_MESSAGE_LENGTH);
         return;
@@ -513,7 +513,8 @@ bool SysEx::checkParameters()
                 }
                 break;
 
-                case sysExWish_set:
+                default:
+                // case sysExWish_set:
                 if (decodedMessage.amount == sysExAmount_single)
                 {
                     if (!checkParameterIndex())
@@ -587,10 +588,6 @@ bool SysEx::checkParameters()
                     }
                 }
                 break;
-
-                default:
-                setStatus(ERROR_WISH);
-                return false;
             }
         }
 
@@ -624,23 +621,23 @@ uint8_t SysEx::generateMessageLenght()
             return ML_REQ_STANDARD + sizeof(sysExParameter_t); //add parameter length
             break;
 
-            case sysExWish_set:
+            default:
+            // case sysExWish_set:
             return ML_REQ_STANDARD + 2*sizeof(sysExParameter_t); //add parameter length and new value length
             break;
-
-            default:
-            return 0;
         }
         break;
 
-        case sysExAmount_all:
+        default:
+        // case sysExAmount_all:
         switch(decodedMessage.wish)
         {
             case sysExWish_get:
             case sysExWish_backup:
             return ML_REQ_STANDARD;
 
-            case sysExWish_set:
+            default:
+            // case sysExWish_set:
             size = sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters;
 
             if (size > PARAMETERS_PER_MESSAGE)
@@ -654,14 +651,8 @@ uint8_t SysEx::generateMessageLenght()
             size *= sizeof(sysExParameter_t);
             size += ML_REQ_STANDARD;
             return size;
-
-            default:
-            return 0;
         }
         break;
-
-        default:
-        return 0;
     }
 
     return size;
@@ -721,8 +712,9 @@ bool SysEx::checkPart()
             return true;
         break;
 
-        case sysExWish_set:
-        case sysExWish_backup:
+        default:
+        // case sysExWish_set:
+        // case sysExWish_backup:
         if (decodedMessage.wish == sysExWish_backup)
         {
             if (decodedMessage.part == 127)
@@ -744,9 +736,6 @@ bool SysEx::checkPart()
                 return true;
         }
         break;
-
-        default:
-        return false;
     }
 }
 
