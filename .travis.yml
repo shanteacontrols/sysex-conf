@@ -1,6 +1,7 @@
 language: cpp
 
 before_install:
+  - pip install --user cpp-coveralls
   - git clone https://github.com/google/googletest.git
 
 install:  
@@ -8,6 +9,10 @@ install:
   
 script:
   - make GTEST_DIR=googletest/googletest
+  
+after_success:
+  - ./Tests
+  - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
 
 notifications:
   email:
