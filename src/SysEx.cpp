@@ -742,7 +742,7 @@ bool SysEx::checkPart()
         // case sysExWish_backup:
         if (decodedMessage.wish == sysExWish_backup)
         {
-            ((decodedMessage.part == 127) || (decodedMessage.part == 126))
+            if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
                 return true;
         }
 
