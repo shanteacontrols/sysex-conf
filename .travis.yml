@@ -7,7 +7,7 @@ install:
   - sudo apt-get install -y lcov
   
 script:
-  - make GTEST_DIR := googletest/googletest
+  - make GTEST_DIR=googletest/googletest
 
 notifications:
   email:
