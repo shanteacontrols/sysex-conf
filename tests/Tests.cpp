@@ -99,6 +99,15 @@ class SysExTest : public ::testing::Test
         sysEx.setHandleCustomRequest(onCustom);
         sysEx.setHandleSysExWrite(writeSysEx);
 
+        uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
+        memcpy(sysExTestArray, handshake, arraySize);
+
+        //send handshake message and see if sysExTestArray is valid
+        sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+        //sysex configuration should be enabled after handshake
+        EXPECT_EQ(1, sysEx.configurationEnabled());
+
         sysEx.addBlocks(6);
 
         sysExSection section;
@@ -307,13 +316,15 @@ class SysExTest : public ::testing::Test
 
     const uint8_t setValidUserErrorInvalid[13] =
     {
-        //set block 3, section 3, index 5, valid new value
+        //set block 3, section 3, index 5
+        //valid new value
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART, sysExWish_set, sysExAmount_single, TEST_BLOCK_ID, TEST_SECTION_ID, (TEST_INDEX_ID+1), TEST_NEW_VALUE_VALID, 0xF7
     };
 
     const uint8_t setInvalid[13] =
     {
-        //set block 3, section 3, index 5, invalid new value
+        //set block 3, section 3, index 5
+        //invalid new value
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART, sysExWish_set, sysExAmount_single, TEST_BLOCK_ID, TEST_SECTION_ID, TEST_INDEX_ID, TEST_NEW_VALUE_INVALID, 0xF7
     };
 
@@ -403,9 +414,14 @@ class SysExTest : public ::testing::Test
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART, sysExWish_get, sysExAmount_all, TEST_BLOCK_ID, TEST_SECTION_ID, 0xF7
     };
 
-    const uint8_t getAllValid_allParts[11] =
+    const uint8_t getAllValid_allParts_7F[11] =
     {
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, 0x7F, sysExWish_get, sysExAmount_all, 0x04, 0x01, 0xF7
+    };
+
+    const uint8_t getAllValid_allParts_7E[11] =
+    {
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, 0x7E, sysExWish_get, sysExAmount_all, 0x04, 0x01, 0xF7
     };
 
     const uint8_t setAll[14] =
@@ -506,6 +522,12 @@ class SysExTest : public ::testing::Test
 
 TEST_F(SysExTest, Init)
 {
+    sysEx.init();
+    sysEx.setHandleGet(onGet);
+    sysEx.setHandleSet(onSet);
+    sysEx.setHandleCustomRequest(onCustom);
+    sysEx.setHandleSysExWrite(writeSysEx);
+
     uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
     memcpy(sysExTestArray, handshake, arraySize);
 
@@ -526,16 +548,7 @@ TEST_F(SysExTest, Init)
 
 TEST_F(SysExTest, ErrorCheckStatus)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorStatus)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorStatus)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorStatus, arraySize);
 
     //send message with invalid status byte
@@ -547,16 +560,7 @@ TEST_F(SysExTest, ErrorCheckStatus)
 
 TEST_F(SysExTest, ErrorCheckWish)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorWish)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorWish)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorWish, arraySize);
 
     //send message with invalid wish byte
@@ -568,16 +572,7 @@ TEST_F(SysExTest, ErrorCheckWish)
 
 TEST_F(SysExTest, ErrorCheckAmount)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorAmount)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorAmount)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorAmount, arraySize);
 
     //send message with invalid amount byte
@@ -589,16 +584,7 @@ TEST_F(SysExTest, ErrorCheckAmount)
 
 TEST_F(SysExTest, ErrorCheckBlock)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorBlock)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorBlock)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorBlock, arraySize);
 
     //send message with invalid block byte
@@ -610,16 +596,7 @@ TEST_F(SysExTest, ErrorCheckBlock)
 
 TEST_F(SysExTest, ErrorCheckSection)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorSection)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorSection)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorSection, arraySize);
 
     //send message with invalid section byte
@@ -631,16 +608,7 @@ TEST_F(SysExTest, ErrorCheckSection)
 
 TEST_F(SysExTest, ErrorCheckPart)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorPart)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorPart)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorPart, arraySize);
 
     //send message with invalid index byte
@@ -652,16 +620,7 @@ TEST_F(SysExTest, ErrorCheckPart)
 
 TEST_F(SysExTest, ErrorCheckIndex)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorIndex)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorIndex)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorIndex, arraySize);
 
     //send message with invalid index byte
@@ -673,16 +632,7 @@ TEST_F(SysExTest, ErrorCheckIndex)
 
 TEST_F(SysExTest, ErrorCheckLength)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(errorLength)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(errorLength)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorLength, arraySize);
 
     //send message with invalid index byte
@@ -694,6 +644,12 @@ TEST_F(SysExTest, ErrorCheckLength)
 
 TEST_F(SysExTest, ErrorHandshake)
 {
+    sysEx.init();
+    sysEx.setHandleGet(onGet);
+    sysEx.setHandleSet(onSet);
+    sysEx.setHandleCustomRequest(onCustom);
+    sysEx.setHandleSysExWrite(writeSysEx);
+
     uint8_t arraySize = sizeof(getValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, getValid, arraySize);
 
@@ -706,20 +662,11 @@ TEST_F(SysExTest, ErrorHandshake)
 
 TEST_F(SysExTest, ErrorCheckWrite)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
+    uint8_t arraySize = sizeof(setValid)/sizeof(uint8_t);
+    memcpy(sysExTestArray, setValid, arraySize);
 
     //configure callback which always returns false on setting value
     sysEx.setHandleSet(onSetInvalid);
-
-    arraySize = sizeof(setValid)/sizeof(uint8_t);
-    memcpy(sysExTestArray, setValid, arraySize);
 
     //send valid set message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
@@ -730,16 +677,7 @@ TEST_F(SysExTest, ErrorCheckWrite)
 
 TEST_F(SysExTest, ErrorNewValue)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(setInvalid)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(setInvalid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setInvalid, arraySize);
 
     //send invalid set message
@@ -751,16 +689,7 @@ TEST_F(SysExTest, ErrorNewValue)
 
 TEST_F(SysExTest, ValidSet)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(setValid)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(setValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setValid, arraySize);
 
     //send valid set message
@@ -772,16 +701,7 @@ TEST_F(SysExTest, ValidSet)
 
 TEST_F(SysExTest, ValidGet)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(getValid)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(getValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, getValid, arraySize);
 
     //send valid get message
@@ -799,16 +719,7 @@ TEST_F(SysExTest, CustomReq)
     //define custom request
     sysEx.addCustomRequest(CUSTOM_REQUEST_ID);
 
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(customReq)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
 
     //send valid custom request message
@@ -936,16 +847,6 @@ TEST_F(SysExTest, IgnoreMessage)
     //if no action took place, sysExTestArray counter should be unchanged
     EXPECT_EQ(tempResponseCounter, responseCounter);
 
-    //send handshake
-    arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
     arraySize = sizeof(shortMessage3)/sizeof(uint8_t);
     memcpy(sysExTestArray, shortMessage3, arraySize);
 
@@ -955,17 +856,11 @@ TEST_F(SysExTest, IgnoreMessage)
 
 TEST_F(SysExTest, GetAllValid)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+    uint8_t arraySize = sizeof(getAllValid_1part)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getAllValid_1part, arraySize);
 
     //we are expecting 1 message as an sysExTestArray
     int tempResponseCounter = responseCounter;
-
-    arraySize = sizeof(getAllValid_1part)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getAllValid_1part, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
@@ -979,12 +874,25 @@ TEST_F(SysExTest, GetAllValid)
     //now send same request for all parts
     //we are expecting 2 messages now
 
-    arraySize = sizeof(getAllValid_allParts)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getAllValid_allParts, arraySize);
+    arraySize = sizeof(getAllValid_allParts_7F)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getAllValid_allParts_7F, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     EXPECT_EQ(responseCounter, expectedCounter+2);
+
+    expectedCounter = responseCounter;
+
+    arraySize = sizeof(getAllValid_allParts_7E)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getAllValid_allParts_7E, arraySize);
+
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //last returned message should have status byte set to ACK
+    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+
+    //also, three messages should be returned
+    EXPECT_EQ(responseCounter, expectedCounter+3);
 }
 
 TEST_F(SysExTest, CustomMessage)
@@ -1003,16 +911,7 @@ TEST_F(SysExTest, CustomMessage)
 
 TEST_F(SysExTest, SetAll)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(setAll)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(setAll)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAll, arraySize);
 
     //send set all request and check if result is ACK
@@ -1046,16 +945,7 @@ TEST_F(SysExTest, SetAll)
 
 TEST_F(SysExTest, Backup)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(backupAll)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(backupAll)/sizeof(uint8_t);
     memcpy(sysExTestArray, backupAll, arraySize);
 
     //send backup all request
@@ -1075,16 +965,7 @@ TEST_F(SysExTest, Backup)
 
 TEST_F(SysExTest, UserError)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
-    arraySize = sizeof(getSingleUserError)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(getSingleUserError)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSingleUserError, arraySize);
 
     //send get request
@@ -1134,17 +1015,8 @@ TEST_F(SysExTest, UserError)
 
 TEST_F(SysExTest, SetAllParts)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
     //send set all requests for all parts and verify that status byte is set to ERROR_PART
-    arraySize = sizeof(setAllParts)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(setAllParts)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllParts, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
@@ -1154,19 +1026,9 @@ TEST_F(SysExTest, SetAllParts)
 
 TEST_F(SysExTest, SpecialRequest)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
     //test all pre-configured special requests and see if they return correct value
-
     //bytes per value request
-    arraySize = sizeof(getSpecialReqBytesPerVal)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(getSpecialReqBytesPerVal)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSpecialReqBytesPerVal, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
@@ -1243,19 +1105,9 @@ TEST_F(SysExTest, SpecialRequest)
 
 TEST_F(SysExTest, SetNoMinMax)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
     //test block which has same min and max value
     //in this case, error_newvalue should never be reported on any value
-
-    arraySize = sizeof(setNoMinMax1)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(setNoMinMax1)/sizeof(uint8_t);
     memcpy(sysExTestArray, setNoMinMax1, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
@@ -1279,18 +1131,8 @@ TEST_F(SysExTest, SetNoMinMax)
 
 TEST_F(SysExTest, SetInvalid)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
-
-    //send handshake message and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-
-    //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
-
     //send set single command with invalid param index
-
-    arraySize = sizeof(setSingleInvalidParam)/sizeof(uint8_t);
+    uint8_t arraySize = sizeof(setSingleInvalidParam)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleInvalidParam, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
