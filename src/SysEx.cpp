@@ -428,14 +428,15 @@ bool SysEx::checkParameters()
 
     if ((decodedMessage.wish == sysExWish_backup) || (decodedMessage.wish == sysExWish_get))
     {
-        if (decodedMessage.part == 127)
+        if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
         {
             msgPartsLoop = sysExMessage[decodedMessage.block].section[decodedMessage.section].parts;
             forcedSend = true;
-        }
-        else if (decodedMessage.part == 126)
-        {
-            allPartsAck = true;
+
+            if (decodedMessage.part == 126)
+            {
+                allPartsAck = true;
+            }
         }
 
         if (decodedMessage.wish == sysExWish_backup)
