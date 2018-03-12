@@ -397,6 +397,7 @@ bool SysEx::checkParameters()
 
     uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
     uint16_t startIndex = 0, endIndex = 1;
+    bool allPartsAck = false;
 
     if (decodedMessage.amount == sysExAmount_single)
     {
@@ -427,10 +428,15 @@ bool SysEx::checkParameters()
 
     if ((decodedMessage.wish == sysExWish_backup) || (decodedMessage.wish == sysExWish_get))
     {
-        if (decodedMessage.part == 127)
+        if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
         {
             msgPartsLoop = sysExMessage[decodedMessage.block].section[decodedMessage.section].parts;
             forcedSend = true;
+
+            if (decodedMessage.part == 126)
+            {
+                allPartsAck = true;
+            }
         }
 
         if (decodedMessage.wish == sysExWish_backup)
@@ -600,6 +606,25 @@ bool SysEx::checkParameters()
         }
     }
 
+    if (allPartsAck)
+    {
+        //send ACK message at the end
+        responseSize = 0;
+        addToResponse(0xF0);
+        addToResponse(SYS_EX_M_ID_0);
+        addToResponse(SYS_EX_M_ID_1);
+        addToResponse(SYS_EX_M_ID_2);
+        addToResponse(ACK);
+        addToResponse(0x7E);
+        addToResponse(decodedMessage.wish);
+        addToResponse(decodedMessage.amount);
+        addToResponse(decodedMessage.block);
+        addToResponse(decodedMessage.section);
+        addToResponse(0xF7);
+
+        sendSysExWriteCallback(sysExArray, responseSize);
+    }
+
     return true;
 }
 
@@ -703,7 +728,7 @@ bool SysEx::checkPart()
     switch(decodedMessage.wish)
     {
         case sysExWish_get:
-        if (decodedMessage.part == 127)
+        if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
             return true;
 
         if (decodedMessage.part >= sysExMessage[decodedMessage.block].section[decodedMessage.section].parts)
@@ -717,7 +742,7 @@ bool SysEx::checkPart()
         // case sysExWish_backup:
         if (decodedMessage.wish == sysExWish_backup)
         {
-            if (decodedMessage.part == 127)
+            if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
                 return true;
         }
 
