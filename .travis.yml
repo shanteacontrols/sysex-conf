@@ -1,0 +1,17 @@
+language: cpp
+
+
+install:  
+  - sudo apt-get install -y lcov
+  
+script:
+  - make
+
+
+
+
+  
+notifications:
+  email:
+    on_success: change
+    on_failure: change
