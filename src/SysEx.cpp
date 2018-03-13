@@ -875,7 +875,7 @@ void SysEx::setError(sysExStatus_t status)
         break;
 
         default:
-        //no action
+        userStatus = ERROR_WRITE;
         break;
     }
 }
