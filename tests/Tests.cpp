@@ -36,9 +36,6 @@
 
 #define CUSTOM_REQUEST_VALUE                1
 
-#define TEST_BLOCK_USER_ERROR_ID            2
-#define TEST_SECTION_USER_ERROR_ID          2
-
 SysEx sysEx;
 uint8_t sysExTestArray[200];
 int responseCounter;
