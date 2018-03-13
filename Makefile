@@ -32,7 +32,7 @@ all: $(TESTS)
 
 clean :
 	@echo Cleaning up.
-	@rm -f $(TESTS) *.o *.info *.gcda *.gcno *.a
+	@rm -f $(TESTS) *.o *.info *.gcda *.gcno *.a *.html *.png *.infoclear *.css
 
 # Builds gtest.a and gtest_main.a.
 
