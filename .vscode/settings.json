@@ -2,7 +2,11 @@
 {
     "files.exclude": {
         "src/build/": true,
-        "bin/": true
+        "bin/": true,
+        "**.a": true,
+        "**.gcno": true,
+        "**.o": true,
+        "**.gcda": true
     },
     "C_Cpp.intelliSenseEngine": "Tag Parser",
     "C_Cpp.intelliSenseEngineFallback": "Disabled",
