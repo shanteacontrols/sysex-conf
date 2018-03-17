@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/SysEx_Test_InvalidReq",
+            "program": "${workspaceFolder}/Tests",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
