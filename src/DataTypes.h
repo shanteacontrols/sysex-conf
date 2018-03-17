@@ -32,7 +32,7 @@ typedef struct
     sysExParameter_t newValueMin;
     sysExParameter_t newValueMax;
     uint8_t parts;
-} sysExSection;
+} sysExSection_t;
 
 ///
 /// \brief Structure holding data for single SysEx block.
@@ -40,8 +40,8 @@ typedef struct
 typedef struct
 {
     uint8_t numberOfSections;
-    sysExSection section[SYSEX_MAX_SECTIONS];
-} sysExBlock;
+    sysExSection_t *section;
+} sysExBlock_t;
 
 ///
 /// \brief Descriptive list of bytes in SysEx message.

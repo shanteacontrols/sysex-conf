@@ -29,7 +29,7 @@ void (*sendSysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
 bool                sysExEnabled,
                     forcedSend;
 
-sysExBlock          sysExMessage[SYSEX_MAX_BLOCKS];
+sysExBlock_t        *sysExMessage;
 
 decodedMessage_t    decodedMessage;
 
@@ -50,7 +50,12 @@ SysEx::SysEx()
     
 }
 
-void SysEx::init()
+///
+/// \brief Configures user specifed configuration layout and initializes data to their default values
+/// @param [in] pointer     Pointer to configuration structure.
+/// @param [in] numberOfBlocks  Total number of blocks in configuration structure.
+///
+void SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
 {
     sendGetCallback             = NULL;
     sendSetCallback             = NULL;
@@ -60,24 +65,26 @@ void SysEx::init()
     sysExEnabled = false;
     forcedSend = false;
 
-    for (int i=0; i<SYSEX_MAX_BLOCKS; i++)
-    {
-        sysExMessage[i].numberOfSections = 0;
-
-        for (int j=0; j<SYSEX_MAX_SECTIONS; j++)
-        {
-            sysExMessage[i].section[j].numberOfParameters = INVALID_VALUE;
-            sysExMessage[i].section[j].newValueMin = INVALID_VALUE;
-            sysExMessage[i].section[j].newValueMax = INVALID_VALUE;
-        }
-    }
-
     for (int i=0; i<MAX_CUSTOM_REQUESTS; i++)
         customRequests[i] = INVALID_VALUE;
 
     customRequestCounter = 0;
-    sysExBlockCounter = 0;
+    sysExBlockCounter = numberOfBlocks;
     userStatus = (sysExStatus_t)0;
+
+    sysExMessage = pointer;
+
+    for (int i=0; i<numberOfBlocks; i++)
+    {
+        for (int j=0; j<sysExMessage[i].numberOfSections; j++)
+        {
+            //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
+            sysExMessage[i].section[j].parts = sysExMessage[i].section[j].numberOfParameters / PARAMETERS_PER_MESSAGE;
+
+            if (sysExMessage[i].section[j].numberOfParameters % PARAMETERS_PER_MESSAGE)
+                sysExMessage[i].section[j].parts++;
+        }
+    }
 }
 
 ///
@@ -106,49 +113,6 @@ bool SysEx::addCustomRequest(uint8_t value)
 
     customRequests[customRequestCounter] = value;
     customRequestCounter++;
-    return true;
-}
-
-///
-/// \brief Adds specified number of SysEx blocks.
-/// @param [in] numberOfBlocks  Number of blocks to add.
-/// \returns True on success, false otherwise.
-///
-bool SysEx::addBlocks(uint8_t numberOfBlocks)
-{
-    if (sysExBlockCounter+numberOfBlocks > SYSEX_MAX_BLOCKS)
-        return false;
-
-    sysExBlockCounter += numberOfBlocks;
-    return true;
-}
-
-///
-/// \brief Adds section to specified block.
-/// @param [in] blockID Block on which to add section.
-/// @param [in] section Structure holding description of section.
-/// \returns True on success, false otherwise.
-/// 
-bool SysEx::addSection(uint8_t blockID, sysExSection section)
-{
-    //make sure block exists
-    if (blockID >= SYSEX_MAX_BLOCKS)
-        return false;
-
-    if (sysExMessage[blockID].numberOfSections > SYSEX_MAX_SECTIONS)
-        return false;
-
-    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].numberOfParameters = section.numberOfParameters;
-    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].newValueMin = section.newValueMin;
-    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].newValueMax = section.newValueMax;
-
-    //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
-    sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].parts = sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].numberOfParameters / PARAMETERS_PER_MESSAGE;
-
-    if (sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].numberOfParameters % PARAMETERS_PER_MESSAGE)
-        sysExMessage[blockID].section[sysExMessage[blockID].numberOfSections].parts++;
-
-    sysExMessage[blockID].numberOfSections++;
     return true;
 }
 

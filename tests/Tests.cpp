@@ -2,6 +2,7 @@
 #include "../src/SysEx.h"
 
 #define NUMBER_OF_BLOCKS                    1
+#define NUMBER_OF_SECTIONS                  3
 
 #define SECTION_0_PARAMETERS                10
 #define SECTION_1_PARAMETERS                6
@@ -95,6 +96,35 @@ void writeSysEx(uint8_t sysExTestArray[], uint8_t arraysize)
     responseCounter++;
 }
 
+static sysExSection_t testSections[NUMBER_OF_SECTIONS] =
+{
+    {
+        .numberOfParameters = SECTION_0_PARAMETERS,
+        .newValueMin = SECTION_0_MIN,
+        .newValueMax = SECTION_0_MAX,
+    },
+
+    {
+        .numberOfParameters = SECTION_1_PARAMETERS,
+        .newValueMin = SECTION_1_MIN,
+        .newValueMax = SECTION_1_MAX,
+    },
+
+    {
+        .numberOfParameters = SECTION_2_PARAMETERS,
+        .newValueMin = SECTION_2_MIN,
+        .newValueMax = SECTION_2_MAX,
+    }
+};
+
+sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
+{
+    {
+        .numberOfSections = NUMBER_OF_SECTIONS,
+        .section = testSections
+    }
+};
+
 class SysExTest : public ::testing::Test
 {
     protected:
@@ -102,7 +132,7 @@ class SysExTest : public ::testing::Test
     {
         userError = REQUEST;
         responseCounter = 0;
-        sysEx.init();
+        sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
         sysEx.setHandleGet(onGet);
         sysEx.setHandleSet(onSet);
         sysEx.setHandleCustomRequest(onCustom);
@@ -116,27 +146,6 @@ class SysExTest : public ::testing::Test
 
         //sysex configuration should be enabled after handshake
         EXPECT_EQ(1, sysEx.configurationEnabled());
-
-        sysEx.addBlocks(NUMBER_OF_BLOCKS);
-
-        sysExSection section;
-
-        {
-            section.numberOfParameters = SECTION_0_PARAMETERS;
-            section.newValueMin = SECTION_0_MIN;
-            section.newValueMax = SECTION_0_MAX;
-            sysEx.addSection(0, section);
-
-            section.numberOfParameters = SECTION_1_PARAMETERS;
-            section.newValueMin = SECTION_1_MIN;
-            section.newValueMax = SECTION_1_MAX;
-            sysEx.addSection(0, section);
-
-            section.numberOfParameters = SECTION_2_PARAMETERS;
-            section.newValueMin = SECTION_2_MIN;
-            section.newValueMax = SECTION_2_MAX;
-            sysEx.addSection(0, section);
-        }
     }
 
     virtual void TearDown()
@@ -357,7 +366,7 @@ class SysExTest : public ::testing::Test
 
 TEST_F(SysExTest, Init)
 {
-    sysEx.init();
+    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setHandleGet(onGet);
     sysEx.setHandleSet(onSet);
     sysEx.setHandleCustomRequest(onCustom);
@@ -383,7 +392,7 @@ TEST_F(SysExTest, Init)
 
 TEST_F(SysExTest, ErrorHandshake)
 {
-    sysEx.init();
+    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setHandleGet(onGet);
     sysEx.setHandleSet(onSet);
     sysEx.setHandleCustomRequest(onCustom);
@@ -770,7 +779,7 @@ TEST_F(SysExTest, CustomReq)
     EXPECT_EQ(ERROR_WISH, sysExTestArray[(uint8_t)statusByte]);
 
     //init sysex instance so that configuration is disabled
-    sysEx.init();
+    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
 
     //define custom request
     sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID);
@@ -794,7 +803,7 @@ TEST_F(SysExTest, CustomReq)
 
     //start by adding maximum number of custom requests
     //init sysEx to clear all existing custom requests
-    sysEx.init();
+    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
 
     for (int i=0; i<=MAX_CUSTOM_REQUESTS; i++)
     {
@@ -810,7 +819,7 @@ TEST_F(SysExTest, CustomReq)
     EXPECT_EQ(false, value);
 
     //init sysEx to clear all existing custom requests
-    sysEx.init();
+    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
 
     //try defining illegal custom requests
 
@@ -821,32 +830,6 @@ TEST_F(SysExTest, CustomReq)
         //invalid values are being assigned as custom requests
         EXPECT_EQ(false, value);
     }
-}
-
-TEST_F(SysExTest, TooManyBlocks)
-{
-    bool value = sysEx.addBlocks(SYSEX_MAX_BLOCKS+1);
-    //function must return false
-    EXPECT_EQ(false, value);
-
-    //try to add section to non-existing block
-    sysExSection testSection;
-    value = sysEx.addSection(SYSEX_MAX_BLOCKS, testSection);
-    EXPECT_EQ(false, value);
-}
-
-TEST_F(SysExTest, TooManySections)
-{
-    sysExSection testSection;
-
-    for (int i=0; i<SYSEX_MAX_SECTIONS; i++)
-    {
-        sysEx.addSection(0, testSection);
-    }
-
-    bool value = sysEx.addSection(0, testSection);
-    //function must return false
-    EXPECT_EQ(false, value);
 }
 
 TEST_F(SysExTest, IgnoreMessage)
@@ -947,7 +930,7 @@ TEST_F(SysExTest, SpecialRequest)
 
     //now try those same requests, but without prior sending of handshake
     //status byte must equal ERROR_HANDSHAKE
-    sysEx.init();
+    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setHandleGet(onGet);
     sysEx.setHandleSet(onSet);
     sysEx.setHandleCustomRequest(onCustom);

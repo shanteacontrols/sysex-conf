@@ -13,11 +13,6 @@ CXXFLAGS += -g -pthread
 # created to the list.
 TESTS := Tests
 
-# needed to build sysex library
-DEFINES := \
-SYSEX_MAX_BLOCKS=6 \
-SYSEX_MAX_SECTIONS=10
-
 # library source
 LIB_SOURCES := $(shell find src/ -name "*.cpp")
 
@@ -63,8 +58,8 @@ gtest_main.a: gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-Tests.o: $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES) $(GTEST_HEADERS)
-	@$(CXX) $(CPPFLAGS) -std=c++11 $(addprefix -D,$(DEFINES)) $(CXXFLAGS) -c $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES)
+Tests.o: $(TEST_DIR)/Tests.cpp $(LIB_SOURCES) $(GTEST_HEADERS)
+	@$(CXX) $(CPPFLAGS) -std=c++11 $(CXXFLAGS) -c $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES)
 
 $(TESTS): %:%.o $(COMMON_REQS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
