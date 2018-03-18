@@ -70,7 +70,7 @@ sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
     }
 };
 
-SysEx sysEx(sysExLayout, NUMBER_OF_BLOCKS);
+SysEx sysEx;
 
 bool onCustom(uint8_t value)
 {
@@ -134,6 +134,7 @@ class SysExTest : public ::testing::Test
     {
         userError = REQUEST;
         responseCounter = 0;
+        sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
         sysEx.setHandleGet(onGet);
         sysEx.setHandleSet(onSet);
         sysEx.setHandleCustomRequest(onCustom);

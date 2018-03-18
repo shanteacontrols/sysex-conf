@@ -105,11 +105,19 @@ uint8_t             customRequestCounter;
 
 ///
 /// \brief Default constructor.
+///
+SysEx::SysEx()
+{
+    sysExMessage = NULL;
+    sysExBlockCounter = 0;
+}
+
+///
 /// Configures user specifed configuration layout and initializes data to their default values.
 /// @param [in] pointer     Pointer to configuration structure.
 /// @param [in] numberOfBlocks  Total number of blocks in configuration structure.
 ///
-SysEx::SysEx(sysExBlock_t *pointer, uint8_t numberOfBlocks)
+void SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
 {
     getCallback             = NULL;
     setCallback             = NULL;
@@ -178,31 +186,34 @@ bool SysEx::addCustomRequest(uint8_t value)
 ///
 void SysEx::handleMessage(uint8_t *array, uint8_t size)
 {
-    //save pointer to received array so we can manipulate it directly
-    sysExArray = array;
-    receivedArraySize = size;
-    responseSize = RESPONSE_SIZE;
-
-    if (receivedArraySize < MIN_MESSAGE_LENGTH)
-        return; //ignore small messages
-
-    if (!checkID())
-        return; //don't send response to wrong ID
-
-    decode();
-
-    if (!messageEndSent)
+    if ((sysExMessage != NULL) && sysExBlockCounter)
     {
-        //if messageEndSent is set to true, response has already been sent
-        sysExArray[responseSize] = 0xF7;
-        responseSize++;
+        //save pointer to received array so we can manipulate it directly
+        sysExArray = array;
+        receivedArraySize = size;
+        responseSize = RESPONSE_SIZE;
 
-        if (sysExWriteCallback != NULL)
-            sysExWriteCallback(sysExArray, responseSize);
+        if (receivedArraySize < MIN_MESSAGE_LENGTH)
+            return; //ignore small messages
+
+        if (!checkID())
+            return; //don't send response to wrong ID
+
+        decode();
+
+        if (!messageEndSent)
+        {
+            //if messageEndSent is set to true, response has already been sent
+            sysExArray[responseSize] = 0xF7;
+            responseSize++;
+
+            if (sysExWriteCallback != NULL)
+                sysExWriteCallback(sysExArray, responseSize);
+        }
+
+        messageEndSent = false;
+        sysExArray = NULL;
     }
-
-    messageEndSent = false;
-    sysExArray = NULL;
 }
 
 ///
