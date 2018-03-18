@@ -32,26 +32,21 @@
 class SysEx
 {
     public:
-    SysEx();
-    static void init(sysExBlock_t *pointer, uint8_t numberOfBlocks);
+    SysEx(sysExBlock_t *pointer, uint8_t numberOfBlocks);
     static void handleMessage(uint8_t *sysExArray, uint8_t size);
-    static void decode();
-    static bool configurationEnabled();
+    static bool isConfigurationEnabled();
     static bool addCustomRequest(uint8_t value);
-    static void startResponse();
-    static void addToResponse(sysExParameter_t value);
-    static void sendResponse();
+    static void sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, uint8_t size);
     static void setError(sysExStatus_t status);
+    static bool addToResponse(sysExParameter_t value);
 
     static void setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index));
     static void setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue));
     static void setHandleCustomRequest(bool(*fptr)(uint8_t value));
     static void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));
 
-    static bool checkRequest();
-    static bool checkParameters();
-
     private:
+    static void decode();
     static bool checkID();
     static bool checkSpecialRequests();
     static bool checkWish();
@@ -61,6 +56,8 @@ class SysEx
     static bool checkPart();
     static bool checkParameterIndex();
     static bool checkNewValue();
+    static bool checkRequest();
+    static bool checkParameters();
 
     static uint8_t generateMessageLenght();
     static void setStatus(sysExStatus_t status);
