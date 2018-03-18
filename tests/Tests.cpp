@@ -37,10 +37,40 @@
 
 #define CUSTOM_REQUEST_VALUE                1
 
-SysEx sysEx;
 uint8_t sysExTestArray[200];
 int responseCounter;
 sysExStatus_t userError;
+
+static sysExSection_t testSections[NUMBER_OF_SECTIONS] =
+{
+    {
+        .numberOfParameters = SECTION_0_PARAMETERS,
+        .newValueMin = SECTION_0_MIN,
+        .newValueMax = SECTION_0_MAX,
+    },
+
+    {
+        .numberOfParameters = SECTION_1_PARAMETERS,
+        .newValueMin = SECTION_1_MIN,
+        .newValueMax = SECTION_1_MAX,
+    },
+
+    {
+        .numberOfParameters = SECTION_2_PARAMETERS,
+        .newValueMin = SECTION_2_MIN,
+        .newValueMax = SECTION_2_MAX,
+    }
+};
+
+sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
+{
+    {
+        .numberOfSections = NUMBER_OF_SECTIONS,
+        .section = testSections
+    }
+};
+
+SysEx sysEx(sysExLayout, NUMBER_OF_BLOCKS);
 
 bool onCustom(uint8_t value)
 {
@@ -96,34 +126,6 @@ void writeSysEx(uint8_t sysExTestArray[], uint8_t arraysize)
     responseCounter++;
 }
 
-static sysExSection_t testSections[NUMBER_OF_SECTIONS] =
-{
-    {
-        .numberOfParameters = SECTION_0_PARAMETERS,
-        .newValueMin = SECTION_0_MIN,
-        .newValueMax = SECTION_0_MAX,
-    },
-
-    {
-        .numberOfParameters = SECTION_1_PARAMETERS,
-        .newValueMin = SECTION_1_MIN,
-        .newValueMax = SECTION_1_MAX,
-    },
-
-    {
-        .numberOfParameters = SECTION_2_PARAMETERS,
-        .newValueMin = SECTION_2_MIN,
-        .newValueMax = SECTION_2_MAX,
-    }
-};
-
-sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
-{
-    {
-        .numberOfSections = NUMBER_OF_SECTIONS,
-        .section = testSections
-    }
-};
 
 class SysExTest : public ::testing::Test
 {
@@ -132,7 +134,6 @@ class SysExTest : public ::testing::Test
     {
         userError = REQUEST;
         responseCounter = 0;
-        sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
         sysEx.setHandleGet(onGet);
         sysEx.setHandleSet(onSet);
         sysEx.setHandleCustomRequest(onCustom);
@@ -145,7 +146,7 @@ class SysExTest : public ::testing::Test
         sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
         //sysex configuration should be enabled after handshake
-        EXPECT_EQ(1, sysEx.configurationEnabled());
+        EXPECT_EQ(1, sysEx.isConfigurationEnabled());
     }
 
     virtual void TearDown()
@@ -366,12 +367,6 @@ class SysExTest : public ::testing::Test
 
 TEST_F(SysExTest, Init)
 {
-    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
-    sysEx.setHandleGet(onGet);
-    sysEx.setHandleSet(onSet);
-    sysEx.setHandleCustomRequest(onCustom);
-    sysEx.setHandleSysExWrite(writeSysEx);
-
     uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
     memcpy(sysExTestArray, handshake, arraySize);
 
@@ -387,18 +382,26 @@ TEST_F(SysExTest, Init)
     EXPECT_EQ(0xF7, sysExTestArray[6]);
 
     //sysex configuration should be enabled after handshake
-    EXPECT_EQ(true, sysEx.configurationEnabled());
+    EXPECT_EQ(true, sysEx.isConfigurationEnabled());
 }
 
 TEST_F(SysExTest, ErrorHandshake)
 {
-    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
-    sysEx.setHandleGet(onGet);
-    sysEx.setHandleSet(onSet);
-    sysEx.setHandleCustomRequest(onCustom);
-    sysEx.setHandleSysExWrite(writeSysEx);
+    uint8_t arraySize;
 
-    uint8_t arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
+    if (sysEx.isConfigurationEnabled())
+    {
+        //close connection first
+        arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
+        memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+
+        sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+        //configuration should be closed now
+        EXPECT_EQ(false, sysEx.isConfigurationEnabled());
+    }
+
+    arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSingleValid, arraySize);
 
     //send valid get message
@@ -778,17 +781,12 @@ TEST_F(SysExTest, CustomReq)
     //check if status byte has error wish value
     EXPECT_EQ(ERROR_WISH, sysExTestArray[(uint8_t)statusByte]);
 
-    //init sysex instance so that configuration is disabled
-    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
+    //disable configuration
+    arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
 
-    //define custom request
-    sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID);
-
-    //define callbacks
-    sysEx.setHandleGet(onGet);
-    sysEx.setHandleSet(onSet);
-    sysEx.setHandleCustomRequest(onCustom);
-    sysEx.setHandleSysExWrite(writeSysEx);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+    EXPECT_EQ(false, sysEx.isConfigurationEnabled());
 
     arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
@@ -801,11 +799,18 @@ TEST_F(SysExTest, CustomReq)
 
     bool value;
 
-    //start by adding maximum number of custom requests
-    //init sysEx to clear all existing custom requests
-    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
+    //try defining illegal custom requests
+    for (int i=0; i<SPECIAL_PARAMETERS; i++)
+    {
+        value = sysEx.addCustomRequest(i);
+        //function must return false every time because
+        //invalid values are being assigned as custom requests
+        EXPECT_EQ(false, value);
+    }
 
-    for (int i=0; i<=MAX_CUSTOM_REQUESTS; i++)
+    //add maximum number of custom requests
+    //start from 1 since one requests is already added
+    for (int i=1; i<=MAX_CUSTOM_REQUESTS; i++)
     {
         value = sysEx.addCustomRequest(SPECIAL_PARAMETERS+i);
         //function must return true every time
@@ -817,19 +822,6 @@ TEST_F(SysExTest, CustomReq)
 
     //check if function returned false on too many custom requests
     EXPECT_EQ(false, value);
-
-    //init sysEx to clear all existing custom requests
-    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
-
-    //try defining illegal custom requests
-
-    for (int i=0; i<SPECIAL_PARAMETERS; i++)
-    {
-        value = sysEx.addCustomRequest(i);
-        //function must return false every time because
-        //invalid values are being assigned as custom requests
-        EXPECT_EQ(false, value);
-    }
 }
 
 TEST_F(SysExTest, IgnoreMessage)
@@ -870,11 +862,14 @@ TEST_F(SysExTest, IgnoreMessage)
 TEST_F(SysExTest, CustomMessage)
 {
     //construct custom message and see if output matches
-    sysEx.startResponse();
-    sysEx.addToResponse(0x05);
-    sysEx.addToResponse(0x06);
-    sysEx.addToResponse(0x07);
-    sysEx.sendResponse();
+    sysExParameter_t values[] = 
+    {
+        0x05,
+        0x06,
+        0x07
+    };
+
+    sysEx.sendCustomMessage(sysExTestArray, values, 3);
 
     EXPECT_EQ(0x05, sysExTestArray[6]);
     EXPECT_EQ(0x06, sysExTestArray[7]);
@@ -930,11 +925,14 @@ TEST_F(SysExTest, SpecialRequest)
 
     //now try those same requests, but without prior sending of handshake
     //status byte must equal ERROR_HANDSHAKE
-    sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
-    sysEx.setHandleGet(onGet);
-    sysEx.setHandleSet(onSet);
-    sysEx.setHandleCustomRequest(onCustom);
-    sysEx.setHandleSysExWrite(writeSysEx);
+    //close connection first
+    arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //configuration should be closed now
+    EXPECT_EQ(false, sysEx.isConfigurationEnabled());
 
     //bytes per value request
     arraySize = sizeof(getSpecialReqBytesPerVal)/sizeof(uint8_t);
@@ -968,7 +966,7 @@ TEST_F(SysExTest, SpecialRequest)
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //sysex configuration should be enabled after handshake
-    EXPECT_EQ(1, sysEx.configurationEnabled());
+    EXPECT_EQ(1, sysEx.isConfigurationEnabled());
 
     //close conf again
     arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
@@ -978,4 +976,11 @@ TEST_F(SysExTest, SpecialRequest)
 
     //status must now be ACK
     EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+}
+
+TEST_F(SysExTest, AddToReponseFail)
+{
+    //try to add bytes to sysex response without first specifying array source
+    bool returnValue = sysEx.addToResponse(0x50);
+    EXPECT_EQ(false, returnValue);
 }
