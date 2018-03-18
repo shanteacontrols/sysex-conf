@@ -33,7 +33,7 @@ class SysEx
 {
     public:
     SysEx();
-    static void init(sysExBlock_t *pointer, uint8_t numberOfBlocks);
+    static bool init(sysExBlock_t *pointer, uint8_t numberOfBlocks);
     static void handleMessage(uint8_t *sysExArray, uint8_t size);
     static bool isConfigurationEnabled();
     static bool addCustomRequest(uint8_t value);

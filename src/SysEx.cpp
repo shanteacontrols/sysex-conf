@@ -116,8 +116,9 @@ SysEx::SysEx()
 /// Configures user specifed configuration layout and initializes data to their default values.
 /// @param [in] pointer     Pointer to configuration structure.
 /// @param [in] numberOfBlocks  Total number of blocks in configuration structure.
+/// \returns True on success, false otherwise.
 ///
-void SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
+bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
 {
     getCallback             = NULL;
     setCallback             = NULL;
@@ -132,22 +133,29 @@ void SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
         customRequests[i] = INVALID_VALUE;
 
     customRequestCounter = 0;
-    sysExBlockCounter = numberOfBlocks;
     userStatus = (sysExStatus_t)0;
 
-    sysExMessage = pointer;
-
-    for (int i=0; i<numberOfBlocks; i++)
+    if ((pointer != NULL) && numberOfBlocks)
     {
-        for (int j=0; j<sysExMessage[i].numberOfSections; j++)
-        {
-            //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
-            sysExMessage[i].section[j].parts = sysExMessage[i].section[j].numberOfParameters / PARAMETERS_PER_MESSAGE;
+        sysExMessage = pointer;
+        sysExBlockCounter = numberOfBlocks;
 
-            if (sysExMessage[i].section[j].numberOfParameters % PARAMETERS_PER_MESSAGE)
-                sysExMessage[i].section[j].parts++;
+        for (int i=0; i<numberOfBlocks; i++)
+        {
+            for (int j=0; j<sysExMessage[i].numberOfSections; j++)
+            {
+                //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
+                sysExMessage[i].section[j].parts = sysExMessage[i].section[j].numberOfParameters / PARAMETERS_PER_MESSAGE;
+
+                if (sysExMessage[i].section[j].numberOfParameters % PARAMETERS_PER_MESSAGE)
+                    sysExMessage[i].section[j].parts++;
+            }
         }
+
+        return true;
     }
+
+    return false;
 }
 
 ///

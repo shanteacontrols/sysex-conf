@@ -386,6 +386,19 @@ TEST_F(SysExTest, Init)
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
 }
 
+TEST_F(SysExTest, ErrorInit)
+{
+    bool returnValue;
+
+    //try to init sysex with null pointer
+    returnValue = sysEx.init(NULL, 1);
+    EXPECT_EQ(false, returnValue);
+
+    //try to init sysex with zero blocks
+    returnValue = sysEx.init(sysExLayout, 0);
+    EXPECT_EQ(false, returnValue);
+}
+
 TEST_F(SysExTest, ErrorHandshake)
 {
     uint8_t arraySize;
