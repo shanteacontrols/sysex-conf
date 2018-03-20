@@ -8,26 +8,29 @@ CPPFLAGS += -isystem $(GTEST_DIR)/include --coverage
 
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -pthread
+ARFLAGS := r
 
-# All tests produced by this Makefile.  Remember to add new tests you
-# created to the list.
-TESTS := Tests
+#all user sources
+SOURCES := $(shell find -name "*.cpp")
 
-# library source
-LIB_SOURCES := $(shell find src/ -name "*.cpp")
+#make sure all objects are located in build directory
+OBJECTS := $(addprefix build/,$(SOURCES))
+#also make sure objects have .o extension
+OBJECTS := $(OBJECTS:.cpp=.o)
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
 GTEST_HEADERS := $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
 
-TEST_DIR := tests
+Tests.out: $(OBJECTS) $(GTEST_HEADERS) build/gtest_main.a
+	@echo Creating executable...
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+	@echo Executable $@ created.
 
-all: $(TESTS)
-
-clean :
+clean:
 	@echo Cleaning up.
-	@rm -f $(TESTS) *.o *.info *.gcda *.gcno *.a *.html *.png *.infoclear *.css
+	@rm -rf *.o *.info *.gcda *.gcno *.a *.html *.png *.infoclear *.css build/ *.out
 
 # Builds gtest.a and gtest_main.a.
 
@@ -35,34 +38,37 @@ clean :
 # trailing _.
 GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 
-# needed by all tests
-COMMON_REQS := SysEx.o gtest_main.a
-
 # For simplicity and to avoid depending on Google Test's
 # implementation details, the dependencies specified below are
 # conservative and not optimized.  This is fine as Google Test
 # compiles fast and for ordinary users its source rarely changes.
-gtest-all.o: $(GTEST_SRCS_)
-	@$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc
+build/gtest-all.o: $(GTEST_SRCS_)
+	@echo Building: $<
+	@mkdir -p $(@D)
+	@$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c $(GTEST_DIR)/src/gtest-all.cc -o build/gtest-all.o
 
-gtest_main.o: $(GTEST_SRCS_)
-	@$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c $(GTEST_DIR)/src/gtest_main.cc
+build/gtest_main.o: $(GTEST_SRCS_)
+	@echo Building: $<
+	@mkdir -p $(@D)
+	@$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c $(GTEST_DIR)/src/gtest_main.cc -o build/gtest_main.o
 
-gtest.a: gtest-all.o
+build/gtest.a: build/gtest-all.o
+	@echo Building: $<
+	@mkdir -p $(@D)
 	@$(AR) $(ARFLAGS) $@ $^
 
-gtest_main.a: gtest-all.o gtest_main.o
+build/gtest_main.a: build/gtest-all.o build/gtest_main.o
+	@echo Building: $<
+	@mkdir -p $(@D)
 	@$(AR) $(ARFLAGS) $@ $^
 
 # A test should link with either gtest.a or
 # gtest_main.a, depending on whether it defines its own main()
 # function.
-
-Tests.o: $(TEST_DIR)/Tests.cpp $(LIB_SOURCES) $(GTEST_HEADERS)
-	@$(CXX) $(CPPFLAGS) -std=c++11 $(CXXFLAGS) -c $(TEST_DIR)/$(@:.o=.cpp) $(LIB_SOURCES)
-
-$(TESTS): %:%.o $(COMMON_REQS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+build/%.o: %.cpp
+	@echo Building: $<
+	@mkdir -p $(@D)
+	@$(CXX) $(CPPFLAGS) -std=c++11 $(CXXFLAGS) -c $< -o $@
 
 #debugging
 print-%:
