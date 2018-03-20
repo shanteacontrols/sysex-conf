@@ -19,7 +19,8 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#ifndef _SYSEX_
+#define _SYSEX_
 
 #include <stdlib.h>
 #include "DataTypes.h"
@@ -65,3 +66,4 @@ class SysEx
 };
 
 /// @}
+#endif
