@@ -11,7 +11,7 @@ script:
   - make GTEST_DIR=googletest/googletest
 
 after_success:
-  - ./Tests.out
+  - ./test_run.out
   - lcov --directory . --capture --output-file coverage.info
   - lcov --remove coverage.info 'tests/*' 'usr/*' '*gtest*' '*googletest*' --output-file coverage.info
   - lcov --list coverage.info

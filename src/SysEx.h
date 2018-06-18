@@ -42,7 +42,7 @@ class SysEx
     static void setError(sysExStatus_t status);
     static bool addToResponse(sysExParameter_t value);
 
-    static void setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index));
+    static void setHandleGet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value));
     static void setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue));
     static void setHandleCustomRequest(bool(*fptr)(uint8_t value));
     static void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));

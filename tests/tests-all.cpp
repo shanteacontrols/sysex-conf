@@ -87,17 +87,23 @@ bool onCustom(uint8_t value)
     }
 }
 
-sysExParameter_t onGet(uint8_t block, uint8_t section, uint16_t index)
+bool onGet(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value)
 {
     if (userError)
     {
         sysEx.setError(userError);
-        return 0;
+        return false;
     }
     else
     {
-        return TEST_VALUE_GET;
+        value = TEST_VALUE_GET;
+        return true;
     }
+}
+
+bool onGetErrorRead(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value)
+{
+    return false;
 }
 
 bool onSet(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue)
@@ -534,6 +540,30 @@ TEST_F(SysExTest, ErrorWrite)
 
     //check if write error is set
     EXPECT_EQ(ERROR_WRITE, sysExTestArray[(uint8_t)statusByte]);
+}
+
+TEST_F(SysExTest, ErrorRead)
+{
+    //test if ERROR_READ is set when get callback returns false
+    sysEx.setHandleGet(onGetErrorRead);
+
+    //test get with single parameter
+    uint8_t arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getSingleValid, arraySize);
+
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check if read error is set
+    EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
+
+    //test get with all parameters
+    arraySize = sizeof(getAllValid_1part)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getAllValid_1part, arraySize);
+
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check if read error is set
+    EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
 }
 
 TEST_F(SysExTest, ErrorNewValue)

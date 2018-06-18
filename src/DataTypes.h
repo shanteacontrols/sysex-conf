@@ -114,6 +114,7 @@ typedef enum
     ERROR_MESSAGE_LENGTH,   //0x0B
     ERROR_WRITE,            //0x0C
     ERROR_NOT_SUPPORTED,    //0x0D
+    ERROR_READ,             //0x0E
     NUMBER_OF_ERRORS
 } sysExStatus_t;
 

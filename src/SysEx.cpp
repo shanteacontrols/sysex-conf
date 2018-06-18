@@ -24,7 +24,7 @@
 ///
 /// \brief Function pointer used to retrieve data.
 ///
-sysExParameter_t (*getCallback)(uint8_t block, uint8_t section, uint16_t index);
+bool (*getCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value);
 
 ///
 /// \brief Function pointer used to change data values.
@@ -524,7 +524,8 @@ bool SysEx::checkParameters()
                     {
                         if (getCallback != NULL)
                         {
-                            sysExParameter_t value = getCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index);
+                            sysExParameter_t value = 0;
+                            bool returnValue = getCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, value);
 
                             //check for custom error
                             if (userStatus)
@@ -532,6 +533,11 @@ bool SysEx::checkParameters()
                                 setStatus(userStatus);
                                 //clear user status
                                 userStatus = (sysExStatus_t)0;
+                                return false;
+                            }
+                            else if (!returnValue)
+                            {
+                                setStatus(ERROR_READ);
                                 return false;
                             }
                             else
@@ -546,12 +552,18 @@ bool SysEx::checkParameters()
                     if (getCallback != NULL)
                     {
                         //get all params - no index is specified
-                        sysExParameter_t value = getCallback(decodedMessage.block, decodedMessage.section, i);
+                        sysExParameter_t value = 0;
+                        bool returnValue = getCallback(decodedMessage.block, decodedMessage.section, i, value);
 
                         if (userStatus)
                         {
                             setStatus(userStatus);
                             userStatus = (sysExStatus_t)0;
+                            return false;
+                        }
+                        else if (!returnValue)
+                        {
+                            setStatus(ERROR_READ);
                             return false;
                         }
                         else
@@ -945,7 +957,7 @@ void SysEx::setError(sysExStatus_t status)
 ///
 /// \brief Handler used to set callback function for get requests.
 ///
-void SysEx::setHandleGet(sysExParameter_t(*fptr)(uint8_t block, uint8_t section, uint16_t index))
+void SysEx::setHandleGet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value))
 {
     getCallback = fptr;
 }
