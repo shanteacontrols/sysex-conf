@@ -164,7 +164,13 @@ class SysExTest : public ::testing::Test
     const uint8_t handshake[8] =
     {
         //handshake request used to enable sysex configuration
-        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, 0x01, 0xF7
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, HANDSHAKE_REQUEST, 0xF7
+    };
+
+    const uint8_t silentMode[8] =
+    {
+        //handshake request used to enable sysex configuration
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, SILENT_MODE_OPEN_REQUEST, 0xF7
     };
 
     const uint8_t errorStatus[12] =
@@ -390,6 +396,12 @@ TEST_F(SysExTest, Init)
 
     //sysex configuration should be enabled after handshake
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
+
+    //test silent mode
+    arraySize = sizeof(silentMode)/sizeof(uint8_t);
+    memcpy(sysExTestArray, silentMode, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+    EXPECT_EQ(true, sysEx.isSilentModeEnabled());
 }
 
 TEST_F(SysExTest, ErrorInit)
@@ -802,7 +814,7 @@ TEST_F(SysExTest, GetAll)
 TEST_F(SysExTest, CustomReq)
 {
     //define custom request
-    sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID);
+    EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID), true);
 
     uint8_t arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
@@ -816,10 +828,13 @@ TEST_F(SysExTest, CustomReq)
     //check if sysExTestArray equals value we're expecting
     EXPECT_EQ(CUSTOM_REQUEST_VALUE, sysExTestArray[6]);
 
+    //try to define same request again
+    EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID), false);
+
+    //send non-existing custom request message
     arraySize = sizeof(customReqInvalid)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReqInvalid, arraySize);
 
-    //send non-existing custom request message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //check if status byte has error wish value

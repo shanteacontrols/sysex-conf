@@ -47,6 +47,12 @@ void (*sysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
 bool                sysExEnabled;
 
 ///
+/// \brief Flag indicating whether or not silent mode is active.
+/// When silent mode is active, protocol won't return any error or ACK messages.
+///
+bool                silentModeEnabled;
+
+///
 /// \brief Flag indicating whether or not message end has already been sent.
 /// Message end (SysEx stop byte) is usually sent in handleMessage function,
 /// however, for specific requests, response can be internally sent in other
@@ -130,7 +136,7 @@ bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
     messageEndSent = false;
 
     for (int i=0; i<MAX_CUSTOM_REQUESTS; i++)
-        customRequests[i] = INVALID_VALUE;
+        customRequests[i] = 128;
 
     customRequestCounter = 0;
     userStatus = (sysExStatus_t)0;
@@ -168,10 +174,20 @@ bool SysEx::isConfigurationEnabled()
 }
 
 ///
+/// \brief Checks whether silent mode is enabled or not.
+/// \returns True if enabled, false otherwise.
+///
+bool SysEx::isSilentModeEnabled()
+{
+    return silentModeEnabled;
+}
+
+///
 /// \brief Adds custom request.
 /// If added byte is found in incoming message, and message is formatted as special request, custom message handler is called.
 /// It is up to user to decide on action.
 /// @param [in] value   Custom request value.
+/// \returns            True on success, false otherwise.
 ///
 bool SysEx::addCustomRequest(uint8_t value)
 {
@@ -181,6 +197,16 @@ bool SysEx::addCustomRequest(uint8_t value)
     //don't add custom string if it's already defined as one of default strings
     if (value < SPECIAL_PARAMETERS)
         return false;
+
+    //sanitize input
+    value &= 0x7F;
+
+    //check if custom request has already been added
+    for (int i=0; i<customRequestCounter; i++)
+    {
+        if (customRequests[i] == value)
+            return false;
+    }
 
     customRequests[customRequestCounter] = value;
     customRequestCounter++;
@@ -321,8 +347,11 @@ bool SysEx::checkSpecialRequests()
         break;
 
         case HANDSHAKE_REQUEST:
-        //hello message, necessary for allowing configuration
+        case SILENT_MODE_OPEN_REQUEST:
+        //hello message, necessary to allow the configuration
         sysExEnabled = true;
+        if (sysExArray[wishByte] == SILENT_MODE_OPEN_REQUEST)
+            silentModeEnabled = true;
         setStatus(ACK);
         return true;
 
@@ -354,7 +383,7 @@ bool SysEx::checkSpecialRequests()
         //check for custom string
         for (int i=0; i<MAX_CUSTOM_REQUESTS; i++)
         {
-            if (customRequests[i] == INVALID_VALUE)
+            if (customRequests[i] == 128)
                 continue;
 
             if (customRequests[i] != sysExArray[wishByte])

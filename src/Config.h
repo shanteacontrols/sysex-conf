@@ -23,24 +23,29 @@
 
 #include <inttypes.h>
 
+///
+/// \brief Maximum number of custom requests user can add.
+///
 #define MAX_CUSTOM_REQUESTS     10
-#define INVALID_VALUE           128
+
+///
+/// \brief Maximum number of parameter indexes in single SysEx message.
+///
 #define PARAMETERS_PER_MESSAGE  32
 
-//1 - one byte size for parameter index and new value (uint8_t)
-//2 - two byte size (uint16_t)
-
+///
+/// \brief Size of single parameter value in SysEx message.
+/// 1 - one byte size for parameter index and new value (uint8_t)
+/// 2 - two byte size (uint16_t)
+///
 #define PARAM_SIZE              1
 
-//manufacturer ID bytes
+///
+/// \brief Manufacturer SysEx bytes.
+/// @{
+
 #define SYS_EX_M_ID_0           0x00
 #define SYS_EX_M_ID_1           0x53
 #define SYS_EX_M_ID_2           0x43
 
-#if PARAM_SIZE == 2
-typedef int16_t sysExParameter_t;
-#elif PARAM_SIZE == 1
-typedef int8_t sysExParameter_t;
-#else
-#error Incorrect parameter size for SysEx
-#endif
+/// @}

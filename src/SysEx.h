@@ -37,6 +37,7 @@ class SysEx
     static bool init(sysExBlock_t *pointer, uint8_t numberOfBlocks);
     static void handleMessage(uint8_t *sysExArray, uint8_t size);
     static bool isConfigurationEnabled();
+    static bool isSilentModeEnabled();
     static bool addCustomRequest(uint8_t value);
     static void sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, uint8_t size);
     static void setError(sysExStatus_t status);

@@ -23,6 +23,14 @@
 
 #include "Config.h"
 
+#if PARAM_SIZE == 2
+typedef int16_t sysExParameter_t;
+#elif PARAM_SIZE == 1
+typedef int8_t sysExParameter_t;
+#else
+#error Incorrect parameter size for SysEx
+#endif
+
 ///
 /// \brief Structure holding data for single SysEx section within block.
 ///
@@ -123,10 +131,12 @@ typedef enum
 ///
 typedef enum
 {
-    SYSEX_CLOSE_REQUEST,        //00
-    HANDSHAKE_REQUEST,          //01
-    BYTES_PER_VALUE_REQUEST,    //02
-    PARAMS_PER_MESSAGE_REQUEST, //03
+    SYSEX_CLOSE_REQUEST,        //0x00
+    HANDSHAKE_REQUEST,          //0x01
+    BYTES_PER_VALUE_REQUEST,    //0x02
+    PARAMS_PER_MESSAGE_REQUEST, //0x03
+    SILENT_MODE_OPEN_REQUEST,   //0x04
+    SILENT_MODE_CLOSE_REQUEST,  //0x05
     SPECIAL_PARAMETERS
 } sysEx_specialRequestID;
 
