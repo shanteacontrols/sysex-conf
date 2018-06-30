@@ -886,8 +886,10 @@ bool SysEx::checkNewValue()
 /// @param [in, out] responseArray Array in which custom request will be stored.
 /// @param [in] value           Array with values to send.
 /// @param [in] size            Array size.
+/// @param [in] ack             When set to true, status byte will be set to ACK, otherwise REQUEST will be used.
+///                             Set to true by default.
 ///
-void SysEx::sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, uint8_t size)
+void SysEx::sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, uint8_t size, bool ack)
 {
     sysExArray = responseArray;
     responseSize = 0;
@@ -900,7 +902,10 @@ void SysEx::sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, 
     responseSize++;
     sysExArray[responseSize] = SYS_EX_M_ID_2;
     responseSize++;
-    sysExArray[responseSize] = ACK;
+    if (ack)
+        sysExArray[responseSize] = ACK;
+    else
+        sysExArray[responseSize] = REQUEST;
     responseSize++;
     sysExArray[responseSize] = 0; //message part
     responseSize++;
