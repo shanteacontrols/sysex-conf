@@ -108,6 +108,11 @@ uint8_t             customRequests[MAX_CUSTOM_REQUESTS];
 ///
 uint8_t             customRequestCounter;
 
+///
+/// \brief Variable holding info on whether custom requests need handshake before they're processed.
+/// \warning This variable assumes no more than 16 custom requests can be specified.
+///
+uint16_t            customReqHandshakeIgnore;
 
 ///
 /// \brief Default constructor.
@@ -187,9 +192,11 @@ bool SysEx::isSilentModeEnabled()
 /// If added byte is found in incoming message, and message is formatted as special request, custom message handler is called.
 /// It is up to user to decide on action.
 /// @param [in] value   Custom request value.
+/// @param [in] handshakeIgnore If set to true, request can be processed without prior enabling of SysEx configuration,
+///                             that is, sending of handshake message. Set to false by default.
 /// \returns            True on success, false otherwise.
 ///
-bool SysEx::addCustomRequest(uint8_t value)
+bool SysEx::addCustomRequest(uint8_t value, bool handshakeIgnore)
 {
     if (customRequestCounter > MAX_CUSTOM_REQUESTS)
         return false;
@@ -209,6 +216,7 @@ bool SysEx::addCustomRequest(uint8_t value)
     }
 
     customRequests[customRequestCounter] = value;
+    handshakeIgnore ? (customReqHandshakeIgnore |= (1U << customRequestCounter)) : (customReqHandshakeIgnore &= ~(1UL << customRequestCounter));
     customRequestCounter++;
     return true;
 }
@@ -348,7 +356,7 @@ bool SysEx::checkSpecialRequests()
 
         case HANDSHAKE_REQUEST:
         case SILENT_MODE_OPEN_REQUEST:
-        //hello message, necessary to allow the configuration
+        //handshake message, necessary to allow the configuration
         sysExEnabled = true;
         if (sysExArray[wishByte] == SILENT_MODE_OPEN_REQUEST)
             silentModeEnabled = true;
@@ -389,7 +397,7 @@ bool SysEx::checkSpecialRequests()
             if (customRequests[i] != sysExArray[wishByte])
                 continue;
 
-            if (sysExEnabled)
+            if (sysExEnabled || ((customReqHandshakeIgnore >> i) & 0x01))
             {
                 setStatus(ACK);
 

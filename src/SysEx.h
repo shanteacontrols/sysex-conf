@@ -38,7 +38,7 @@ class SysEx
     static void handleMessage(uint8_t *sysExArray, uint8_t size);
     static bool isConfigurationEnabled();
     static bool isSilentModeEnabled();
-    static bool addCustomRequest(uint8_t value);
+    static bool addCustomRequest(uint8_t value, bool handshakeIgnore = false);
     static void sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, uint8_t size, bool ack = true);
     static void setError(sysExStatus_t status);
     static bool addToResponse(sysExParameter_t value);
