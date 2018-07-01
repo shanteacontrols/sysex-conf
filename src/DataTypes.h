@@ -91,7 +91,7 @@ typedef enum
     sysExWish_set,
     sysExWish_backup,
     SYSEX_WISH_MAX
-} sysExWish;
+} sysExWish_t;
 
 ///
 /// \brief Descriptive list of SysEx amount bytes.
@@ -101,7 +101,14 @@ typedef enum
     sysExAmount_single,
     sysExAmount_all,
     SYSEX_AMOUNT_MAX
-} sysExAmount;
+} sysExAmount_t;
+
+typedef enum
+{
+    sysExRetSuccess,
+    sysExRetFail,
+    sysExRetSilent
+} sysExRetType_t;
 
 ///
 /// \brief Descriptive list of possible SysEx message statuses.
@@ -138,7 +145,7 @@ typedef enum
     SILENT_MODE_OPEN_REQUEST,   //0x04
     SILENT_MODE_CLOSE_REQUEST,  //0x05
     SPECIAL_PARAMETERS
-} sysEx_specialRequestID;
+} sysEx_specialRequest_t;
 
 ///
 /// \brief Structure holding decoded request data.
@@ -146,8 +153,8 @@ typedef enum
 typedef struct
 {
     sysExStatus_t status;
-    sysExWish wish;
-    sysExAmount amount;
+    sysExWish_t wish;
+    sysExAmount_t amount;
     uint8_t block;
     uint8_t section;
     uint8_t part;

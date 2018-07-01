@@ -34,7 +34,7 @@ bool (*setCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParamet
 ///
 /// \brief Function pointer used to handle user specified requests.
 ///
-bool (*customRequestCallback)(uint8_t value);
+sysExRetType_t (*customRequestCallback)(uint8_t value);
 
 ///
 /// \brief Function pointer used to send SysEx response.
@@ -291,8 +291,8 @@ void SysEx::decode()
 
     //don't try to request these parameters if the size is too small
     decodedMessage.part = sysExArray[(uint8_t)partByte];
-    decodedMessage.wish = (sysExWish)sysExArray[(uint8_t)wishByte];
-    decodedMessage.amount = (sysExAmount)sysExArray[(uint8_t)amountByte];
+    decodedMessage.wish = (sysExWish_t)sysExArray[(uint8_t)wishByte];
+    decodedMessage.amount = (sysExAmount_t)sysExArray[(uint8_t)amountByte];
     decodedMessage.block = sysExArray[(uint8_t)blockByte];
     decodedMessage.section = sysExArray[(uint8_t)sectionByte];
 
@@ -403,7 +403,19 @@ bool SysEx::checkSpecialRequests()
 
                 if (customRequestCallback != NULL)
                 {
-                    customRequestCallback(customRequests[i]);
+                    switch(customRequestCallback(customRequests[i]))
+                    {
+                        case sysExRetFail:
+                        setStatus(ERROR_READ);
+                        break;
+
+                        case sysExRetSilent:
+                        messageEndSent = true;
+                        break;
+
+                        default:
+                        break;
+                    }
                 }
             }
             else
@@ -1015,7 +1027,7 @@ void SysEx::setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t in
 ///
 /// \brief Handler used to set callback function for custom requests.
 ///
-void SysEx::setHandleCustomRequest(bool(*fptr)(uint8_t value)) 
+void SysEx::setHandleCustomRequest(sysExRetType_t(*fptr)(uint8_t value)) 
 {
     customRequestCallback = fptr;
 }
