@@ -72,17 +72,17 @@ sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
 
 SysEx sysEx;
 
-bool onCustom(uint8_t value)
+sysExRetType_t onCustom(uint8_t value)
 {
     switch(value)
     {
         case CUSTOM_REQUEST_ID_VALID:
         sysEx.addToResponse(CUSTOM_REQUEST_VALUE);
-        return true;
+        return sysExRetSuccess;
         break;
 
         default:
-        return false;
+        return sysExRetFail;
         break;
     }
 }
