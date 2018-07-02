@@ -34,6 +34,7 @@
 
 #define CUSTOM_REQUEST_ID_VALID             54
 #define CUSTOM_REQUEST_ID_INVALID           55
+#define CUSTOM_REQUEST_ID_ERROR_READ        56
 
 #define CUSTOM_REQUEST_VALUE                1
 
@@ -72,17 +73,18 @@ sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
 
 SysEx sysEx;
 
-sysExRetType_t onCustom(uint8_t value)
+bool onCustom(uint8_t value)
 {
     switch(value)
     {
         case CUSTOM_REQUEST_ID_VALID:
         sysEx.addToResponse(CUSTOM_REQUEST_VALUE);
-        return sysExRetSuccess;
+        return true;
         break;
 
+        case CUSTOM_REQUEST_ID_ERROR_READ:
         default:
-        return sysExRetFail;
+        return false;
         break;
     }
 }
@@ -146,13 +148,13 @@ class SysExTest : public ::testing::Test
         sysEx.setHandleCustomRequest(onCustom);
         sysEx.setHandleSysExWrite(writeSysEx);
 
-        uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-        memcpy(sysExTestArray, handshake, arraySize);
+        uint8_t arraySize = sizeof(connOpen)/sizeof(uint8_t);
+        memcpy(sysExTestArray, connOpen, arraySize);
 
-        //send handshake message and see if sysExTestArray is valid
+        //send open connection request and see if sysExTestArray is valid
         sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-        //sysex configuration should be enabled after handshake
+        //sysex configuration should be enabled now
         EXPECT_EQ(1, sysEx.isConfigurationEnabled());
     }
 
@@ -161,16 +163,28 @@ class SysExTest : public ::testing::Test
         
     }
 
-    const uint8_t handshake[8] =
+    const uint8_t connOpen[8] =
     {
-        //handshake request used to enable sysex configuration
-        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, HANDSHAKE_REQUEST, 0xF7
+        //request used to enable sysex configuration
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, SYSEX_SR_CONN_OPEN, 0xF7
     };
 
-    const uint8_t silentMode[8] =
+    const uint8_t connClose[8] =
     {
-        //handshake request used to enable sysex configuration
-        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, SILENT_MODE_OPEN_REQUEST, 0xF7
+        //request used to disable sysex configuration
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, SYSEX_SR_CONN_CLOSE, 0xF7
+    };
+
+    const uint8_t connOpenSilent[8] =
+    {
+        //request used to enable sysex configuration in silent mode
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, SYSEX_SR_CONN_OPEN_SILENT, 0xF7
+    };
+
+    const uint8_t silentModeDisable[8] =
+    {
+        //request used to disable silent mode
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, SYSEX_SR_SILENT_DISABLE, 0xF7
     };
 
     const uint8_t errorStatus[12] =
@@ -225,6 +239,12 @@ class SysExTest : public ::testing::Test
     {
         //custom request with custom ID specified by user
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, CUSTOM_REQUEST_ID_VALID, 0xF7
+    };
+
+    const uint8_t customReqErrorRead[8] =
+    {
+        //custom request with custom ID specified by user
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, CUSTOM_REQUEST_ID_ERROR_READ, 0xF7
     };
 
     const uint8_t customReqInvalid[8] =
@@ -291,12 +311,6 @@ class SysExTest : public ::testing::Test
     {
         //built-in special request which returns number of parameters per message configured in protocol
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, 0x00, 0x00, 0x03, 0xF7
-    };
-
-    const uint8_t getSpecialReqCloseConf[8] =
-    {
-        //built-in special request which disables further sysex configuration
-        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, 0x00, 0x00, 0x00, 0xF7
     };
 
     const uint8_t setSingleValid[13] =
@@ -380,10 +394,10 @@ class SysExTest : public ::testing::Test
 
 TEST_F(SysExTest, Init)
 {
-    uint8_t arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
+    uint8_t arraySize = sizeof(connOpen)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpen, arraySize);
 
-    //send handshake message and see if sysExTestArray is valid
+    //send open request message and see if sysExTestArray is valid
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     EXPECT_EQ(0xF0, sysExTestArray[0]);
@@ -394,14 +408,74 @@ TEST_F(SysExTest, Init)
     EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(0xF7, sysExTestArray[6]);
 
-    //sysex configuration should be enabled after handshake
+    //sysex configuration should be enabled now
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
 
-    //test silent mode
-    arraySize = sizeof(silentMode)/sizeof(uint8_t);
-    memcpy(sysExTestArray, silentMode, arraySize);
+    //close connection
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //sysex configuration should be disabled now
+    EXPECT_EQ(false, sysEx.isConfigurationEnabled());
+
+    //test silent mode
+    //open silent mode
+    int tempResponseCounter = responseCounter;
+    arraySize = sizeof(connOpenSilent)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpenSilent, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //configuration and silent mode must be enabled
     EXPECT_EQ(true, sysEx.isSilentModeEnabled());
+    EXPECT_EQ(true, sysEx.isConfigurationEnabled());
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //now disable silent mode
+    arraySize = sizeof(silentModeDisable)/sizeof(uint8_t);
+    memcpy(sysExTestArray, silentModeDisable, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //silent mode should be disabled, but connection should be still opened
+    EXPECT_EQ(false, sysEx.isSilentModeEnabled());
+    EXPECT_EQ(true, sysEx.isConfigurationEnabled());
+
+    //open silent mode again
+    tempResponseCounter = responseCounter;
+    arraySize = sizeof(connOpenSilent)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpenSilent, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //verify no response was received
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //now close connection
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //verify that connection is closed
+    EXPECT_EQ(false, sysEx.isConfigurationEnabled());
+
+    //silent mode should be disabled as well as an result of closed connection
+    EXPECT_EQ(false, sysEx.isSilentModeEnabled());
+
+    //verify no response was received
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //enable silent mode using direct function call
+    sysEx.setSilentMode(true);
+
+    //verify silent mode is enabled
+    EXPECT_EQ(true, sysEx.isSilentModeEnabled());
+
+    //disable silent mode using direct function call
+    sysEx.setSilentMode(false);
+
+    //verify silent mode is disabled
+    EXPECT_EQ(false, sysEx.isSilentModeEnabled());
 }
 
 TEST_F(SysExTest, ErrorInit)
@@ -417,15 +491,15 @@ TEST_F(SysExTest, ErrorInit)
     EXPECT_EQ(false, returnValue);
 }
 
-TEST_F(SysExTest, ErrorHandshake)
+TEST_F(SysExTest, ErrorConnClosed)
 {
     uint8_t arraySize;
 
     if (sysEx.isConfigurationEnabled())
     {
         //close connection first
-        arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
-        memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+        arraySize = sizeof(connClose)/sizeof(uint8_t);
+        memcpy(sysExTestArray, connClose, arraySize);
 
         sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
@@ -439,8 +513,8 @@ TEST_F(SysExTest, ErrorHandshake)
     //send valid get message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if handshake error is set
-    EXPECT_EQ(ERROR_HANDSHAKE, sysExTestArray[(uint8_t)statusByte]);
+    //check if connection error is set
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
 }
 
 TEST_F(SysExTest, ErrorStatus)
@@ -813,8 +887,9 @@ TEST_F(SysExTest, GetAll)
 
 TEST_F(SysExTest, CustomReq)
 {
-    //define custom request
+    //define custom requests
     EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID), true);
+    EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_ERROR_READ), true);
 
     uint8_t arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
@@ -828,7 +903,16 @@ TEST_F(SysExTest, CustomReq)
     //check if sysExTestArray equals value we're expecting
     EXPECT_EQ(CUSTOM_REQUEST_VALUE, sysExTestArray[6]);
 
-    //try to define same request again
+    arraySize = sizeof(customReqErrorRead)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReqErrorRead, arraySize);
+
+    //send custom request message which should return false in custom request handler
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check if status byte has ERROR_READ value
+    EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
+
+    //try to define first request again
     EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID), false);
 
     //send non-existing custom request message
@@ -841,8 +925,8 @@ TEST_F(SysExTest, CustomReq)
     EXPECT_EQ(ERROR_WISH, sysExTestArray[(uint8_t)statusByte]);
 
     //disable configuration
-    arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
     EXPECT_EQ(false, sysEx.isConfigurationEnabled());
@@ -853,13 +937,13 @@ TEST_F(SysExTest, CustomReq)
     //send valid custom request message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has error handshake value
-    EXPECT_EQ(ERROR_HANDSHAKE, sysExTestArray[(uint8_t)statusByte]);
+    //check if status byte has connection error value
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
 
     bool value;
 
     //try defining illegal custom requests
-    for (int i=0; i<SPECIAL_PARAMETERS; i++)
+    for (int i=0; i<SYSEX_SR_TOTAL_NUMBER; i++)
     {
         value = sysEx.addCustomRequest(i);
         //function must return false every time because
@@ -868,16 +952,16 @@ TEST_F(SysExTest, CustomReq)
     }
 
     //add maximum number of custom requests
-    //start from 1 since one requests is already added
-    for (int i=1; i<=MAX_CUSTOM_REQUESTS; i++)
+    //start from 2 since two requests are already added
+    for (int i=2; i<=MAX_CUSTOM_REQUESTS; i++)
     {
-        value = sysEx.addCustomRequest(SPECIAL_PARAMETERS+i);
+        value = sysEx.addCustomRequest(SYSEX_SR_TOTAL_NUMBER+i);
         //function must return true every time
         EXPECT_EQ(true, value);
     }
 
     //add another request
-    value = sysEx.addCustomRequest(SPECIAL_PARAMETERS+MAX_CUSTOM_REQUESTS+1);
+    value = sysEx.addCustomRequest(SYSEX_SR_TOTAL_NUMBER+MAX_CUSTOM_REQUESTS+1);
 
     //check if function returned false on too many custom requests
     EXPECT_EQ(false, value);
@@ -930,6 +1014,15 @@ TEST_F(SysExTest, CustomMessage)
 
     sysEx.sendCustomMessage(sysExTestArray, values, 3);
 
+    EXPECT_EQ(sysExTestArray[statusByte], ACK);
+    EXPECT_EQ(0x05, sysExTestArray[6]);
+    EXPECT_EQ(0x06, sysExTestArray[7]);
+    EXPECT_EQ(0x07, sysExTestArray[8]);
+
+    //construct same message again with REQUEST as status byte
+    sysEx.sendCustomMessage(sysExTestArray, values, 3, false);
+
+    EXPECT_EQ(sysExTestArray[statusByte], REQUEST);
     EXPECT_EQ(0x05, sysExTestArray[6]);
     EXPECT_EQ(0x06, sysExTestArray[7]);
     EXPECT_EQ(0x07, sysExTestArray[8]);
@@ -982,11 +1075,11 @@ TEST_F(SysExTest, SpecialRequest)
     //returned value must be PARAMETERS_PER_MESSAGE
     EXPECT_EQ(PARAMETERS_PER_MESSAGE, sysExTestArray[6]);
 
-    //now try those same requests, but without prior sending of handshake
-    //status byte must equal ERROR_HANDSHAKE
+    //now try those same requests, but without prior open connection request
+    //status byte must equal ERROR_CONNECTION
     //close connection first
-    arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
@@ -999,7 +1092,7 @@ TEST_F(SysExTest, SpecialRequest)
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_HANDSHAKE, sysExTestArray[(uint8_t)statusByte]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
 
     //params per msg request
     arraySize = sizeof(getSpecialReqParamPerMsg)/sizeof(uint8_t);
@@ -1007,29 +1100,29 @@ TEST_F(SysExTest, SpecialRequest)
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_HANDSHAKE, sysExTestArray[(uint8_t)statusByte]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
 
     //try to close configuration which is already closed
-    arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_HANDSHAKE, sysExTestArray[(uint8_t)statusByte]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
 
     //now re-enable conf
-    arraySize = sizeof(handshake)/sizeof(uint8_t);
-    memcpy(sysExTestArray, handshake, arraySize);
+    arraySize = sizeof(connOpen)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpen, arraySize);
 
-    //send handshake message and see if sysExTestArray is valid
+    //send open connection request and check if sysExTestArray is valid
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //sysex configuration should be enabled after handshake
+    //sysex configuration should be enabled now
     EXPECT_EQ(1, sysEx.isConfigurationEnabled());
 
-    //close conf again
-    arraySize = sizeof(getSpecialReqCloseConf)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getSpecialReqCloseConf, arraySize);
+    //disable configuration again
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
 
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 

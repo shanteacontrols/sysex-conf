@@ -11,4 +11,9 @@
     "C_Cpp.intelliSenseEngine": "Tag Parser",
     "C_Cpp.intelliSenseEngineFallback": "Disabled",
     "editor.renderWhitespace": "all",
+    "files.associations": {
+        "system_error": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp"
+    },
 }

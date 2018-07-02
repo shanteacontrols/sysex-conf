@@ -34,7 +34,7 @@ bool (*setCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParamet
 ///
 /// \brief Function pointer used to handle user specified requests.
 ///
-sysExRetType_t (*customRequestCallback)(uint8_t value);
+bool (*customRequestCallback)(uint8_t value);
 
 ///
 /// \brief Function pointer used to send SysEx response.
@@ -109,10 +109,10 @@ uint8_t             customRequests[MAX_CUSTOM_REQUESTS];
 uint8_t             customRequestCounter;
 
 ///
-/// \brief Variable holding info on whether custom requests need handshake before they're processed.
+/// \brief Variable holding info on whether custom requests need connection open request before they're processed.
 /// \warning This variable assumes no more than 16 custom requests can be specified.
 ///
-uint16_t            customReqHandshakeIgnore;
+uint16_t            customReqConnIgnore;
 
 ///
 /// \brief Default constructor.
@@ -188,21 +188,30 @@ bool SysEx::isSilentModeEnabled()
 }
 
 ///
+/// \brief Enables or disables silent protocol mode.
+/// When enabled, only GET and BACKUP requests will return response.
+///
+void SysEx::setSilentMode(bool state)
+{
+    silentModeEnabled = state;
+}
+
+///
 /// \brief Adds custom request.
 /// If added byte is found in incoming message, and message is formatted as special request, custom message handler is called.
 /// It is up to user to decide on action.
 /// @param [in] value   Custom request value.
-/// @param [in] handshakeIgnore If set to true, request can be processed without prior enabling of SysEx configuration,
-///                             that is, sending of handshake message. Set to false by default.
-/// \returns            True on success, false otherwise.
+/// @param [in] connectionIgnore    If set to true, request can be processed without prior enabling of SysEx configuration,
+///                                 that is, sending of open connection request. Set to false by default.
+/// \returns                        True on success, false otherwise.
 ///
-bool SysEx::addCustomRequest(uint8_t value, bool handshakeIgnore)
+bool SysEx::addCustomRequest(uint8_t value, bool connectionIgnore)
 {
     if (customRequestCounter > MAX_CUSTOM_REQUESTS)
         return false;
 
     //don't add custom string if it's already defined as one of default strings
-    if (value < SPECIAL_PARAMETERS)
+    if (value < SYSEX_SR_TOTAL_NUMBER)
         return false;
 
     //sanitize input
@@ -216,7 +225,7 @@ bool SysEx::addCustomRequest(uint8_t value, bool handshakeIgnore)
     }
 
     customRequests[customRequestCounter] = value;
-    handshakeIgnore ? (customReqHandshakeIgnore |= (1U << customRequestCounter)) : (customReqHandshakeIgnore &= ~(1UL << customRequestCounter));
+    connectionIgnore ? (customReqConnIgnore |= (1U << customRequestCounter)) : (customReqConnIgnore &= ~(1UL << customRequestCounter));
     customRequestCounter++;
     return true;
 }
@@ -278,8 +287,8 @@ void SysEx::decode()
     //message appears to be fine for now
     if (!sysExEnabled)
     {
-        //message is fine, but handshake hasn't been received
-        setStatus(ERROR_HANDSHAKE);
+        //message is fine, but connection open request hasn't been received
+        setStatus(ERROR_CONNECTION);
         return;
     }
 
@@ -338,11 +347,11 @@ bool SysEx::checkSpecialRequests()
 
     switch(sysExArray[wishByte])
     {
-        case SYSEX_CLOSE_REQUEST:
+        case SYSEX_SR_CONN_CLOSE:
         if (!sysExEnabled)
         {
             //connection can't be closed if it isn't opened
-            setStatus(ERROR_HANDSHAKE);
+            setStatus(ERROR_CONNECTION);
             return true;
         }
         else
@@ -350,20 +359,35 @@ bool SysEx::checkSpecialRequests()
             //close sysex connection
             sysExEnabled = false;
             setStatus(ACK);
+            if (silentModeEnabled)
+            {
+                messageEndSent = true;
+                //also disable silent mode
+                silentModeEnabled = false;
+            }
             return true;
         }
         break;
 
-        case HANDSHAKE_REQUEST:
-        case SILENT_MODE_OPEN_REQUEST:
-        //handshake message, necessary to allow the configuration
+        case SYSEX_SR_CONN_OPEN:
+        case SYSEX_SR_CONN_OPEN_SILENT:
+        //necessary to allow the configuration
         sysExEnabled = true;
-        if (sysExArray[wishByte] == SILENT_MODE_OPEN_REQUEST)
+        if (sysExArray[wishByte] == SYSEX_SR_CONN_OPEN_SILENT)
+        {
+            messageEndSent = true;
             silentModeEnabled = true;
+        }
+
         setStatus(ACK);
         return true;
 
-        case BYTES_PER_VALUE_REQUEST:
+        case SYSEX_SR_SILENT_DISABLE:
+        silentModeEnabled = false;
+        setStatus(ACK);
+        return true;
+
+        case SYSEX_SR_BYTES_PER_VALUE:
         if (sysExEnabled)
         {
             setStatus(ACK);
@@ -371,11 +395,11 @@ bool SysEx::checkSpecialRequests()
         }
         else
         {
-            setStatus(ERROR_HANDSHAKE);
+            setStatus(ERROR_CONNECTION);
         }
         return true;
 
-        case PARAMS_PER_MESSAGE_REQUEST:
+        case SYSEX_SR_PARAMS_PER_MESSAGE:
         if (sysExEnabled)
         {
             setStatus(ACK);
@@ -383,7 +407,7 @@ bool SysEx::checkSpecialRequests()
         }
         else
         {
-            setStatus(ERROR_HANDSHAKE);
+            setStatus(ERROR_CONNECTION);
         }
         return true;
 
@@ -397,30 +421,19 @@ bool SysEx::checkSpecialRequests()
             if (customRequests[i] != sysExArray[wishByte])
                 continue;
 
-            if (sysExEnabled || ((customReqHandshakeIgnore >> i) & 0x01))
+            if (sysExEnabled || ((customReqConnIgnore >> i) & 0x01))
             {
                 setStatus(ACK);
 
                 if (customRequestCallback != NULL)
                 {
-                    switch(customRequestCallback(customRequests[i]))
-                    {
-                        case sysExRetFail:
+                    if (!customRequestCallback(customRequests[i]))
                         setStatus(ERROR_READ);
-                        break;
-
-                        case sysExRetSilent:
-                        messageEndSent = true;
-                        break;
-
-                        default:
-                        break;
-                    }
                 }
             }
             else
             {
-                setStatus(ERROR_HANDSHAKE);
+                setStatus(ERROR_CONNECTION);
             }
 
             return true;
@@ -987,7 +1000,7 @@ void SysEx::setError(sysExStatus_t status)
     switch(status)
     {
         case ERROR_STATUS:
-        case ERROR_HANDSHAKE:
+        case ERROR_CONNECTION:
         case ERROR_WISH:
         case ERROR_AMOUNT:
         case ERROR_BLOCK:
@@ -1027,7 +1040,7 @@ void SysEx::setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t in
 ///
 /// \brief Handler used to set callback function for custom requests.
 ///
-void SysEx::setHandleCustomRequest(sysExRetType_t(*fptr)(uint8_t value)) 
+void SysEx::setHandleCustomRequest(bool(*fptr)(uint8_t value)) 
 {
     customRequestCallback = fptr;
 }

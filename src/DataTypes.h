@@ -103,13 +103,6 @@ typedef enum
     SYSEX_AMOUNT_MAX
 } sysExAmount_t;
 
-typedef enum
-{
-    sysExRetSuccess,
-    sysExRetFail,
-    sysExRetSilent
-} sysExRetType_t;
-
 ///
 /// \brief Descriptive list of possible SysEx message statuses.
 ///
@@ -118,7 +111,7 @@ typedef enum
     REQUEST,                //0x00
     ACK,                    //0x01
     ERROR_STATUS,           //0x02
-    ERROR_HANDSHAKE,        //0x03
+    ERROR_CONNECTION,       //0x03
     ERROR_WISH,             //0x04
     ERROR_AMOUNT,           //0x05
     ERROR_BLOCK,            //0x06
@@ -138,13 +131,13 @@ typedef enum
 ///
 typedef enum
 {
-    SYSEX_CLOSE_REQUEST,        //0x00
-    HANDSHAKE_REQUEST,          //0x01
-    BYTES_PER_VALUE_REQUEST,    //0x02
-    PARAMS_PER_MESSAGE_REQUEST, //0x03
-    SILENT_MODE_OPEN_REQUEST,   //0x04
-    SILENT_MODE_CLOSE_REQUEST,  //0x05
-    SPECIAL_PARAMETERS
+    SYSEX_SR_CONN_CLOSE,            //0x00
+    SYSEX_SR_CONN_OPEN,             //0x01
+    SYSEX_SR_BYTES_PER_VALUE,       //0x02
+    SYSEX_SR_PARAMS_PER_MESSAGE,    //0x03
+    SYSEX_SR_CONN_OPEN_SILENT,      //0x04
+    SYSEX_SR_SILENT_DISABLE,        //0x05
+    SYSEX_SR_TOTAL_NUMBER
 } sysEx_specialRequest_t;
 
 ///
