@@ -35,8 +35,9 @@
 #define CUSTOM_REQUEST_ID_VALID             54
 #define CUSTOM_REQUEST_ID_INVALID           55
 #define CUSTOM_REQUEST_ID_ERROR_READ        56
-
+#define CUSTOM_REQUEST_ID_NO_CONN_CHECK     57
 #define CUSTOM_REQUEST_VALUE                1
+#define TOTAL_CUSTOM_REQUESTS               3
 
 uint8_t sysExTestArray[200];
 int responseCounter;
@@ -71,6 +72,24 @@ sysExBlock_t sysExLayout[NUMBER_OF_BLOCKS] =
     }
 };
 
+sysExCustomRequest_t customRequests[TOTAL_CUSTOM_REQUESTS] =
+{
+    {
+        .requestID = CUSTOM_REQUEST_ID_VALID,
+        .connOpenCheck = true
+    },
+
+    {
+        .requestID = CUSTOM_REQUEST_ID_NO_CONN_CHECK,
+        .connOpenCheck = false
+    },
+
+    {
+        .requestID = CUSTOM_REQUEST_ID_ERROR_READ,
+        .connOpenCheck = true
+    }
+};
+
 SysEx sysEx;
 
 bool onCustom(uint8_t value)
@@ -78,6 +97,7 @@ bool onCustom(uint8_t value)
     switch(value)
     {
         case CUSTOM_REQUEST_ID_VALID:
+        case CUSTOM_REQUEST_ID_NO_CONN_CHECK:
         sysEx.addToResponse(CUSTOM_REQUEST_VALUE);
         return true;
         break;
@@ -143,6 +163,7 @@ class SysExTest : public ::testing::Test
         userError = REQUEST;
         responseCounter = 0;
         sysEx.init(sysExLayout, NUMBER_OF_BLOCKS);
+        sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
         sysEx.setHandleGet(onGet);
         sysEx.setHandleSet(onSet);
         sysEx.setHandleCustomRequest(onCustom);
@@ -251,6 +272,12 @@ class SysExTest : public ::testing::Test
     {
         //custom request with non-existing custom ID
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, CUSTOM_REQUEST_ID_INVALID, 0xF7
+    };
+
+    const uint8_t customReqNoConnCheck[8] =
+    {
+        //custom request with non-existing custom ID
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, CUSTOM_REQUEST_ID_NO_CONN_CHECK, 0xF7
     };
 
     const uint8_t shortMessage1[6] =
@@ -887,10 +914,6 @@ TEST_F(SysExTest, GetAll)
 
 TEST_F(SysExTest, CustomReq)
 {
-    //define custom requests
-    EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID), true);
-    EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_ERROR_READ), true);
-
     uint8_t arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
 
@@ -911,9 +934,6 @@ TEST_F(SysExTest, CustomReq)
 
     //check if status byte has ERROR_READ value
     EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
-
-    //try to define first request again
-    EXPECT_EQ(sysEx.addCustomRequest(CUSTOM_REQUEST_ID_VALID), false);
 
     //send non-existing custom request message
     arraySize = sizeof(customReqInvalid)/sizeof(uint8_t);
@@ -940,31 +960,81 @@ TEST_F(SysExTest, CustomReq)
     //check if status byte has connection error value
     EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
 
-    bool value;
+    //try defining custom requests with invalid pointer
+    EXPECT_EQ(sysEx.setupCustomRequests(NULL, 0), false);
 
     //try defining illegal custom requests
-    for (int i=0; i<SYSEX_SR_TOTAL_NUMBER; i++)
+    sysExCustomRequest_t customRequests_invalid[SYSEX_SR_TOTAL_NUMBER] =
     {
-        value = sysEx.addCustomRequest(i);
-        //function must return false every time because
-        //invalid values are being assigned as custom requests
-        EXPECT_EQ(false, value);
-    }
+        {
+            .requestID = 0,
+            .connOpenCheck = true
+        },
 
-    //add maximum number of custom requests
-    //start from 2 since two requests are already added
-    for (int i=2; i<=MAX_CUSTOM_REQUESTS; i++)
-    {
-        value = sysEx.addCustomRequest(SYSEX_SR_TOTAL_NUMBER+i);
-        //function must return true every time
-        EXPECT_EQ(true, value);
-    }
+        {
+            .requestID = 1,
+            .connOpenCheck = true
+        },
 
-    //add another request
-    value = sysEx.addCustomRequest(SYSEX_SR_TOTAL_NUMBER+MAX_CUSTOM_REQUESTS+1);
+        {
+            .requestID = 2,
+            .connOpenCheck = true
+        },
 
-    //check if function returned false on too many custom requests
-    EXPECT_EQ(false, value);
+        {
+            .requestID = 3,
+            .connOpenCheck = true
+        },
+
+        {
+            .requestID = 4,
+            .connOpenCheck = true
+        },
+
+        {
+            .requestID = 5,
+            .connOpenCheck = true
+        }
+    };
+
+    //setupCustomRequests should return false because special requests which
+    //are already used internally are defined in pointed structure
+    EXPECT_EQ(sysEx.setupCustomRequests(customRequests_invalid, SYSEX_SR_TOTAL_NUMBER), false);
+
+    //restore valid custom requests
+    EXPECT_EQ(sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS), true);
+
+    //close sysex connection
+    arraySize = sizeof(connClose)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connClose, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //sysex configuration should be disabled now
+    EXPECT_EQ(false, sysEx.isConfigurationEnabled());
+
+    //send custom request 0
+    arraySize = sizeof(customReq)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReq, arraySize);
+
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //ERROR_CONNECTION should be returned because connection is closed
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+
+    //send another custom request which has flag set to ignore connection status
+    arraySize = sizeof(customReqNoConnCheck)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReqNoConnCheck, arraySize);
+
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //status byte should be ACK
+    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+
+    //open connection again
+    arraySize = sizeof(connOpen)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpen, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
 }
 
 TEST_F(SysExTest, IgnoreMessage)

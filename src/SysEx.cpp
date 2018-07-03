@@ -44,13 +44,13 @@ void (*sysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
 ///
 /// \brief Flag indicating whether or not configuration is possible.
 ///
-bool                sysExEnabled;
+bool                    sysExEnabled;
 
 ///
 /// \brief Flag indicating whether or not silent mode is active.
 /// When silent mode is active, protocol won't return any error or ACK messages.
 ///
-bool                silentModeEnabled;
+bool                    silentModeEnabled;
 
 ///
 /// \brief Flag indicating whether or not message end has already been sent.
@@ -58,61 +58,66 @@ bool                silentModeEnabled;
 /// however, for specific requests, response can be internally sent in other
 /// functions which removes the need to send SysEx stop byte in handleMessage function.
 ///
-bool                messageEndSent;
+bool                    messageEndSent;
 
 ///
 /// \brief Pointer to SysEx layout.
 ///
-sysExBlock_t        *sysExMessage;
+sysExBlock_t            *sysExMessage;
 
 ///
 /// \brief Total number of blocks for a received SysEx layout.
 ///
-uint8_t             sysExBlockCounter;
+uint8_t                 sysExBlockCounter;
 
 ///
 /// \brief Structure containing decoded data from SysEx request for easier access.
 ///
-decodedMessage_t    decodedMessage;
+decodedMessage_t        decodedMessage;
 
 ///
 /// \brief Pointer to SysEx array.
 /// Same array is used for request and response.
 /// Response modifies received request so that arrays aren't duplicated.
 ///
-uint8_t             *sysExArray;
+uint8_t                 *sysExArray;
+
+///
+/// \brief Pointer to structure containing data for custom requests.
+///
+sysExCustomRequest_t    *sysExCustomRequest;
+
+///
+/// \brief Total number of custom SysEx requests stored in pointed structure.
+///
+uint8_t                 numberOfCustomRequests;
 
 ///
 /// \brief Size of received SysEx array.
 ///
-uint8_t             receivedArraySize;
+uint8_t                 receivedArraySize;
 
 ///
 /// \brief Size of SysEx response.
 ///
-uint8_t             responseSize;
+uint8_t                 responseSize;
 
 ///
 /// \brief User-set SysEx status.
 /// Used when user sets custom status.
 ///
-sysExStatus_t       userStatus;
-
-///
-/// \brief Array containing user-specifed custom requests.
-///
-uint8_t             customRequests[MAX_CUSTOM_REQUESTS];
+sysExStatus_t           userStatus;
 
 ///
 /// \brief Holds amount of user-specified custom requests.
 ///
-uint8_t             customRequestCounter;
+uint8_t                 customRequestCounter;
 
 ///
 /// \brief Variable holding info on whether custom requests need connection open request before they're processed.
 /// \warning This variable assumes no more than 16 custom requests can be specified.
 ///
-uint16_t            customReqConnIgnore;
+uint16_t                customReqConnIgnore;
 
 ///
 /// \brief Default constructor.
@@ -120,7 +125,9 @@ uint16_t            customReqConnIgnore;
 SysEx::SysEx()
 {
     sysExMessage = NULL;
+    sysExCustomRequest = NULL;
     sysExBlockCounter = 0;
+    numberOfCustomRequests = 0;
 }
 
 ///
@@ -139,9 +146,6 @@ bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
 
     sysExEnabled = false;
     messageEndSent = false;
-
-    for (int i=0; i<MAX_CUSTOM_REQUESTS; i++)
-        customRequests[i] = 128;
 
     customRequestCounter = 0;
     userStatus = (sysExStatus_t)0;
@@ -163,6 +167,35 @@ bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
             }
         }
 
+        return true;
+    }
+
+    return false;
+}
+
+///
+/// \brief Configures custom requests stored in external structure.
+/// @param [in] customRequests          Pointer to structure containing custom requests.
+/// @param [in] numberOfCustomRequests  Total number of requests stored in specified structure.
+/// \returns True on success, false otherwise.
+///
+bool SysEx::setupCustomRequests(sysExCustomRequest_t *pointer, uint8_t _numberOfCustomRequests)
+{
+    if ((pointer != NULL) && _numberOfCustomRequests)
+    {
+        sysExCustomRequest = pointer;
+
+        for (int i=0; i<_numberOfCustomRequests; i++)
+        {
+            if (sysExCustomRequest[i].requestID < SYSEX_SR_TOTAL_NUMBER)
+            {
+                sysExCustomRequest = NULL;
+                numberOfCustomRequests = 0;
+                return false; //id already used internally
+            }
+        }
+
+        numberOfCustomRequests = _numberOfCustomRequests;
         return true;
     }
 
@@ -194,40 +227,6 @@ bool SysEx::isSilentModeEnabled()
 void SysEx::setSilentMode(bool state)
 {
     silentModeEnabled = state;
-}
-
-///
-/// \brief Adds custom request.
-/// If added byte is found in incoming message, and message is formatted as special request, custom message handler is called.
-/// It is up to user to decide on action.
-/// @param [in] value   Custom request value.
-/// @param [in] connectionIgnore    If set to true, request can be processed without prior enabling of SysEx configuration,
-///                                 that is, sending of open connection request. Set to false by default.
-/// \returns                        True on success, false otherwise.
-///
-bool SysEx::addCustomRequest(uint8_t value, bool connectionIgnore)
-{
-    if (customRequestCounter > MAX_CUSTOM_REQUESTS)
-        return false;
-
-    //don't add custom string if it's already defined as one of default strings
-    if (value < SYSEX_SR_TOTAL_NUMBER)
-        return false;
-
-    //sanitize input
-    value &= 0x7F;
-
-    //check if custom request has already been added
-    for (int i=0; i<customRequestCounter; i++)
-    {
-        if (customRequests[i] == value)
-            return false;
-    }
-
-    customRequests[customRequestCounter] = value;
-    connectionIgnore ? (customReqConnIgnore |= (1U << customRequestCounter)) : (customReqConnIgnore &= ~(1UL << customRequestCounter));
-    customRequestCounter++;
-    return true;
 }
 
 ///
@@ -413,21 +412,19 @@ bool SysEx::checkSpecialRequests()
 
         default:
         //check for custom string
-        for (int i=0; i<MAX_CUSTOM_REQUESTS; i++)
+        for (int i=0; i<numberOfCustomRequests; i++)
         {
-            if (customRequests[i] == 128)
+            //check only current wish/request
+            if (sysExCustomRequest[i].requestID != sysExArray[wishByte])
                 continue;
 
-            if (customRequests[i] != sysExArray[wishByte])
-                continue;
-
-            if (sysExEnabled || ((customReqConnIgnore >> i) & 0x01))
+            if (sysExEnabled || !sysExCustomRequest[i].connOpenCheck)
             {
                 setStatus(ACK);
 
                 if (customRequestCallback != NULL)
                 {
-                    if (!customRequestCallback(customRequests[i]))
+                    if (!customRequestCallback(sysExCustomRequest[i].requestID))
                         setStatus(ERROR_READ);
                 }
             }

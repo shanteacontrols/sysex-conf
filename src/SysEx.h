@@ -35,11 +35,11 @@ class SysEx
     public:
     SysEx();
     static bool init(sysExBlock_t *pointer, uint8_t numberOfBlocks);
+    static bool setupCustomRequests(sysExCustomRequest_t *customRequests, uint8_t numberOfCustomRequests);
     static void handleMessage(uint8_t *sysExArray, uint8_t size);
     static bool isConfigurationEnabled();
     static bool isSilentModeEnabled();
     static void setSilentMode(bool state);
-    static bool addCustomRequest(uint8_t value, bool connectionIgnore = false);
     static void sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, uint8_t size, bool ack = true);
     static void setError(sysExStatus_t status);
     static bool addToResponse(sysExParameter_t value);

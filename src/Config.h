@@ -24,11 +24,6 @@
 #include <inttypes.h>
 
 ///
-/// \brief Maximum number of custom requests user can add.
-///
-#define MAX_CUSTOM_REQUESTS     16
-
-///
 /// \brief Maximum number of parameter indexes in single SysEx message.
 ///
 #define PARAMETERS_PER_MESSAGE  32

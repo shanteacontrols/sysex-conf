@@ -52,6 +52,15 @@ typedef struct
 } sysExBlock_t;
 
 ///
+/// \brief Structure containing data for single custom request.
+///
+typedef struct
+{
+    uint8_t requestID;  ///< ID byte representing specific request.
+    bool connOpenCheck; ///< Flag indicating whether or not SysEx connection should be enabled before processing request.
+} sysExCustomRequest_t;
+
+///
 /// \brief Descriptive list of bytes in SysEx message.
 ///
 typedef enum
