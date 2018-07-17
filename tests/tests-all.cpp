@@ -220,10 +220,10 @@ class SysExTest : public ::testing::Test
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, 0x04, sysExAmount_single, TEST_BLOCK_ID, TEST_SECTION_SINGLE_PART_ID, TEST_INDEX_ID, 0xF7
     };
 
-    const uint8_t errorAmount[12] =
+    const uint8_t errorLength[13] =
     {
-        //amount byte set to invalid value
-        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, sysExWish_get, 0x08, TEST_BLOCK_ID, TEST_SECTION_SINGLE_PART_ID, TEST_INDEX_ID, 0xF7
+        //message intentionally one byte too long
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, sysExWish_get, sysExAmount_single, TEST_BLOCK_ID, TEST_SECTION_SINGLE_PART_ID, TEST_INDEX_ID, TEST_INDEX_ID, 0xF7
     };
 
     const uint8_t errorBlock[12] =
@@ -250,10 +250,10 @@ class SysExTest : public ::testing::Test
         0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_INVALID, sysExWish_get, sysExAmount_single, TEST_BLOCK_ID, TEST_SECTION_SINGLE_PART_ID, TEST_INDEX_ID, 0xF7
     };
 
-    const uint8_t errorLength[13] =
+    const uint8_t errorAmount[13] =
     {
-        //message intentionally one byte too long
-        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, sysExWish_get, sysExAmount_single, TEST_BLOCK_ID, TEST_SECTION_SINGLE_PART_ID, TEST_INDEX_ID, 0x00, 0xF7
+        //amount byte set to invalid value
+        0xF0, SYS_EX_M_ID_0, SYS_EX_M_ID_1, SYS_EX_M_ID_2, REQUEST, TEST_MSG_PART_VALID, sysExWish_get, 0x02, TEST_BLOCK_ID, TEST_SECTION_SINGLE_PART_ID, TEST_INDEX_ID, 0x00, 0xF7
     };
 
     const uint8_t customReq[8] =
@@ -489,9 +489,6 @@ TEST_F(SysExTest, Init)
     //silent mode should be disabled as well as an result of closed connection
     EXPECT_EQ(false, sysEx.isSilentModeEnabled());
 
-    //verify no response was received
-    EXPECT_EQ(tempResponseCounter, responseCounter);
-
     //enable silent mode using direct function call
     sysEx.setSilentMode(true);
 
@@ -503,6 +500,111 @@ TEST_F(SysExTest, Init)
 
     //verify silent mode is disabled
     EXPECT_EQ(false, sysEx.isSilentModeEnabled());
+}
+
+TEST_F(SysExTest, SilentMode)
+{
+    int tempResponseCounter = responseCounter;
+
+    //open silent mode
+    uint8_t arraySize = sizeof(connOpenSilent)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpenSilent, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //configuration and silent mode must be enabled
+    EXPECT_EQ(true, sysEx.isSilentModeEnabled());
+    EXPECT_EQ(true, sysEx.isConfigurationEnabled());
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send set sigle request
+    arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
+    memcpy(sysExTestArray, setSingleValid, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send set all request
+    arraySize = sizeof(setAllValid)/sizeof(uint8_t);
+    memcpy(sysExTestArray, setAllValid, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes status error
+    arraySize = sizeof(errorStatus)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorStatus, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes wish error
+    arraySize = sizeof(errorWish)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorWish, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes amount error
+    arraySize = sizeof(errorAmount)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorAmount, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes block error
+    arraySize = sizeof(errorBlock)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorBlock, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes section error
+    arraySize = sizeof(errorSection)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorSection, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes index error
+    arraySize = sizeof(errorIndex)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorIndex, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes part error
+    arraySize = sizeof(errorPart)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorPart, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send request which causes length error
+    arraySize = sizeof(errorLength)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorLength, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
+
+    //send custom request
+    arraySize = sizeof(customReq)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReq, arraySize);
+    sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //check that nothing was received as response
+    EXPECT_EQ(tempResponseCounter, responseCounter);
 }
 
 TEST_F(SysExTest, ErrorInit)
@@ -734,7 +836,7 @@ TEST_F(SysExTest, ErrorUser)
 
     //try to set invalid user error
     //response should be just ERROR_WRITE in this case
-    userError = NUMBER_OF_ERRORS;
+    userError = SYSEX_STATUS_MAX;
 
     arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleValid, arraySize);

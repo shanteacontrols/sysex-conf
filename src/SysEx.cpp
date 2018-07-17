@@ -53,14 +53,6 @@ bool                    sysExEnabled;
 bool                    silentModeEnabled;
 
 ///
-/// \brief Flag indicating whether or not message end has already been sent.
-/// Message end (SysEx stop byte) is usually sent in handleMessage function,
-/// however, for specific requests, response can be internally sent in other
-/// functions which removes the need to send SysEx stop byte in handleMessage function.
-///
-bool                    messageEndSent;
-
-///
 /// \brief Pointer to SysEx layout.
 ///
 sysExBlock_t            *sysExMessage;
@@ -145,7 +137,6 @@ bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
     sysExArray              = NULL;
 
     sysExEnabled = false;
-    messageEndSent = false;
 
     customRequestCounter = 0;
     userStatus = (sysExStatus_t)0;
@@ -238,6 +229,7 @@ void SysEx::handleMessage(uint8_t *array, uint8_t size)
 {
     if ((sysExMessage != NULL) && sysExBlockCounter)
     {
+        resetDecodedMessage();
         //save pointer to received array so we can manipulate it directly
         sysExArray = array;
         receivedArraySize = size;
@@ -249,302 +241,205 @@ void SysEx::handleMessage(uint8_t *array, uint8_t size)
         if (!checkID())
             return; //don't send response to wrong ID
 
-        decode();
+        bool sendResponse_var = true;
 
-        if (!messageEndSent)
+        if (!checkStatus())
         {
-            //if messageEndSent is set to true, response has already been sent
-            sysExArray[responseSize] = 0xF7;
-            responseSize++;
-
-            if (sysExWriteCallback != NULL)
-                sysExWriteCallback(sysExArray, responseSize);
+            setStatus(ERROR_STATUS);
+        }
+        else
+        {
+            if (decode())
+            {
+                if (receivedArraySize == MIN_MESSAGE_LENGTH)
+                {
+                    processSpecialRequest();
+                }
+                else
+                {
+                    if (processStandardRequest())
+                    {
+                        //in this case, processStandardRequest will internally call
+                        //sendResponse function, which means it's not necessary to call
+                        //it again here
+                        sendResponse_var = false;
+                    }
+                    else
+                    {
+                        //function returned error
+                        //send response manually and reset decoded message
+                        resetDecodedMessage();
+                    }
+                }
+            }
+            else
+            {
+                resetDecodedMessage();
+            }
         }
 
-        messageEndSent = false;
+        if (sendResponse_var)
+            sendResponse(false);
+
         sysExArray = NULL;
     }
 }
 
 ///
+/// \brief Resets all elements in decodedMessage structure to default values.
+///
+void SysEx::resetDecodedMessage()
+{
+    //reset decodedMessage
+    decodedMessage.status = SYSEX_STATUS_MAX;
+    decodedMessage.wish = SYSEX_WISH_MAX;
+    decodedMessage.amount = SYSEX_AMOUNT_MAX;
+    decodedMessage.block = 0;
+    decodedMessage.section = 0;
+    decodedMessage.part = 0;
+    decodedMessage.index = 0;
+    decodedMessage.newValue = 0;
+}
+
+///
 /// \brief Decodes received message.
+/// \returns True on success, false otherwise (invalid values).
 ///
-void SysEx::decode()
+bool SysEx::decode()
 {
-    decodedMessage.status = (sysExStatus_t)sysExArray[(uint8_t)statusByte];
-
-    if (decodedMessage.status != REQUEST)
+    if (receivedArraySize == MIN_MESSAGE_LENGTH)
     {
-        //don't let status be anything but request
-        setStatus(ERROR_STATUS);
-        return;
+        //special request
+        return true; //checked in processSpecialRequest
     }
-
-    if (checkSpecialRequests())
-        return; //special request was handled by now
-
-    //message appears to be fine for now
-    if (!sysExEnabled)
-    {
-        //message is fine, but connection open request hasn't been received
-        setStatus(ERROR_CONNECTION);
-        return;
-    }
-
-    if (receivedArraySize <= REQUEST_SIZE)
+    else if (receivedArraySize <= REQUEST_SIZE)
     {
         setStatus(ERROR_MESSAGE_LENGTH);
-        return;
-    }
-
-    //don't try to request these parameters if the size is too small
-    decodedMessage.part = sysExArray[(uint8_t)partByte];
-    decodedMessage.wish = (sysExWish_t)sysExArray[(uint8_t)wishByte];
-    decodedMessage.amount = (sysExAmount_t)sysExArray[(uint8_t)amountByte];
-    decodedMessage.block = sysExArray[(uint8_t)blockByte];
-    decodedMessage.section = sysExArray[(uint8_t)sectionByte];
-
-    if (!checkRequest())
-        return;
-
-    uint16_t length = generateMessageLenght();
-
-    if (receivedArraySize != length)
-    {
-        setStatus(ERROR_MESSAGE_LENGTH);
-        return;
-    }
-
-    if (checkParameters())
-    {
-        //message is ok
-    }
-}
-
-///
-/// \brief Checks whether the manufacturer ID in message is correct.
-/// @returns    True if valid, false otherwise.
-///
-bool SysEx::checkID()
-{
-    return
-    (
-        (sysExArray[idByte_1] == SYS_EX_M_ID_0)    &&
-        (sysExArray[idByte_2] == SYS_EX_M_ID_1)    &&
-        (sysExArray[idByte_3] == SYS_EX_M_ID_2)
-    );
-}
-
-///
-/// \brief Checks whether the request belong to special group of requests or not
-/// \returns    True if request is special, false otherwise.
-///
-bool SysEx::checkSpecialRequests()
-{
-    if (receivedArraySize != MIN_MESSAGE_LENGTH)
         return false;
-
-    switch(sysExArray[wishByte])
+    }
+    else
     {
-        case SYSEX_SR_CONN_CLOSE:
         if (!sysExEnabled)
         {
-            //connection can't be closed if it isn't opened
+            //connection open request hasn't been received
             setStatus(ERROR_CONNECTION);
-            return true;
-        }
-        else
-        {
-            //close sysex connection
-            sysExEnabled = false;
-            setStatus(ACK);
-            if (silentModeEnabled)
-            {
-                messageEndSent = true;
-                //also disable silent mode
-                silentModeEnabled = false;
-            }
-            return true;
-        }
-        break;
-
-        case SYSEX_SR_CONN_OPEN:
-        case SYSEX_SR_CONN_OPEN_SILENT:
-        //necessary to allow the configuration
-        sysExEnabled = true;
-        if (sysExArray[wishByte] == SYSEX_SR_CONN_OPEN_SILENT)
-        {
-            messageEndSent = true;
-            silentModeEnabled = true;
+            return false;
         }
 
+        //don't try to request these parameters if the size is too small
+        decodedMessage.part = sysExArray[(uint8_t)partByte];
+        decodedMessage.wish = (sysExWish_t)sysExArray[(uint8_t)wishByte];
+        decodedMessage.amount = (sysExAmount_t)sysExArray[(uint8_t)amountByte];
+        decodedMessage.block = sysExArray[(uint8_t)blockByte];
+        decodedMessage.section = sysExArray[(uint8_t)sectionByte];
+
+        if (!checkWish())
+        {
+            setStatus(ERROR_WISH);
+            return false;
+        }
+
+        if (!checkBlock())
+        {
+            setStatus(ERROR_BLOCK);
+            return false;
+        }
+
+        if (!checkSection())
+        {
+            setStatus(ERROR_SECTION);
+            return false;
+        }
+
+        if (!checkAmount())
+        {
+            setStatus(ERROR_AMOUNT);
+            return false;
+        }
+
+        if (!checkPart())
+        {
+            setStatus(ERROR_PART);
+            return false;
+        }
+
+        if (receivedArraySize != generateMessageLenght())
+        {
+            setStatus(ERROR_MESSAGE_LENGTH);
+            return false;
+        }
+
+        //start building response
         setStatus(ACK);
-        return true;
 
-        case SYSEX_SR_SILENT_DISABLE:
-        silentModeEnabled = false;
-        setStatus(ACK);
-        return true;
+        if (decodedMessage.amount == sysExAmount_single)
+        {
+            //param size should be handled here - relevant only on single param amount
+            #if PARAM_SIZE == 2
+            encDec_14bit decoded;
+            //index
+            decoded.high = sysExArray[indexByte];
+            decoded.low = sysExArray[indexByte+1];
+            decodedMessage.index = decoded.decode14bit();
+            #elif PARAM_SIZE == 1
+            decodedMessage.index = sysExArray[indexByte];
+            #endif
+            decodedMessage.index += (PARAMETERS_PER_MESSAGE*decodedMessage.part);
 
-        case SYSEX_SR_BYTES_PER_VALUE:
-        if (sysExEnabled)
-        {
-            setStatus(ACK);
-            addToResponse(PARAM_SIZE);
-        }
-        else
-        {
-            setStatus(ERROR_CONNECTION);
-        }
-        return true;
-
-        case SYSEX_SR_PARAMS_PER_MESSAGE:
-        if (sysExEnabled)
-        {
-            setStatus(ACK);
-            addToResponse(PARAMETERS_PER_MESSAGE);
-        }
-        else
-        {
-            setStatus(ERROR_CONNECTION);
-        }
-        return true;
-
-        default:
-        //check for custom string
-        for (int i=0; i<numberOfCustomRequests; i++)
-        {
-            //check only current wish/request
-            if (sysExCustomRequest[i].requestID != sysExArray[wishByte])
-                continue;
-
-            if (sysExEnabled || !sysExCustomRequest[i].connOpenCheck)
+            if (decodedMessage.wish == sysExWish_set)
             {
-                setStatus(ACK);
-
-                if (customRequestCallback != NULL)
-                {
-                    if (!customRequestCallback(sysExCustomRequest[i].requestID))
-                        setStatus(ERROR_READ);
-                }
+                //new value
+                #if PARAM_SIZE == 2
+                decoded.high = sysExArray[newValueByte_single];
+                decoded.low = sysExArray[newValueByte_single+1];
+                decodedMessage.newValue = decoded.decode14bit();
+                #elif PARAM_SIZE == 1
+                decodedMessage.newValue = sysExArray[newValueByte_single];
+                #endif
             }
-            else
-            {
-                setStatus(ERROR_CONNECTION);
-            }
-
-            return true;
         }
-
-        //custom string not found
-        setStatus(ERROR_WISH);
-        return true;
-    }
-}
-
-///
-/// \brief Checks whether request is valid by calling other checking functions.
-/// @returns    True if valid, false otherwise.
-///
-bool SysEx::checkRequest()
-{
-    if (!checkWish())
-    {
-        setStatus(ERROR_WISH);
-        return false;
-    }
-
-    if (!checkBlock())
-    {
-        setStatus(ERROR_BLOCK);
-        return false;
-    }
-
-    if (!checkSection())
-    {
-        setStatus(ERROR_SECTION);
-        return false;
-    }
-
-    if (!checkAmount())
-    {
-        setStatus(ERROR_AMOUNT);
-        return false;
-    }
-
-    if (!checkPart())
-    {
-        setStatus(ERROR_PART);
-        return false;
     }
 
     return true;
 }
 
 ///
-/// \brief Checks all parameters in message, builds and sends response.
-/// \returns    True if entire request is valid, false otherwise.
+/// \brief Used to process standard SysEx request.
+/// \returns True on success, false otherwise.
 ///
-bool SysEx::checkParameters()
+bool SysEx::processStandardRequest()
 {
-    //sysex request is fine
-    //start building response
-    setStatus(ACK);
-
-    uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
     uint16_t startIndex = 0, endIndex = 1;
+    uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
     bool allPartsAck = false;
-
-    if (decodedMessage.amount == sysExAmount_single)
-    {
-        //param size should be handled here - relevant only on single param amount
-        #if PARAM_SIZE == 2
-        encDec_14bit decoded;
-        //index
-        decoded.high = sysExArray[indexByte];
-        decoded.low = sysExArray[indexByte+1];
-        decodedMessage.index = decoded.decode14bit();
-        #elif PARAM_SIZE == 1
-        decodedMessage.index = sysExArray[indexByte];
-        #endif
-        decodedMessage.index += (PARAMETERS_PER_MESSAGE*decodedMessage.part);
-
-        if (decodedMessage.wish == sysExWish_set)
-        {
-            //new value
-            #if PARAM_SIZE == 2
-            decoded.high = sysExArray[newValueByte_single];
-            decoded.low = sysExArray[newValueByte_single+1];
-            decodedMessage.newValue = decoded.decode14bit();
-            #elif PARAM_SIZE == 1
-            decodedMessage.newValue = sysExArray[newValueByte_single];
-            #endif
-        }
-    }
+    bool allPartsLoop = false;
+    bool exitLoop = false;
 
     if ((decodedMessage.wish == sysExWish_backup) || (decodedMessage.wish == sysExWish_get))
     {
         if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
         {
+            //when parts 127 or 126 are specified, protocol will loop over all message parts and
+            //deliver as many messages as there are parts as response
             msgPartsLoop = sysExMessage[decodedMessage.block].section[decodedMessage.section].parts;
-            messageEndSent = true;
+            allPartsLoop = true;
 
+            //when part is set to 126 (0x7E), ACK message will be sent as the last message
+            //indicating that all messages have been sent as response to specific request
             if (decodedMessage.part == 126)
-            {
                 allPartsAck = true;
-            }
         }
 
         if (decodedMessage.wish == sysExWish_backup)
         {
-            //don't overwrite anything if backup is requested
-            responseSize_ = receivedArraySize - 1;
             //convert response to request
             sysExArray[(uint8_t)statusByte] = REQUEST;
             //now convert wish to set
             sysExArray[(uint8_t)wishByte] = (uint8_t)sysExWish_set;
             //decoded message wish needs to be set to get so that we can retrieve parameters
             decodedMessage.wish = sysExWish_get;
+            //don't overwrite anything when backup is requested - just append
+            responseSize_ = receivedArraySize - 1;
         }
     }
 
@@ -552,7 +447,7 @@ bool SysEx::checkParameters()
     {
         responseSize = responseSize_;
 
-        if (messageEndSent)
+        if (allPartsLoop)
         {
             decodedMessage.part = j;
             sysExArray[partByte] = j;
@@ -653,7 +548,6 @@ bool SysEx::checkParameters()
                     {
                         if (setCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, decodedMessage.newValue))
                         {
-                            //no further checks are required
                             return true;
                         }
                         else
@@ -717,14 +611,7 @@ bool SysEx::checkParameters()
             }
         }
 
-        if (messageEndSent)
-        {
-            sysExArray[responseSize] = 0xF7;
-            responseSize++;
-
-            if (sysExWriteCallback != NULL)
-                sysExWriteCallback(sysExArray, responseSize);
-        }
+        sendResponse(false);
     }
 
     if (allPartsAck)
@@ -741,13 +628,135 @@ bool SysEx::checkParameters()
         addToResponse(decodedMessage.amount);
         addToResponse(decodedMessage.block);
         addToResponse(decodedMessage.section);
-        addToResponse(0xF7);
-
-        if (sysExWriteCallback != NULL)
-            sysExWriteCallback(sysExArray, responseSize);
+        sendResponse(false);
     }
 
     return true;
+}
+
+///
+/// \brief Checks whether the manufacturer ID in message is correct.
+/// @returns    True if valid, false otherwise.
+///
+bool SysEx::checkID()
+{
+    return
+    (
+        (sysExArray[idByte_1] == SYS_EX_M_ID_0)    &&
+        (sysExArray[idByte_2] == SYS_EX_M_ID_1)    &&
+        (sysExArray[idByte_3] == SYS_EX_M_ID_2)
+    );
+}
+
+///
+/// \brief Checks whether the status byte in request is correct.
+/// @returns    True if valid, false otherwise.
+///
+bool SysEx::checkStatus()
+{
+    return ((sysExStatus_t)sysExArray[(uint8_t)statusByte] == REQUEST);
+}
+
+///
+/// \brief Used to process special SysEx request.
+/// \returns True on success, false otherwise.
+///
+bool SysEx::processSpecialRequest()
+{
+    switch(sysExArray[wishByte])
+    {
+        case SYSEX_SR_CONN_CLOSE:
+        if (!sysExEnabled)
+        {
+            //connection can't be closed if it isn't opened
+            setStatus(ERROR_CONNECTION);
+            return true;
+        }
+        else
+        {
+            //close sysex connection
+            sysExEnabled = false;
+            setStatus(ACK);
+            if (silentModeEnabled)
+            {
+                //also disable silent mode
+                silentModeEnabled = false;
+            }
+            return true;
+        }
+        break;
+
+        case SYSEX_SR_CONN_OPEN:
+        case SYSEX_SR_CONN_OPEN_SILENT:
+        //necessary to allow the configuration
+        sysExEnabled = true;
+        if (sysExArray[wishByte] == SYSEX_SR_CONN_OPEN_SILENT)
+        {
+            silentModeEnabled = true;
+        }
+
+        setStatus(ACK);
+        return true;
+
+        case SYSEX_SR_SILENT_DISABLE:
+        silentModeEnabled = false;
+        setStatus(ACK);
+        return true;
+
+        case SYSEX_SR_BYTES_PER_VALUE:
+        if (sysExEnabled)
+        {
+            setStatus(ACK);
+            addToResponse(PARAM_SIZE);
+        }
+        else
+        {
+            setStatus(ERROR_CONNECTION);
+        }
+        return true;
+
+        case SYSEX_SR_PARAMS_PER_MESSAGE:
+        if (sysExEnabled)
+        {
+            setStatus(ACK);
+            addToResponse(PARAMETERS_PER_MESSAGE);
+        }
+        else
+        {
+            setStatus(ERROR_CONNECTION);
+        }
+        return true;
+
+        default:
+        //check for custom string
+        for (int i=0; i<numberOfCustomRequests; i++)
+        {
+            //check only current wish/request
+            if (sysExCustomRequest[i].requestID != sysExArray[wishByte])
+                continue;
+
+            if (sysExEnabled || !sysExCustomRequest[i].connOpenCheck)
+            {
+                setStatus(ACK);
+
+                if (customRequestCallback != NULL)
+                {
+                    if (!customRequestCallback(sysExCustomRequest[i].requestID))
+                        setStatus(ERROR_READ);
+                }
+            }
+            else
+            {
+                setStatus(ERROR_CONNECTION);
+            }
+
+            return true;
+        }
+
+        //custom string not found
+        setStatus(ERROR_WISH);
+        return true;
+    }
 }
 
 ///
@@ -945,11 +954,25 @@ void SysEx::sendCustomMessage(uint8_t *responseArray, sysExParameter_t *values, 
         addToResponse(values[i]);
     }
 
-    sysExArray[responseSize] = 0xF7;
-    responseSize++;
+    sendResponse(false);
+}
 
-    if (sysExWriteCallback != NULL)
-        sysExWriteCallback(sysExArray, responseSize);
+///
+/// \brief Used to send SysEx response.
+/// @param [in] containsLastByte If set to true, last SysEx byte (0x07) won't be appended.
+///
+void SysEx::sendResponse(bool containsLastByte)
+{
+    if (!containsLastByte)
+    {
+        sysExArray[responseSize] = 0xF7;
+        responseSize++;
+    }
+
+    if (silentModeEnabled && (decodedMessage.wish != sysExWish_get))
+        return;
+
+    sysExWriteCallback(sysExArray, responseSize);
 }
 
 ///

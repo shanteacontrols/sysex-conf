@@ -50,9 +50,12 @@ class SysEx
     static void setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size));
 
     private:
-    static void decode();
+    static bool decode();
+    static void resetDecodedMessage();
+    static bool processStandardRequest();
+    static bool processSpecialRequest();
     static bool checkID();
-    static bool checkSpecialRequests();
+    static bool checkStatus();
     static bool checkWish();
     static bool checkAmount();
     static bool checkBlock();
@@ -60,11 +63,11 @@ class SysEx
     static bool checkPart();
     static bool checkParameterIndex();
     static bool checkNewValue();
-    static bool checkRequest();
     static bool checkParameters();
 
     static uint8_t generateMessageLenght();
     static void setStatus(sysExStatus_t status);
+    static void sendResponse(bool containsLastByte);
 };
 
 /// @}
