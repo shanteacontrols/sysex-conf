@@ -132,7 +132,7 @@ typedef enum
     ERROR_WRITE,            //0x0C
     ERROR_NOT_SUPPORTED,    //0x0D
     ERROR_READ,             //0x0E
-    NUMBER_OF_ERRORS
+    SYSEX_STATUS_MAX
 } sysExStatus_t;
 
 ///
