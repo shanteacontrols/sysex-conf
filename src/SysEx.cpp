@@ -413,7 +413,6 @@ bool SysEx::processStandardRequest()
     uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
     bool allPartsAck = false;
     bool allPartsLoop = false;
-    bool exitLoop = false;
 
     if ((decodedMessage.wish == sysExWish_backup) || (decodedMessage.wish == sysExWish_get))
     {
