@@ -546,11 +546,7 @@ bool SysEx::processStandardRequest()
 
                     if (setCallback != NULL)
                     {
-                        if (setCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, decodedMessage.newValue))
-                        {
-                            return true;
-                        }
-                        else
+                        if (!setCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, decodedMessage.newValue))
                         {
                             if (userStatus)
                             {
@@ -624,10 +620,6 @@ bool SysEx::processStandardRequest()
         addToResponse(SYS_EX_M_ID_2);
         addToResponse(ACK);
         addToResponse(0x7E);
-        addToResponse(decodedMessage.wish);
-        addToResponse(decodedMessage.amount);
-        addToResponse(decodedMessage.block);
-        addToResponse(decodedMessage.section);
         sendResponse(false);
     }
 

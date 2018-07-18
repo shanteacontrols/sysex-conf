@@ -421,19 +421,28 @@ class SysExTest : public ::testing::Test
 
 TEST_F(SysExTest, Init)
 {
+    //reset message count
+    responseCounter = 0;
+
+    //send open request message
     uint8_t arraySize = sizeof(connOpen)/sizeof(uint8_t);
     memcpy(sysExTestArray, connOpen, arraySize);
-
-    //send open request message and see if sysExTestArray is valid
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
+    //check response
     EXPECT_EQ(0xF0, sysExTestArray[0]);
     EXPECT_EQ(0x00, sysExTestArray[1]);
     EXPECT_EQ(0x53, sysExTestArray[2]);
     EXPECT_EQ(0x43, sysExTestArray[3]);
-    EXPECT_EQ(0x01, sysExTestArray[4]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
     EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset number of received messages
+    responseCounter = 0;
 
     //sysex configuration should be enabled now
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
@@ -446,9 +455,22 @@ TEST_F(SysExTest, Init)
     //sysex configuration should be disabled now
     EXPECT_EQ(false, sysEx.isConfigurationEnabled());
 
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset number of received messages
+    responseCounter = 0;
+
     //test silent mode
-    //open silent mode
-    int tempResponseCounter = responseCounter;
     arraySize = sizeof(connOpenSilent)/sizeof(uint8_t);
     memcpy(sysExTestArray, connOpenSilent, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
@@ -458,7 +480,7 @@ TEST_F(SysExTest, Init)
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
 
     //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    EXPECT_EQ(responseCounter, 0);
 
     //now disable silent mode
     arraySize = sizeof(silentModeDisable)/sizeof(uint8_t);
@@ -466,17 +488,32 @@ TEST_F(SysExTest, Init)
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //silent mode should be disabled, but connection should be still opened
+    //response should be received
     EXPECT_EQ(false, sysEx.isSilentModeEnabled());
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
 
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset number of received messages
+    responseCounter = 0;
+
     //open silent mode again
-    tempResponseCounter = responseCounter;
     arraySize = sizeof(connOpenSilent)/sizeof(uint8_t);
     memcpy(sysExTestArray, connOpenSilent, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //verify no response was received
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    EXPECT_EQ(responseCounter, 0);
 
     //now close connection
     arraySize = sizeof(connClose)/sizeof(uint8_t);
@@ -488,6 +525,18 @@ TEST_F(SysExTest, Init)
 
     //silent mode should be disabled as well as an result of closed connection
     EXPECT_EQ(false, sysEx.isSilentModeEnabled());
+
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 
     //enable silent mode using direct function call
     sysEx.setSilentMode(true);
@@ -504,7 +553,8 @@ TEST_F(SysExTest, Init)
 
 TEST_F(SysExTest, SilentMode)
 {
-    int tempResponseCounter = responseCounter;
+    //reset message count
+    responseCounter = 0;
 
     //open silent mode
     uint8_t arraySize = sizeof(connOpenSilent)/sizeof(uint8_t);
@@ -515,113 +565,112 @@ TEST_F(SysExTest, SilentMode)
     EXPECT_EQ(true, sysEx.isSilentModeEnabled());
     EXPECT_EQ(true, sysEx.isConfigurationEnabled());
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send set sigle request
     arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleValid, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send set all request
     arraySize = sizeof(setAllValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllValid, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes status error
     arraySize = sizeof(errorStatus)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorStatus, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes wish error
     arraySize = sizeof(errorWish)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorWish, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes amount error
     arraySize = sizeof(errorAmount)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorAmount, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes block error
     arraySize = sizeof(errorBlock)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorBlock, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes section error
     arraySize = sizeof(errorSection)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorSection, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes index error
     arraySize = sizeof(errorIndex)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorIndex, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes part error
     arraySize = sizeof(errorPart)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorPart, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send request which causes length error
     arraySize = sizeof(errorLength)/sizeof(uint8_t);
     memcpy(sysExTestArray, errorLength, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 
     //send custom request
     arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check that nothing was received as response
-    EXPECT_EQ(tempResponseCounter, responseCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
 }
 
 TEST_F(SysExTest, ErrorInit)
 {
-    bool returnValue;
-
     //try to init sysex with null pointer
-    returnValue = sysEx.init(NULL, 1);
-    EXPECT_EQ(false, returnValue);
+    EXPECT_EQ(false, sysEx.init(NULL, 1));
 
     //try to init sysex with zero blocks
-    returnValue = sysEx.init(sysExLayout, 0);
-    EXPECT_EQ(false, returnValue);
+    EXPECT_EQ(false, sysEx.init(sysExLayout, 0));
 }
 
 TEST_F(SysExTest, ErrorConnClosed)
 {
+    //reset message count
+    responseCounter = 0;
+
     uint8_t arraySize;
 
     if (sysEx.isConfigurationEnabled())
@@ -629,210 +678,423 @@ TEST_F(SysExTest, ErrorConnClosed)
         //close connection first
         arraySize = sizeof(connClose)/sizeof(uint8_t);
         memcpy(sysExTestArray, connClose, arraySize);
-
         sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
         //configuration should be closed now
         EXPECT_EQ(false, sysEx.isConfigurationEnabled());
+
+        //check response
+        EXPECT_EQ(0xF0, sysExTestArray[0]);
+        EXPECT_EQ(0x00, sysExTestArray[1]);
+        EXPECT_EQ(0x53, sysExTestArray[2]);
+        EXPECT_EQ(0x43, sysExTestArray[3]);
+        EXPECT_EQ(ACK, sysExTestArray[4]);
+        EXPECT_EQ(0x00, sysExTestArray[5]);
+        EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+        //check number of received messages
+        EXPECT_EQ(responseCounter, 1);
+
+        //reset number of received messages
+        responseCounter = 0;
     }
 
+    //send valid get message
+    //since connection is closed, ERROR_CONNECTION should be reported
     arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSingleValid, arraySize);
-
-    //send valid get message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if connection error is set
-    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorStatus)
 {
-    uint8_t arraySize = sizeof(errorStatus)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorStatus, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid status byte
+    //ERROR_STATUS should be reported
+    uint8_t arraySize = sizeof(errorStatus)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorStatus, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status error is set
-    EXPECT_EQ(ERROR_STATUS, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_STATUS, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorWish)
 {
-    uint8_t arraySize = sizeof(errorWish)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorWish, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid wish byte
+    uint8_t arraySize = sizeof(errorWish)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorWish, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if wish error is set
-    EXPECT_EQ(ERROR_WISH, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_WISH, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorAmount)
 {
-    uint8_t arraySize = sizeof(errorAmount)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorAmount, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid amount byte
+    //ERROR_AMOUNT should be reported
+    uint8_t arraySize = sizeof(errorAmount)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorAmount, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if amount error is set
-    EXPECT_EQ(ERROR_AMOUNT, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_AMOUNT, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorBlock)
 {
-    uint8_t arraySize = sizeof(errorBlock)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorBlock, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid block byte
+    //ERROR_BLOCK should be reported
+    uint8_t arraySize = sizeof(errorBlock)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorBlock, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if block error is set
-    EXPECT_EQ(ERROR_BLOCK, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_BLOCK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorSection)
 {
-    uint8_t arraySize = sizeof(errorSection)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorSection, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid section byte
+    //ERROR_SECTION should be reported
+    uint8_t arraySize = sizeof(errorSection)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorSection, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if section error is set
-    EXPECT_EQ(ERROR_SECTION, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_SECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorPart)
 {
-    uint8_t arraySize = sizeof(errorPart)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorPart, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid index byte
+    //ERROR_PART should be reported
+    uint8_t arraySize = sizeof(errorPart)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorPart, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if part error is set
-    EXPECT_EQ(ERROR_PART, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_PART, sysExTestArray[4]);
+    EXPECT_EQ(TEST_MSG_PART_INVALID, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorIndex)
 {
-    uint8_t arraySize = sizeof(errorIndex)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorIndex, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid index byte
+    //ERROR_INDEX should be reported
+    uint8_t arraySize = sizeof(errorIndex)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorIndex, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if index error is set
-    EXPECT_EQ(ERROR_INDEX, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_INDEX, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorLength)
 {
-    uint8_t arraySize = sizeof(errorLength)/sizeof(uint8_t);
-    memcpy(sysExTestArray, errorLength, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send message with invalid index byte
+    //ERROR_MESSAGE_LENGTH should be reported
+    uint8_t arraySize = sizeof(errorLength)/sizeof(uint8_t);
+    memcpy(sysExTestArray, errorLength, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if message length error is set
-    EXPECT_EQ(ERROR_MESSAGE_LENGTH, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_MESSAGE_LENGTH, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorWrite)
 {
+    //reset message count
+    responseCounter = 0;
+
     //set userError to ERROR_WRITE and check if message returns the same error
     userError = ERROR_WRITE;
 
+    //send valid set message
+    //ERROR_WRITE should be reported since that error is assigned to userError
     uint8_t arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleValid, arraySize);
-
-    //send valid set message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if write error is set
-    EXPECT_EQ(ERROR_WRITE, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_WRITE, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorRead)
 {
-    //test if ERROR_READ is set when get callback returns false
+    //reset message count
+    responseCounter = 0;
+
+    //configure get callback to always return false
     sysEx.setHandleGet(onGetErrorRead);
 
-    //test get with single parameter
+    //send get single request
+    //ERROR_READ should be reported since callback returns false
     uint8_t arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSingleValid, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if read error is set
-    EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_READ, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //test get with all parameters
+    //ERROR_READ should be reported again
     arraySize = sizeof(getAllValid_1part)/sizeof(uint8_t);
     memcpy(sysExTestArray, getAllValid_1part, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if read error is set
-    EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_READ, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorNewValue)
 {
-    uint8_t arraySize = sizeof(setSingleInvalidNewValue)/sizeof(uint8_t);
-    memcpy(sysExTestArray, setSingleInvalidNewValue, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send invalid set message
+    //ERROR_NEW_VALUE should be reported
+    uint8_t arraySize = sizeof(setSingleInvalidNewValue)/sizeof(uint8_t);
+    memcpy(sysExTestArray, setSingleInvalidNewValue, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if write error is set
-    EXPECT_EQ(ERROR_NEW_VALUE, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_NEW_VALUE, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, ErrorUser)
 {
-    uint8_t arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
-    memcpy(sysExTestArray, getSingleValid, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     userError = ERROR_NOT_SUPPORTED;
 
     //send get request
+    //ERROR_NOT_SUPPORTED should be returned since that value is assigned to userError
+    uint8_t arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
+    memcpy(sysExTestArray, getSingleValid, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte is set to NOT_SUPPORTTED value
-    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //get all request
     arraySize = sizeof(getAllValid_1part)/sizeof(uint8_t);
     memcpy(sysExTestArray, getAllValid_1part, arraySize);
-
-    //send get request
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte is set to NOT_SUPPORTTED value
-    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //set single request
     arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleValid, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte is set to NOT_SUPPORTTED value
-    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //set all request
     arraySize = sizeof(setAllValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllValid, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte is set to NOT_SUPPORTTED value
-    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_NOT_SUPPORTED, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //try to set invalid user error
     //response should be just ERROR_WRITE in this case
@@ -840,88 +1102,194 @@ TEST_F(SysExTest, ErrorUser)
 
     arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleValid, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_WRITE, sysExTestArray[(uint8_t)statusByte]);
+    //test sysex array
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_WRITE, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, SetSingle)
 {
-    uint8_t arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
-    memcpy(sysExTestArray, setSingleValid, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send valid set message
+    uint8_t arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
+    memcpy(sysExTestArray, setSingleValid, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has ACK value
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send set single command with invalid param index
     arraySize = sizeof(setSingleInvalidParam)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleInvalidParam, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_INDEX, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_INDEX, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //test block which has same min and max value
-    //in this case, error_newvalue should never be reported on any value
+    //in this case, ERROR_NEW_VALUE should never be reported on any value
     arraySize = sizeof(setSingleNoMinMax1)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleNoMinMax1, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     arraySize = sizeof(setSingleNoMinMax2)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleNoMinMax2, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     arraySize = sizeof(setSingleNoMinMax3)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleNoMinMax3, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
 
-    //try calling valid set single command
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
     //configure set callback to always return false
     //check if status byte is ERROR_WRITE
     sysEx.setHandleSet(onSetInvalid);
 
+    //send valid set message
     arraySize = sizeof(setSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setSingleValid, arraySize);
-
-    //send valid set message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_WRITE, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_WRITE, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, SetAll)
 {
+    //reset message count
+    responseCounter = 0;
+
+    //send set all request
     uint8_t arraySize = sizeof(setAllValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllValid, arraySize);
-
-    //send set all request and check if result is ACK
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has ACK value
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //handle same message again, but configure set callback to always return false
+    //status byte should then be ERROR_WRITE
     sysEx.setHandleSet(onSetInvalid);
 
     arraySize = sizeof(setAllValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllValid, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_WRITE, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_WRITE, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //restore callback
     sysEx.setHandleSet(onSet);
@@ -929,138 +1297,278 @@ TEST_F(SysExTest, SetAll)
     //send set all message for section with more parts
     arraySize = sizeof(setAllMoreParts1)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllMoreParts1, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
+    //send set all request with part byte being 0x01
     arraySize = sizeof(setAllMoreParts2)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllMoreParts2, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x01, sysExTestArray[5]); //second part
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send set all requests for all parts and verify that status byte is set to ERROR_PART
     arraySize = sizeof(setAllAllParts)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllAllParts, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_PART, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_PART, sysExTestArray[4]);
+    EXPECT_EQ(0x7F, sysExTestArray[5]); //same part as requested
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
 
-    //set all with invalid value
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
+    //send set all request with invalid value
+    //status byte should be ERROR_NEW_VALUE
     arraySize = sizeof(setAllnvalidNewVal)/sizeof(uint8_t);
     memcpy(sysExTestArray, setAllnvalidNewVal, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_NEW_VALUE, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_NEW_VALUE, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 }
 
 TEST_F(SysExTest, GetSingle)
 {
+    //reset message count
+    responseCounter = 0;
+
+    //send get single request
     uint8_t arraySize = sizeof(getSingleValid)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSingleValid, arraySize);
-
-    //send valid get message
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has ACK value
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
-
-    //check if sysExTestArray equals value we're expecting
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[6]);
+    EXPECT_EQ(0xF7, sysExTestArray[7]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, GetAll)
 {
+    //reset message count
+    responseCounter = 0;
+
+    //send get all request
     uint8_t arraySize = sizeof(getAllValid_1part)/sizeof(uint8_t);
     memcpy(sysExTestArray, getAllValid_1part, arraySize);
-
-    //we are expecting 1 message as an sysExTestArray
-    int tempResponseCounter = responseCounter;
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    int expectedCounter = tempResponseCounter+1;
+    //check response
+    //10 values should be received
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[6]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[7]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[8]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[9]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[10]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[11]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[12]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[13]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[14]);
+    EXPECT_EQ(TEST_VALUE_GET, sysExTestArray[15]);
+    EXPECT_EQ(0xF7, sysExTestArray[16]);
 
-    EXPECT_EQ(responseCounter, expectedCounter);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 
-    //check if status byte has ACK value
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //reset message count
+    responseCounter = 0;
 
     //now send same request for all parts
     //we are expecting 2 messages now
-
     arraySize = sizeof(getAllValid_allParts_7F)/sizeof(uint8_t);
     memcpy(sysExTestArray, getAllValid_allParts_7F, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(responseCounter, expectedCounter+2);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 2);
 
-    expectedCounter = responseCounter;
+    //reset message count
+    responseCounter = 0;
 
+    //same message with part being 0x7E
+    //in this case, last message should be ACK message
     arraySize = sizeof(getAllValid_allParts_7E)/sizeof(uint8_t);
     memcpy(sysExTestArray, getAllValid_allParts_7E, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //last returned message should have status byte set to ACK
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check last response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x7E, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
 
-    //also, three messages should be returned
-    EXPECT_EQ(responseCounter, expectedCounter+3);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 3);
 }
 
 TEST_F(SysExTest, CustomReq)
 {
-    uint8_t arraySize = sizeof(customReq)/sizeof(uint8_t);
-    memcpy(sysExTestArray, customReq, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send valid custom request message
+    uint8_t arraySize = sizeof(customReq)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReq, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has ACK value
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
-
-    //check if sysExTestArray equals value we're expecting
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(CUSTOM_REQUEST_VALUE, sysExTestArray[6]);
+    EXPECT_EQ(0xF7, sysExTestArray[7]);
 
-    arraySize = sizeof(customReqErrorRead)/sizeof(uint8_t);
-    memcpy(sysExTestArray, customReqErrorRead, arraySize);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send custom request message which should return false in custom request handler
+    //in this case, ERROR_READ should be reported
+    arraySize = sizeof(customReqErrorRead)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReqErrorRead, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has ERROR_READ value
-    EXPECT_EQ(ERROR_READ, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_READ, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send non-existing custom request message
+    //ERROR_WISH should be reported
     arraySize = sizeof(customReqInvalid)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReqInvalid, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has error wish value
-    EXPECT_EQ(ERROR_WISH, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_WISH, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //disable configuration
     arraySize = sizeof(connClose)/sizeof(uint8_t);
     memcpy(sysExTestArray, connClose, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
+
+    //verify that connection is closed
     EXPECT_EQ(false, sysEx.isConfigurationEnabled());
 
-    arraySize = sizeof(customReq)/sizeof(uint8_t);
-    memcpy(sysExTestArray, customReq, arraySize);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send valid custom request message
+    //ERROR_CONNECTION should be reported
+    arraySize = sizeof(customReq)/sizeof(uint8_t);
+    memcpy(sysExTestArray, customReq, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //check if status byte has connection error value
-    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //try defining custom requests with invalid pointer
     EXPECT_EQ(sysEx.setupCustomRequests(NULL, 0), false);
@@ -1114,68 +1622,130 @@ TEST_F(SysExTest, CustomReq)
     //sysex configuration should be disabled now
     EXPECT_EQ(false, sysEx.isConfigurationEnabled());
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
     //send custom request 0
+    //ERROR_CONNECTION should be returned because connection is closed
     arraySize = sizeof(customReq)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReq, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //ERROR_CONNECTION should be returned because connection is closed
-    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send another custom request which has flag set to ignore connection status
+    //ACK should be reported
     arraySize = sizeof(customReqNoConnCheck)/sizeof(uint8_t);
     memcpy(sysExTestArray, customReqNoConnCheck, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //status byte should be ACK
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(CUSTOM_REQUEST_VALUE, sysExTestArray[6]);
+    EXPECT_EQ(0xF7, sysExTestArray[7]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //open connection again
     arraySize = sizeof(connOpen)/sizeof(uint8_t);
     memcpy(sysExTestArray, connOpen, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //verify that connection is opened
+    EXPECT_EQ(true, sysEx.isConfigurationEnabled());
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, IgnoreMessage)
 {
+    //reset message count
+    responseCounter = 0;
+
     //verify that no action takes place when sysex ids in message don't match
     //short message is any message without every required byte
-    //store current sysExTestArray counter
-    int tempResponseCounter = responseCounter;
-
     uint8_t arraySize = sizeof(shortMessage1)/sizeof(uint8_t);
     memcpy(sysExTestArray, shortMessage1, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-    //if no action took place, sysExTestArray counter should be unchanged
-    EXPECT_EQ(tempResponseCounter, responseCounter);
 
+    //if no action took place, responseCounter should be 0
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
+
+    //send another variant of short message
     arraySize = sizeof(shortMessage2)/sizeof(uint8_t);
     memcpy(sysExTestArray, shortMessage2, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-    //if no action took place, sysExTestArray counter should be unchanged
-    EXPECT_EQ(tempResponseCounter, responseCounter);
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
+
+    //send message with invalid SysEx ID
     arraySize = sizeof(getSingleInvalidSysExID)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSingleInvalidSysExID, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-    //if no action took place, sysExTestArray counter should be unchanged
-    EXPECT_EQ(tempResponseCounter, responseCounter);
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 0);
+
+    //short message where ERROR_MESSAGE_LENGTH should be returned
     arraySize = sizeof(shortMessage3)/sizeof(uint8_t);
     memcpy(sysExTestArray, shortMessage3, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
-    EXPECT_EQ(ERROR_MESSAGE_LENGTH, sysExTestArray[(uint8_t)statusByte]);
+
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_MESSAGE_LENGTH, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, CustomMessage)
 {
+    //reset message count
+    responseCounter = 0;
+
     //construct custom message and see if output matches
     sysExParameter_t values[] = 
     {
@@ -1186,125 +1756,243 @@ TEST_F(SysExTest, CustomMessage)
 
     sysEx.sendCustomMessage(sysExTestArray, values, 3);
 
-    EXPECT_EQ(sysExTestArray[statusByte], ACK);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(0x05, sysExTestArray[6]);
     EXPECT_EQ(0x06, sysExTestArray[7]);
     EXPECT_EQ(0x07, sysExTestArray[8]);
+    EXPECT_EQ(0xF7, sysExTestArray[9]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //construct same message again with REQUEST as status byte
     sysEx.sendCustomMessage(sysExTestArray, values, 3, false);
 
-    EXPECT_EQ(sysExTestArray[statusByte], REQUEST);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(REQUEST, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(0x05, sysExTestArray[6]);
     EXPECT_EQ(0x06, sysExTestArray[7]);
     EXPECT_EQ(0x07, sysExTestArray[8]);
+    EXPECT_EQ(0xF7, sysExTestArray[9]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, Backup)
 {
-    uint8_t arraySize = sizeof(backupAll)/sizeof(uint8_t);
-    memcpy(sysExTestArray, backupAll, arraySize);
+    //reset message count
+    responseCounter = 0;
 
     //send backup all request
+    uint8_t arraySize = sizeof(backupAll)/sizeof(uint8_t);
+    memcpy(sysExTestArray, backupAll, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //check if status byte is set to REQUEST value
     EXPECT_EQ(REQUEST, sysExTestArray[(uint8_t)statusByte]);
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
     //send backup/single request with incorrect part
     arraySize = sizeof(backupSingleInvPart)/sizeof(uint8_t);
     memcpy(sysExTestArray, backupSingleInvPart, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_PART, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_PART, sysExTestArray[4]);
+    EXPECT_EQ(0x03, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
 }
 
 TEST_F(SysExTest, SpecialRequest)
 {
+    //reset message count
+    responseCounter = 0;
+
     //test all pre-configured special requests and see if they return correct value
+
     //bytes per value request
     uint8_t arraySize = sizeof(getSpecialReqBytesPerVal)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSpecialReqBytesPerVal, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //status byte must be ACK
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
-
-    //returned value must be PARAM_SIZE
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(PARAM_SIZE, sysExTestArray[6]);
+    EXPECT_EQ(0xF7, sysExTestArray[7]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //params per msg request
     arraySize = sizeof(getSpecialReqParamPerMsg)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSpecialReqParamPerMsg, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //status byte must be ACK
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
-
-    //returned value must be PARAMETERS_PER_MESSAGE
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
     EXPECT_EQ(PARAMETERS_PER_MESSAGE, sysExTestArray[6]);
+    EXPECT_EQ(0xF7, sysExTestArray[7]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //now try those same requests, but without prior open connection request
     //status byte must equal ERROR_CONNECTION
+
     //close connection first
     arraySize = sizeof(connClose)/sizeof(uint8_t);
     memcpy(sysExTestArray, connClose, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //configuration should be closed now
     EXPECT_EQ(false, sysEx.isConfigurationEnabled());
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
     //bytes per value request
     arraySize = sizeof(getSpecialReqBytesPerVal)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSpecialReqBytesPerVal, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //params per msg request
     arraySize = sizeof(getSpecialReqParamPerMsg)/sizeof(uint8_t);
     memcpy(sysExTestArray, getSpecialReqParamPerMsg, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //try to close configuration which is already closed
     arraySize = sizeof(connClose)/sizeof(uint8_t);
     memcpy(sysExTestArray, connClose, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ERROR_CONNECTION, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
 
-    //now re-enable conf
-    arraySize = sizeof(connOpen)/sizeof(uint8_t);
-    memcpy(sysExTestArray, connOpen, arraySize);
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 
     //send open connection request and check if sysExTestArray is valid
+    arraySize = sizeof(connOpen)/sizeof(uint8_t);
+    memcpy(sysExTestArray, connOpen, arraySize);
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
     //sysex configuration should be enabled now
     EXPECT_EQ(1, sysEx.isConfigurationEnabled());
 
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
+
     //disable configuration again
     arraySize = sizeof(connClose)/sizeof(uint8_t);
     memcpy(sysExTestArray, connClose, arraySize);
-
     sysEx.handleMessage((uint8_t*)sysExTestArray, arraySize);
 
-    //status must now be ACK
-    EXPECT_EQ(ACK, sysExTestArray[(uint8_t)statusByte]);
+    //check response
+    EXPECT_EQ(0xF0, sysExTestArray[0]);
+    EXPECT_EQ(0x00, sysExTestArray[1]);
+    EXPECT_EQ(0x53, sysExTestArray[2]);
+    EXPECT_EQ(0x43, sysExTestArray[3]);
+    EXPECT_EQ(ACK, sysExTestArray[4]);
+    EXPECT_EQ(0x00, sysExTestArray[5]);
+    EXPECT_EQ(0xF7, sysExTestArray[6]);
+
+    //check number of received messages
+    EXPECT_EQ(responseCounter, 1);
+
+    //reset message count
+    responseCounter = 0;
 }
 
 TEST_F(SysExTest, AddToReponseFail)
 {
     //try to add bytes to sysex response without first specifying array source
-    bool returnValue = sysEx.addToResponse(0x50);
-    EXPECT_EQ(false, returnValue);
+    EXPECT_EQ(false, sysEx.addToResponse(0x50));
 }
