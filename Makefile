@@ -7,7 +7,7 @@ TEST_DIR := tests
 CPPFLAGS += -isystem $(GTEST_DIR)/include --coverage
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -pthread
+CXXFLAGS += -g -pthread -std=c++0x
 
 GTEST_DIR := ../googletest/googletest
 GTEST_HEADERS := $(GTEST_DIR)/include/gtest/*.h \
