@@ -1,6 +1,8 @@
 *.info
 *.gcda
 *.gcno
-*.o
+*.o*
 *.a
-Tests
+*.png
+*.htm*
+*.css

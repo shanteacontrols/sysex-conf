@@ -22,102 +22,12 @@
 #include "SysEx.h"
 
 ///
-/// \brief Function pointer used to retrieve data.
-///
-bool (*getCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value);
-
-///
-/// \brief Function pointer used to change data values.
-///
-bool (*setCallback)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue);
-
-///
-/// \brief Function pointer used to handle user specified requests.
-///
-bool (*customRequestCallback)(uint8_t value);
-
-///
-/// \brief Function pointer used to send SysEx response.
-///
-void (*sysExWriteCallback)(uint8_t *sysExArray, uint8_t size);
-
-///
-/// \brief Flag indicating whether or not configuration is possible.
-///
-bool                    sysExEnabled;
-
-///
-/// \brief Flag indicating whether or not silent mode is active.
-/// When silent mode is active, protocol won't return any error or ACK messages.
-///
-bool                    silentModeEnabled;
-
-///
-/// \brief Pointer to SysEx layout.
-///
-sysExBlock_t            *sysExMessage;
-
-///
-/// \brief Total number of blocks for a received SysEx layout.
-///
-uint8_t                 sysExBlockCounter;
-
-///
-/// \brief Structure containing decoded data from SysEx request for easier access.
-///
-decodedMessage_t        decodedMessage;
-
-///
-/// \brief Pointer to SysEx array.
-/// Same array is used for request and response.
-/// Response modifies received request so that arrays aren't duplicated.
-///
-uint8_t                 *sysExArray;
-
-///
-/// \brief Pointer to structure containing data for custom requests.
-///
-sysExCustomRequest_t    *sysExCustomRequest;
-
-///
-/// \brief Total number of custom SysEx requests stored in pointed structure.
-///
-uint8_t                 numberOfCustomRequests;
-
-///
-/// \brief Size of received SysEx array.
-///
-uint8_t                 receivedArraySize;
-
-///
-/// \brief Size of SysEx response.
-///
-uint8_t                 responseSize;
-
-///
-/// \brief User-set SysEx status.
-/// Used when user sets custom status.
-///
-sysExStatus_t           userStatus;
-
-///
-/// \brief Holds amount of user-specified custom requests.
-///
-uint8_t                 customRequestCounter;
-
-///
-/// \brief Variable holding info on whether custom requests need connection open request before they're processed.
-/// \warning This variable assumes no more than 16 custom requests can be specified.
-///
-uint16_t                customReqConnIgnore;
-
-///
 /// \brief Default constructor.
 ///
 SysEx::SysEx()
 {
-    sysExMessage = NULL;
-    sysExCustomRequest = NULL;
+    sysExMessage = nullptr;
+    sysExCustomRequest = nullptr;
     sysExBlockCounter = 0;
     numberOfCustomRequests = 0;
 }
@@ -128,20 +38,16 @@ SysEx::SysEx()
 /// @param [in] numberOfBlocks  Total number of blocks in configuration structure.
 /// \returns True on success, false otherwise.
 ///
-bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
+bool SysEx::setLayout(sysExBlock_t *pointer, uint8_t numberOfBlocks)
 {
-    getCallback             = NULL;
-    setCallback             = NULL;
-    customRequestCallback   = NULL;
-    sysExWriteCallback      = NULL;
-    sysExArray              = NULL;
+    sysExArray              = nullptr;
 
     sysExEnabled = false;
 
     customRequestCounter = 0;
     userStatus = (sysExStatus_t)0;
 
-    if ((pointer != NULL) && numberOfBlocks)
+    if ((pointer != nullptr) && numberOfBlocks)
     {
         sysExMessage = pointer;
         sysExBlockCounter = numberOfBlocks;
@@ -172,7 +78,7 @@ bool SysEx::init(sysExBlock_t *pointer, uint8_t numberOfBlocks)
 ///
 bool SysEx::setupCustomRequests(sysExCustomRequest_t *pointer, uint8_t _numberOfCustomRequests)
 {
-    if ((pointer != NULL) && _numberOfCustomRequests)
+    if ((pointer != nullptr) && _numberOfCustomRequests)
     {
         sysExCustomRequest = pointer;
 
@@ -180,7 +86,7 @@ bool SysEx::setupCustomRequests(sysExCustomRequest_t *pointer, uint8_t _numberOf
         {
             if (sysExCustomRequest[i].requestID < SYSEX_SR_TOTAL_NUMBER)
             {
-                sysExCustomRequest = NULL;
+                sysExCustomRequest = nullptr;
                 numberOfCustomRequests = 0;
                 return false; //id already used internally
             }
@@ -227,7 +133,7 @@ void SysEx::setSilentMode(bool state)
 ///
 void SysEx::handleMessage(uint8_t *array, uint8_t size)
 {
-    if ((sysExMessage != NULL) && sysExBlockCounter)
+    if ((sysExMessage != nullptr) && sysExBlockCounter)
     {
         resetDecodedMessage();
         //save pointer to received array so we can manipulate it directly
@@ -281,7 +187,7 @@ void SysEx::handleMessage(uint8_t *array, uint8_t size)
         if (sendResponse_var)
             sendResponse(false);
 
-        sysExArray = NULL;
+        sysExArray = nullptr;
     }
 }
 
@@ -475,42 +381,14 @@ bool SysEx::processStandardRequest()
                     }
                     else
                     {
-                        if (getCallback != NULL)
-                        {
-                            sysExParameter_t value = 0;
-                            bool returnValue = getCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, value);
-
-                            //check for custom error
-                            if (userStatus)
-                            {
-                                setStatus(userStatus);
-                                //clear user status
-                                userStatus = (sysExStatus_t)0;
-                                return false;
-                            }
-                            else if (!returnValue)
-                            {
-                                setStatus(ERROR_READ);
-                                return false;
-                            }
-                            else
-                            {
-                                addToResponse(value);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (getCallback != NULL)
-                    {
-                        //get all params - no index is specified
                         sysExParameter_t value = 0;
-                        bool returnValue = getCallback(decodedMessage.block, decodedMessage.section, i, value);
+                        bool returnValue = onGet(decodedMessage.block, decodedMessage.section, decodedMessage.index, value);
 
+                        //check for custom error
                         if (userStatus)
                         {
                             setStatus(userStatus);
+                            //clear user status
                             userStatus = (sysExStatus_t)0;
                             return false;
                         }
@@ -523,6 +401,28 @@ bool SysEx::processStandardRequest()
                         {
                             addToResponse(value);
                         }
+                    }
+                }
+                else
+                {
+                    //get all params - no index is specified
+                    sysExParameter_t value = 0;
+                    bool returnValue = onGet(decodedMessage.block, decodedMessage.section, i, value);
+
+                    if (userStatus)
+                    {
+                        setStatus(userStatus);
+                        userStatus = (sysExStatus_t)0;
+                        return false;
+                    }
+                    else if (!returnValue)
+                    {
+                        setStatus(ERROR_READ);
+                        return false;
+                    }
+                    else
+                    {
+                        addToResponse(value);
                     }
                 }
                 break;
@@ -543,22 +443,19 @@ bool SysEx::processStandardRequest()
                         return false;
                     }
 
-                    if (setCallback != NULL)
+                    if (!onSet(decodedMessage.block, decodedMessage.section, decodedMessage.index, decodedMessage.newValue))
                     {
-                        if (!setCallback(decodedMessage.block, decodedMessage.section, decodedMessage.index, decodedMessage.newValue))
+                        if (userStatus)
                         {
-                            if (userStatus)
-                            {
-                                setStatus(userStatus);
-                                userStatus = (sysExStatus_t)0;
-                            }
-                            else
-                            {
-                                setStatus(ERROR_WRITE);
-                            }
-
-                            return false;
+                            setStatus(userStatus);
+                            userStatus = (sysExStatus_t)0;
                         }
+                        else
+                        {
+                            setStatus(ERROR_WRITE);
+                        }
+
+                        return false;
                     }
                 }
                 else
@@ -582,24 +479,21 @@ bool SysEx::processStandardRequest()
                         return false;
                     }
 
-                    if (setCallback != NULL)
+                    if (!onSet(decodedMessage.block, decodedMessage.section, i, decodedMessage.newValue))
                     {
-                        if (!setCallback(decodedMessage.block, decodedMessage.section, i, decodedMessage.newValue))
+                        //check for custom error
+                        if (userStatus)
                         {
-                            //check for custom error
-                            if (userStatus)
-                            {
-                                setStatus(userStatus);
-                                //clear user status
-                                userStatus = (sysExStatus_t)0;
-                            }
-                            else
-                            {
-                                setStatus(ERROR_WRITE);
-                            }
-
-                            return false;
+                            setStatus(userStatus);
+                            //clear user status
+                            userStatus = (sysExStatus_t)0;
                         }
+                        else
+                        {
+                            setStatus(ERROR_WRITE);
+                        }
+
+                        return false;
                     }
                 }
                 break;
@@ -730,11 +624,8 @@ bool SysEx::processSpecialRequest()
             {
                 setStatus(ACK);
 
-                if (customRequestCallback != NULL)
-                {
-                    if (!customRequestCallback(sysExCustomRequest[i].requestID))
-                        setStatus(ERROR_READ);
-                }
+                if (!onCustomRequest(sysExCustomRequest[i].requestID))
+                    setStatus(ERROR_READ);
             }
             else
             {
@@ -963,7 +854,7 @@ void SysEx::sendResponse(bool containsLastByte)
     if (silentModeEnabled && (decodedMessage.wish != sysExWish_get))
         return;
 
-    sysExWriteCallback(sysExArray, responseSize);
+    onWrite(sysExArray, responseSize);
 }
 
 ///
@@ -974,7 +865,7 @@ void SysEx::sendResponse(bool containsLastByte)
 ///
 bool SysEx::addToResponse(sysExParameter_t value)
 {
-    if (sysExArray == NULL)
+    if (sysExArray == nullptr)
         return false;
 
     #if PARAM_SIZE == 2
@@ -1030,36 +921,4 @@ void SysEx::setError(sysExStatus_t status)
         userStatus = ERROR_WRITE;
         break;
     }
-}
-
-///
-/// \brief Handler used to set callback function for get requests.
-///
-void SysEx::setHandleGet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t &value))
-{
-    getCallback = fptr;
-}
-
-///
-/// \brief Handler used to set callback function for set requests.
-///
-void SysEx::setHandleSet(bool(*fptr)(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue))
-{
-    setCallback = fptr;
-}
-
-///
-/// \brief Handler used to set callback function for custom requests.
-///
-void SysEx::setHandleCustomRequest(bool(*fptr)(uint8_t value)) 
-{
-    customRequestCallback = fptr;
-}
-
-///
-/// \brief Handler used to set callback function for handling assembled SysEx array.
-///
-void SysEx::setHandleSysExWrite(void(*fptr)(uint8_t *sysExArray, uint8_t size))
-{
-    sysExWriteCallback = fptr;
 }
