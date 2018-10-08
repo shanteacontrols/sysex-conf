@@ -32,7 +32,7 @@
 class SysEx
 {
     public:
-    SysEx();
+    SysEx() {}
     bool setLayout(sysExBlock_t *pointer, uint8_t numberOfBlocks);
     bool setupCustomRequests(sysExCustomRequest_t *customRequests, uint8_t numberOfCustomRequests);
     void handleMessage(uint8_t *sysExArray, uint8_t size);
@@ -72,23 +72,23 @@ class SysEx
     ///
     /// \brief Flag indicating whether or not configuration is possible.
     ///
-    bool                    sysExEnabled;
+    bool                    sysExEnabled = false;
 
     ///
     /// \brief Flag indicating whether or not silent mode is active.
     /// When silent mode is active, protocol won't return any error or ACK messages.
     ///
-    bool                    silentModeEnabled;
+    bool                    silentModeEnabled = false;
 
     ///
     /// \brief Pointer to SysEx layout.
     ///
-    sysExBlock_t            *sysExMessage;
+    sysExBlock_t            *sysExMessage = nullptr;
 
     ///
     /// \brief Total number of blocks for a received SysEx layout.
     ///
-    uint8_t                 sysExBlockCounter;
+    uint8_t                 sysExBlockCounter = 0;
 
     ///
     /// \brief Structure containing decoded data from SysEx request for easier access.
@@ -100,44 +100,44 @@ class SysEx
     /// Same array is used for request and response.
     /// Response modifies received request so that arrays aren't duplicated.
     ///
-    uint8_t                 *sysExArray;
+    uint8_t                 *sysExArray = nullptr;
 
     ///
     /// \brief Pointer to structure containing data for custom requests.
     ///
-    sysExCustomRequest_t    *sysExCustomRequest;
+    sysExCustomRequest_t    *sysExCustomRequest = nullptr;
 
     ///
     /// \brief Total number of custom SysEx requests stored in pointed structure.
     ///
-    uint8_t                 numberOfCustomRequests;
+    uint8_t                 numberOfCustomRequests = 0;
 
     ///
     /// \brief Size of received SysEx array.
     ///
-    uint8_t                 receivedArraySize;
+    uint8_t                 receivedArraySize = 0;
 
     ///
     /// \brief Size of SysEx response.
     ///
-    uint8_t                 responseSize;
+    uint8_t                 responseSize = 0;
 
     ///
     /// \brief User-set SysEx status.
     /// Used when user sets custom status.
     ///
-    sysExStatus_t           userStatus;
+    sysExStatus_t           userStatus = REQUEST;
 
     ///
     /// \brief Holds amount of user-specified custom requests.
     ///
-    uint8_t                 customRequestCounter;
+    uint8_t                 customRequestCounter = 0;
 
     ///
     /// \brief Variable holding info on whether custom requests need connection open request before they're processed.
     /// \warning This variable assumes no more than 16 custom requests can be specified.
     ///
-    uint16_t                customReqConnIgnore;
+    uint16_t                customReqConnIgnore = 0;
 };
 
 /// @}

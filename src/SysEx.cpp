@@ -22,17 +22,6 @@
 #include "SysEx.h"
 
 ///
-/// \brief Default constructor.
-///
-SysEx::SysEx()
-{
-    sysExMessage = nullptr;
-    sysExCustomRequest = nullptr;
-    sysExBlockCounter = 0;
-    numberOfCustomRequests = 0;
-}
-
-///
 /// Configures user specifed configuration layout and initializes data to their default values.
 /// @param [in] pointer     Pointer to configuration structure.
 /// @param [in] numberOfBlocks  Total number of blocks in configuration structure.
