@@ -8,14 +8,14 @@ install:
   - gem install coveralls-lcov
 
 script:
-  - make GTEST_DIR=googletest/googletest
+  - cd tests/
+  - make GTEST_DIR=../googletest/googletest
 
 after_success:
-  - ./test_run.out
-  - lcov --directory . --capture --output-file coverage.info
-  - lcov --remove coverage.info '*tests*' '*usr/*' '*gtest*' '*googletest*' --output-file coverage.info
-  - lcov --list coverage.info
-  - coveralls-lcov coverage.info
+  - chmod +x runtests.sh
+  - make exec
+  - make coverage
+  - coveralls-lcov build/coverage.info
 
 notifications:
   email:
