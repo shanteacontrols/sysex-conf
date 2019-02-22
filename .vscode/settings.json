@@ -1,7 +1,7 @@
 // Workspace settings
 {
     "files.exclude": {
-        "src/build/": true,
+        "**/build*": true,
         "bin/": true,
         "**.a": true,
         "**.gcno": true,
@@ -14,6 +14,7 @@
     "files.associations": {
         "system_error": "cpp",
         "*.tcc": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "type_traits": "cpp"
     },
 }

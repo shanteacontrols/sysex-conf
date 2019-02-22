@@ -6,15 +6,18 @@
     "configurations": [
         {
             "name": "(gdb) Launch",
+            "linux": {
+                "externalConsole": false
+            },
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/test_run.out",
+            "program": "${workspaceFolder}/tests/build/sysex.out",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": true,
-            "MIMode": "lldb",
+            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
