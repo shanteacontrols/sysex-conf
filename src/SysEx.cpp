@@ -352,7 +352,7 @@ bool SysEx::processStandardRequest()
             startIndex = PARAMETERS_PER_MESSAGE*decodedMessage.part;
             endIndex = startIndex + PARAMETERS_PER_MESSAGE;
 
-            if ((sysExParameter_t)endIndex > sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters)
+            if (endIndex > sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters)
                 endIndex = sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters;
         }
 

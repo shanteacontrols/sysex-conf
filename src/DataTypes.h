@@ -36,7 +36,7 @@ typedef int8_t sysExParameter_t;
 ///
 typedef struct
 {
-    sysExParameter_t numberOfParameters;
+    uint16_t numberOfParameters;
     sysExParameter_t newValueMin;
     sysExParameter_t newValueMax;
     uint8_t parts;
@@ -160,6 +160,6 @@ typedef struct
     uint8_t block;
     uint8_t section;
     uint8_t part;
-    sysExParameter_t index;
+    uint16_t index;
     sysExParameter_t newValue;
 } decodedMessage_t;
