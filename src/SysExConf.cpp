@@ -19,7 +19,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "SysEx.h"
+#include "SysExConf.h"
 
 ///
 /// Configures user specifed configuration layout and initializes data to their default values.
