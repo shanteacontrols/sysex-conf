@@ -1,21 +1,18 @@
 {
     "configurations": [
         {
-            "name": "Linux",
-            "includePath": [
-                "/usr/local/avr",
-                "${workspaceRoot}"
-            ],
+            "name": "default",
             "defines": [],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "browse": {
                 "path": [
-                    "/usr/local/avr",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++11"
         }
     ],
     "version": 4

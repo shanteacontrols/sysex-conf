@@ -8,11 +8,10 @@ install:
   - gem install coveralls-lcov
 
 script:
-  - cd tests/
-  - make GTEST_DIR=../googletest/googletest
+  - cd src/tests/
+  - make GTEST_DIR=../../googletest/googletest
 
 after_success:
-  - chmod +x runtests.sh
   - make exec
   - make coverage
   - coveralls-lcov build/coverage.info

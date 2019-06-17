@@ -1,9 +1,7 @@
-*.info
-*.gcda
-*.gcno
-*.o*
-*.a
-*.png
-*.htm*
-*.css
-*build*
+build/
+.DS_Store
+src/compile_commands.json
+Documentation/*
+*compile_commands.json
+*ipch*
+*Objects.mk*

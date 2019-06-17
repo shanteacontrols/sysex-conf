@@ -21,26 +21,36 @@
 
 #pragma once
 
-#include <inttypes.h>
-
 ///
 /// \brief Maximum number of parameter indexes in single SysEx message.
 ///
-#define PARAMETERS_PER_MESSAGE  32
+#ifndef SYS_EX_CONF_PARAMETERS_PER_MESSAGE
+#define SYS_EX_CONF_PARAMETERS_PER_MESSAGE 32
+#endif
 
 ///
 /// \brief Size of single parameter value in SysEx message.
 /// 1 - one byte size for parameter index and new value (uint8_t)
 /// 2 - two byte size (uint16_t)
 ///
-#define PARAM_SIZE              1
+#ifndef SYS_EX_CONF_PARAM_SIZE
+#define SYS_EX_CONF_PARAM_SIZE 1
+#endif
 
 ///
 /// \brief Manufacturer SysEx bytes.
 /// @{
 
-#define SYS_EX_M_ID_0           0x00
-#define SYS_EX_M_ID_1           0x53
-#define SYS_EX_M_ID_2           0x43
+#ifndef SYS_EX_CONF_M_ID_0
+#define SYS_EX_CONF_M_ID_0 0x00
+#endif
+
+#ifndef SYS_EX_CONF_M_ID_1
+#define SYS_EX_CONF_M_ID_1 0x53
+#endif
+
+#ifndef SYS_EX_CONF_M_ID_2
+#define SYS_EX_CONF_M_ID_2 0x43
+#endif
 
 /// @}
