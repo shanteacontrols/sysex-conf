@@ -96,7 +96,7 @@ class SysExTestingValid : public SysExConf
     SysExConf::status_t userError;
     uint8_t             testArray[200];
 
-    bool onCustomRequest(size_t value)
+    bool onCustomRequest(size_t value) override
     {
         switch (value)
         {
@@ -117,7 +117,7 @@ class SysExTestingValid : public SysExConf
 
     ON_SET_VALID
 
-    void onWrite(uint8_t testArray[], size_t arraysize)
+    void onWrite(uint8_t testArray[], size_t arraysize) override
     {
         for (size_t i = 0; i < arraysize; i++)
             this->testArray[i] = testArray[i];
