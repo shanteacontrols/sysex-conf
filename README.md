@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/paradajz/sysex-conf.svg?branch=master)](https://travis-ci.org/paradajz/sysex-conf)
-[![Coverage Status](https://coveralls.io/repos/github/paradajz/sysex-conf/badge.svg?branch=master&service=github)](https://coveralls.io/github/paradajz/sysex-conf?branch=master)
+[![Build Status](https://github.com/paradajz/sysex-conf/workflows/Build+Test/badge.svg?branch=master)](https://github.com/paradajz/sysex-conf/actions)
 
 # MIDI SysEx configuration protocol
 
