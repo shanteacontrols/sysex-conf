@@ -3,7 +3,7 @@ CLANG-FORMAT := clang-format
 
 build/$(TARGETNAME).o:
 	@mkdir -p $(@D)
-	@$(CXX) -std=c++11 -c SysExConf.cpp -o "$@"
+	@$(CXX) -std=c++11 -Wall -c SysExConf.cpp -o "$@"
 	@echo Finished building: SysExConf.cpp
 
 format:
