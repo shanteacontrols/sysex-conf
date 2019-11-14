@@ -64,13 +64,13 @@ bool SysExConf::setLayout(block_t* pointer, uint8_t numberOfBlocks)
 /// @param [in] numberOfCustomRequests  Total number of requests stored in specified structure.
 /// \returns True on success, false otherwise.
 ///
-bool SysExConf::setupCustomRequests(customRequest_t* pointer, uint8_t _numberOfCustomRequests)
+bool SysExConf::setupCustomRequests(customRequest_t* pointer, size_t _numberOfCustomRequests)
 {
     if ((pointer != nullptr) && _numberOfCustomRequests)
     {
         sysExCustomRequest = pointer;
 
-        for (int i = 0; i < _numberOfCustomRequests; i++)
+        for (size_t i = 0; i < _numberOfCustomRequests; i++)
         {
             if (sysExCustomRequest[i].requestID < static_cast<uint8_t>(specialRequest_t::AMOUNT))
             {
@@ -119,7 +119,7 @@ void SysExConf::setSilentMode(bool state)
 /// @param [in] array   SysEx array.
 /// @param [in] size    Array size.
 ///
-void SysExConf::handleMessage(uint8_t* array, uint8_t size)
+void SysExConf::handleMessage(uint8_t* array, size_t size)
 {
     userStatus = status_t::request;
 
@@ -305,10 +305,10 @@ bool SysExConf::decode()
 ///
 bool SysExConf::processStandardRequest()
 {
-    uint16_t startIndex = 0, endIndex = 1;
-    uint8_t  msgPartsLoop = 1, responseSize_ = responseSize;
-    bool     allPartsAck = false;
-    bool     allPartsLoop = false;
+    size_t  startIndex = 0, endIndex = 1;
+    uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
+    bool    allPartsAck = false;
+    bool    allPartsLoop = false;
 
     if ((decodedMessage.wish == wish_t::backup) || (decodedMessage.wish == wish_t::get))
     {
@@ -587,7 +587,7 @@ bool SysExConf::processSpecialRequest()
 
     default:
         //check for custom value
-        for (int i = 0; i < numberOfCustomRequests; i++)
+        for (size_t i = 0; i < numberOfCustomRequests; i++)
         {
             //check only current wish/request
             if (sysExCustomRequest[i].requestID != sysExArray[wishByte])
@@ -618,9 +618,9 @@ bool SysExConf::processSpecialRequest()
 /// \brief Generates message length based on other parameters in message.
 /// \returns    Message length in bytes.
 ///
-uint8_t SysExConf::generateMessageLenght()
+size_t SysExConf::generateMessageLenght()
 {
-    uint16_t size = 0;
+    size_t size = 0;
 
     switch (decodedMessage.amount)
     {
@@ -783,7 +783,7 @@ bool SysExConf::checkNewValue()
 /// @param [in] ack             When set to true, status byte will be set to status_t::ack, otherwise status_t::request will be used.
 ///                             Set to true by default.
 ///
-void SysExConf::sendCustomMessage(uint8_t* responseArray, sysExParameter_t* values, uint8_t size, bool ack)
+void SysExConf::sendCustomMessage(uint8_t* responseArray, sysExParameter_t* values, size_t size, bool ack)
 {
     sysExArray = responseArray;
     responseSize = 0;
@@ -804,7 +804,7 @@ void SysExConf::sendCustomMessage(uint8_t* responseArray, sysExParameter_t* valu
     sysExArray[responseSize] = 0;    //message part
     responseSize++;
 
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         addToResponse(values[i]);
     }

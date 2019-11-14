@@ -34,9 +34,9 @@ class SysExConf
 {
     public:
 #if SYS_EX_CONF_PARAM_SIZE == 2
-    typedef int16_t sysExParameter_t;
+    typedef uint16_t sysExParameter_t;
 #elif SYS_EX_CONF_PARAM_SIZE == 1
-    typedef int8_t sysExParameter_t;
+    typedef uint8_t sysExParameter_t;
 #else
 #error Incorrect parameter size for SysExConf
 #endif
@@ -46,7 +46,7 @@ class SysExConf
     ///
     typedef struct
     {
-        uint16_t         numberOfParameters;
+        size_t           numberOfParameters;
         sysExParameter_t newValueMin;
         sysExParameter_t newValueMax;
         uint8_t          parts;
@@ -66,8 +66,8 @@ class SysExConf
     ///
     typedef struct
     {
-        uint8_t requestID;        ///< ID byte representing specific request.
-        bool    connOpenCheck;    ///< Flag indicating whether or not SysEx connection should be enabled before processing request.
+        size_t requestID;        ///< ID byte representing specific request.
+        bool   connOpenCheck;    ///< Flag indicating whether or not SysEx connection should be enabled before processing request.
     } customRequest_t;
 
     ///
@@ -139,25 +139,25 @@ class SysExConf
         uint8_t          block;
         uint8_t          section;
         uint8_t          part;
-        uint16_t         index;
+        size_t           index;
         sysExParameter_t newValue;
     } decodedMessage_t;
 
     SysExConf() {}
     bool setLayout(block_t* pointer, uint8_t numberOfBlocks);
-    bool setupCustomRequests(customRequest_t* customRequests, uint8_t numberOfCustomRequests);
-    void handleMessage(uint8_t* sysExArray, uint8_t size);
+    bool setupCustomRequests(customRequest_t* customRequests, size_t numberOfCustomRequests);
+    void handleMessage(uint8_t* sysExArray, size_t size);
     bool isConfigurationEnabled();
     bool isSilentModeEnabled();
     void setSilentMode(bool state);
-    void sendCustomMessage(uint8_t* responseArray, sysExParameter_t* values, uint8_t size, bool ack = true);
+    void sendCustomMessage(uint8_t* responseArray, sysExParameter_t* values, size_t size, bool ack = true);
     void setError(status_t status);
     bool addToResponse(sysExParameter_t value);
 
-    virtual bool onGet(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t& value) = 0;
-    virtual bool onSet(uint8_t block, uint8_t section, uint16_t index, sysExParameter_t newValue) = 0;
-    virtual bool onCustomRequest(uint8_t value) = 0;
-    virtual void onWrite(uint8_t* sysExArray, uint8_t size) = 0;
+    virtual bool onGet(uint8_t block, uint8_t section, size_t index, sysExParameter_t& value) = 0;
+    virtual bool onSet(uint8_t block, uint8_t section, size_t index, sysExParameter_t newValue) = 0;
+    virtual bool onCustomRequest(size_t value) = 0;
+    virtual void onWrite(uint8_t* sysExArray, size_t size) = 0;
 
     private:
     bool decode();
@@ -175,9 +175,9 @@ class SysExConf
     bool checkNewValue();
     bool checkParameters();
 
-    uint8_t generateMessageLenght();
-    void    setStatus(status_t status);
-    void    sendResponse(bool containsLastByte);
+    size_t generateMessageLenght();
+    void   setStatus(status_t status);
+    void   sendResponse(bool containsLastByte);
 
     private:
     ///
@@ -252,17 +252,17 @@ class SysExConf
     ///
     /// \brief Total number of custom SysEx requests stored in pointed structure.
     ///
-    uint8_t numberOfCustomRequests = 0;
+    size_t numberOfCustomRequests = 0;
 
     ///
     /// \brief Size of received SysEx array.
     ///
-    uint8_t receivedArraySize = 0;
+    size_t receivedArraySize = 0;
 
     ///
     /// \brief Size of SysEx response.
     ///
-    uint8_t responseSize = 0;
+    size_t responseSize = 0;
 
     ///
     /// \brief User-set SysEx status.
@@ -273,13 +273,7 @@ class SysExConf
     ///
     /// \brief Holds amount of user-specified custom requests.
     ///
-    uint8_t customRequestCounter = 0;
-
-    ///
-    /// \brief Variable holding info on whether custom requests need connection open request before they're processed.
-    /// \warning This variable assumes no more than 16 custom requests can be specified.
-    ///
-    uint16_t customReqConnIgnore = 0;
+    size_t customRequestCounter = 0;
 };
 
 /// @}

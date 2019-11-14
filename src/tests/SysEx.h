@@ -40,8 +40,29 @@
 #define CUSTOM_REQUEST_VALUE 1
 #define TOTAL_CUSTOM_REQUESTS 3
 
-#define ON_GET_VALID                                                                                        \
-    bool onGet(uint8_t block, uint8_t section, uint16_t index, SysExConf::sysExParameter_t& value) override \
+#define ON_GET_VALID                                                                                      \
+    bool onGet(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value) override \
+    {                                                                                                     \
+        if (userError != SysExConf::status_t::request)                                                    \
+        {                                                                                                 \
+            setError(userError);                                                                          \
+            return false;                                                                                 \
+        }                                                                                                 \
+        else                                                                                              \
+        {                                                                                                 \
+            value = TEST_VALUE_GET;                                                                       \
+            return true;                                                                                  \
+        }                                                                                                 \
+    }
+
+#define ON_GET_INVALID                                                                                    \
+    bool onGet(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value) override \
+    {                                                                                                     \
+        return false;                                                                                     \
+    }
+
+#define ON_SET_VALID                                                                                        \
+    bool onSet(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) override \
     {                                                                                                       \
         if (userError != SysExConf::status_t::request)                                                      \
         {                                                                                                   \
@@ -50,35 +71,14 @@
         }                                                                                                   \
         else                                                                                                \
         {                                                                                                   \
-            value = TEST_VALUE_GET;                                                                         \
             return true;                                                                                    \
         }                                                                                                   \
     }
 
-#define ON_GET_INVALID                                                                                      \
-    bool onGet(uint8_t block, uint8_t section, uint16_t index, SysExConf::sysExParameter_t& value) override \
+#define ON_SET_INVALID                                                                                      \
+    bool onSet(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) override \
     {                                                                                                       \
         return false;                                                                                       \
-    }
-
-#define ON_SET_VALID                                                                                          \
-    bool onSet(uint8_t block, uint8_t section, uint16_t index, SysExConf::sysExParameter_t newValue) override \
-    {                                                                                                         \
-        if (userError != SysExConf::status_t::request)                                                        \
-        {                                                                                                     \
-            setError(userError);                                                                              \
-            return false;                                                                                     \
-        }                                                                                                     \
-        else                                                                                                  \
-        {                                                                                                     \
-            return true;                                                                                      \
-        }                                                                                                     \
-    }
-
-#define ON_SET_INVALID                                                                                        \
-    bool onSet(uint8_t block, uint8_t section, uint16_t index, SysExConf::sysExParameter_t newValue) override \
-    {                                                                                                         \
-        return false;                                                                                         \
     }
 
 class SysExTestingValid : public SysExConf
@@ -96,7 +96,7 @@ class SysExTestingValid : public SysExConf
     SysExConf::status_t userError;
     uint8_t             testArray[200];
 
-    bool onCustomRequest(uint8_t value)
+    bool onCustomRequest(size_t value)
     {
         switch (value)
         {
@@ -117,9 +117,9 @@ class SysExTestingValid : public SysExConf
 
     ON_SET_VALID
 
-    void onWrite(uint8_t testArray[], uint8_t arraysize)
+    void onWrite(uint8_t testArray[], size_t arraysize)
     {
-        for (int i = 0; i < arraysize; i++)
+        for (size_t i = 0; i < arraysize; i++)
             this->testArray[i] = testArray[i];
 
         responseCounter++;
@@ -140,7 +140,7 @@ class SysExTestingErrorGet : public SysExConf
     SysExConf::status_t userError;
     uint8_t             testArray[200];
 
-    bool onCustomRequest(uint8_t value) override
+    bool onCustomRequest(size_t value) override
     {
         switch (value)
         {
@@ -161,9 +161,9 @@ class SysExTestingErrorGet : public SysExConf
 
     ON_SET_VALID
 
-    void onWrite(uint8_t testArray[], uint8_t arraysize) override
+    void onWrite(uint8_t testArray[], size_t arraysize) override
     {
-        for (int i = 0; i < arraysize; i++)
+        for (size_t i = 0; i < arraysize; i++)
             this->testArray[i] = testArray[i];
 
         responseCounter++;
@@ -184,7 +184,7 @@ class SysExTestingErrorSet : public SysExConf
     SysExConf::status_t userError;
     uint8_t             testArray[200];
 
-    bool onCustomRequest(uint8_t value) override
+    bool onCustomRequest(size_t value) override
     {
         switch (value)
         {
@@ -205,9 +205,9 @@ class SysExTestingErrorSet : public SysExConf
 
     ON_SET_INVALID
 
-    void onWrite(uint8_t testArray[], uint8_t arraysize) override
+    void onWrite(uint8_t testArray[], size_t arraysize) override
     {
-        for (int i = 0; i < arraysize; i++)
+        for (size_t i = 0; i < arraysize; i++)
             this->testArray[i] = testArray[i];
 
         responseCounter++;
