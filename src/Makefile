@@ -1,5 +1,5 @@
 TARGETNAME := sysex-conf
-CLANG-FORMAT := clang-format-8
+CLANG-FORMAT := clang-format
 
 build/$(TARGETNAME).o:
 	@mkdir -p $(@D)
