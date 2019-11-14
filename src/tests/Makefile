@@ -2,24 +2,35 @@ include GTest.mk
 include Sources.mk
 -include Objects.mk
 
-pre-build:
-	@chmod +x ./gen_tests_targets.sh && ./gen_tests_targets.sh
+CPP := clang
+CXX := clang++
+LLVM_PROFDATA := llvm-profdata-9
+LLVM_COV := llvm-cov-9
 
-build/%.o: %.cpp $(GTEST_HEADERS)
-	@mkdir -p $(@D)
-	@echo Building $<
-	@$(CXX) $(CPP_FLAGS) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+TEST_BINARIES := $(addprefix -object ,$(shell find ./build -name "*.out" 2>/dev/null))
 
-exec:
-	@echo Running all compiled tests.
-	@chmod +x runtests.sh && ./runtests.sh
+#passed to both c and c++ compiler
+COMMON_FLAGS := \
+-isystem $(GTEST_DIR)/include \
+-isystem $(GTEST_DIR) \
+-fprofile-instr-generate \
+-fcoverage-mapping \
+-Og \
+-g \
+-pthread \
+-Wall
 
-coverage:
-	@echo Creating coverage report.
-	@lcov --directory build/ --capture --output-file build/coverage.info > /dev/null 2>&1
-	@lcov --remove build/coverage.info '*v1*' '/usr/*' '*crypto*' '*gtest*' '*stubs*' '*tests*' '*googletest*' --output-file build/coverage.info 2>&1
-	@lcov --list build/coverage.info > /dev/null 2>&1
-	@genhtml -o build/ build/coverage.info > /dev/null 2>&1
+#c++ compiler only
+CPP_FLAGS := \
+-std=c++11
+
+#c compiler only
+C_FLAGS := \
+-std=c11
+
+#linker
+LDFLAGS := \
+-lpthread
 
 #doesn't remove gtest sources
 clean:
@@ -31,6 +42,30 @@ clean:
 clean-all:
 	@echo Cleaning up.
 	@rm -rf build/
+
+build/%.o: %.c $(GTEST_HEADERS)
+	@mkdir -p $(@D)
+	@echo Building $<
+	@$(CPP) $(COMMON_FLAGS) $(C_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS) $(INCLUDE_FILES) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+
+build/%.o: %.cpp $(GTEST_HEADERS)
+	@mkdir -p $(@D)
+	@echo Building $<
+	@$(CXX) $(COMMON_FLAGS) $(CPP_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS) $(INCLUDE_FILES) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+
+pre-build:
+	@chmod +x ../../scripts/gen_tests_targets.sh && ../../scripts/gen_tests_targets.sh
+
+exec:
+	@echo Running all compiled tests.
+	@chmod +x ../../scripts/execute_tests.sh && ../../scripts/execute_tests.sh
+
+coverage:
+	@echo Creating coverage report.
+	@$(LLVM_PROFDATA) merge $(wildcard build/*.profraw) -o build/tests.profdata
+	@$(LLVM_COV) report $(TEST_BINARIES) -instr-profile=./build/tests.profdata -ignore-filename-regex="test|modules" -use-color
+	@$(LLVM_COV) show $(TEST_BINARIES) -instr-profile=./build/tests.profdata -ignore-filename-regex="test|modules" -use-color --format html > ./build/coverage.html
+	@echo ***Generated HTML coverage report in ./build/coverage.html***
 
 #debugging
 print-%:
