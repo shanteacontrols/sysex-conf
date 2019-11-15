@@ -34,9 +34,9 @@ class SysExConf
 {
     public:
 #if SYS_EX_CONF_PARAM_SIZE == 2
-    typedef uint16_t sysExParameter_t;
+    using sysExParameter_t = uint16_t;
 #elif SYS_EX_CONF_PARAM_SIZE == 1
-    typedef uint8_t sysExParameter_t;
+    using sysExParameter_t = uint8_t;
 #else
 #error Incorrect parameter size for SysExConf
 #endif
@@ -143,7 +143,7 @@ class SysExConf
         sysExParameter_t newValue;
     } decodedMessage_t;
 
-    SysExConf() {}
+    SysExConf() = default;
     bool setLayout(block_t* pointer, uint8_t numberOfBlocks);
     bool setupCustomRequests(customRequest_t* customRequests, size_t numberOfCustomRequests);
     void handleMessage(uint8_t* sysExArray, size_t size);
