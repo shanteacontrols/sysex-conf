@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "[Test] Build",
+            "command": "cd tests && make pre-build && make",
+            "type": "shell",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "[Test] Clean",
+            "command": "cd tests && make clean",
+            "type": "shell",
+            "problemMatcher": []
+        },
+        {
+            "label": "[Tests] Run compiled",
+            "command": "cd tests && make exec",
+            "type": "shell",
+            "problemMatcher": [],
+            "dependsOn": [
+                "[Test] Build"
+            ]
+        }
+    ]
+}

@@ -33,7 +33,7 @@ jobs:
            sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
        - name: Build
          run: |
-           cd src/tests
+           cd tests
            make pre-build
            make CPP=clang-9 CXX=clang++-9
            make exec

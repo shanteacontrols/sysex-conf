@@ -54,11 +54,11 @@ build/%.o: %.cpp $(GTEST_HEADERS)
 	@$(CXX) $(COMMON_FLAGS) $(CPP_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS) $(INCLUDE_FILES) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
 
 pre-build:
-	@chmod +x ../../scripts/gen_tests_targets.sh && ../../scripts/gen_tests_targets.sh
+	@chmod +x ../scripts/gen_tests_targets.sh && ../scripts/gen_tests_targets.sh
 
 exec:
 	@echo Running all compiled tests.
-	@chmod +x ../../scripts/execute_tests.sh && ../../scripts/execute_tests.sh
+	@chmod +x ../scripts/execute_tests.sh && ../scripts/execute_tests.sh
 
 coverage:
 	@echo Creating coverage report.

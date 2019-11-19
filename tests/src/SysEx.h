@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../SysExConf.h"
+#include "SysExConf.h"
 
 #define NUMBER_OF_BLOCKS 1
 #define NUMBER_OF_SECTIONS 3

@@ -15,7 +15,6 @@ build/$(TARGETNAME).o:
 format:
 	@echo Checking code formatting...
 	@find . -regex '.*\.\(cpp\|hpp\|h\|cc\|cxx\)' \
-	-not -path "*modules*" \
 	-exec $(CLANG_FORMAT) -i {} \;
 ifeq ($(CF_FAIL_ON_DIFF), 1)
 	git diff -s --exit-code
