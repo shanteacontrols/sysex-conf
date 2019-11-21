@@ -1,11 +1,12 @@
 // Workspace settings
 {
     "files.exclude": {
-        "**/build*": true,
-        "**/Build*": true,
+        "**/build/*": true,
         "bin/": true,
         "**/compile_commands.json": true,
         "**/ipch*": true,
+        "**/*cortex-debug*": true,
+        "**/*profraw": true,
     },
     "C_Cpp.intelliSenseEngine": "Default",
     "C_Cpp.intelliSenseEngineFallback": "Disabled",

@@ -1,9 +1,11 @@
-vpath src/%.cpp ../
+vpath modules/%.cpp ../
+vpath modules/%.c ../
 
-SOURCES_sysexconf := \
-src/tests.cpp \
-src/SysExConf.cpp
+TEST_FRAMEWORK_SOURCES := \
+modules/unity/src/unity.c
 
 #common include dirs
 INCLUDE_DIRS := \
--I"../src"
+-I"../modules" \
+-I"../src" \
+-I"./"

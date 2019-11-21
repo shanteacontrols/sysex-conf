@@ -18,7 +18,7 @@ jobs:
       - name: Build
         run: |
           cd src/
-          make CPP=clang-9 CXX=clang++-9
+          make C_COMPILER=clang-9 CPP_COMPILER=clang++-9
   test:
     name: Run tests
     runs-on: ubuntu-18.04
@@ -35,7 +35,7 @@ jobs:
          run: |
            cd tests
            make pre-build
-           make CPP=clang-9 CXX=clang++-9
+           make C_COMPILER=clang-9 CPP_COMPILER=clang++-9
            make exec
   format:
     name: Code formatting
@@ -53,4 +53,6 @@ jobs:
        - name: Build
          run: |
            cd src
+           make format CF_FAIL_ON_DIFF=1 CLANG_FORMAT=clang-format-9
+           cd ../tests
            make format CF_FAIL_ON_DIFF=1 CLANG_FORMAT=clang-format-9

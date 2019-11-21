@@ -12,7 +12,8 @@
                 "databaseFilename": ""
             },
             "cStandard": "c11",
-            "cppStandard": "c++11"
+            "cppStandard": "c++11",
+            "compileCommands": "${workspaceFolder}/src/compile_commands.json"
         }
     ],
     "version": 4

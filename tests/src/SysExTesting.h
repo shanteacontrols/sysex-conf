@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string.h>
 #include "SysExConf.h"
 
 #define NUMBER_OF_BLOCKS 1
