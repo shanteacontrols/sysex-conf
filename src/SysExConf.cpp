@@ -850,6 +850,12 @@ bool SysExConf::addToResponse(sysExParameter_t value)
     sysExArray[responseSize] = encoded.low;
     responseSize++;
 #elif SYS_EX_CONF_PARAM_SIZE == 1
+    if ((value != 0xF0) && (value != 0xF7))
+    {
+        if (value > 127)
+            value = 127;
+    }
+
     sysExArray[responseSize] = (uint8_t)value;
     responseSize++;
 #endif
