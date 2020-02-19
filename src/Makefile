@@ -5,8 +5,8 @@ BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGETNAME)
 
 include Sources.mk
 
-C_COMPILER := clang
-CPP_COMPILER := clang++
+C_COMPILER := clang-9
+CPP_COMPILER := clang++-9
 CLANG_FORMAT := clang-format-9
 
 #when set to 1, format target will fail if there are any changes to the repository after formatting

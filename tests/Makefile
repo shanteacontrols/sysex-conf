@@ -5,8 +5,8 @@ BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGETNAME)
 include Sources.mk
 -include Objects.mk
 
-C_COMPILER := clang
-CPP_COMPILER := clang++
+C_COMPILER := clang-9
+CPP_COMPILER := clang++-9
 LLVM_PROFDATA := llvm-profdata-9
 LLVM_COV := llvm-cov-9
 CLANG_FORMAT := clang-format-9
