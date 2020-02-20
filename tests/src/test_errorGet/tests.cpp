@@ -2,8 +2,18 @@
 #include "unity/Helpers.h"
 #include "src/SysExTesting.h"
 
+#define SYS_EX_CONF_M_ID_0 0x00
+#define SYS_EX_CONF_M_ID_1 0x53
+#define SYS_EX_CONF_M_ID_2 0x43
+
 namespace
 {
+    SysExConf::manufacturerID_t mId = {
+        SYS_EX_CONF_M_ID_0,
+        SYS_EX_CONF_M_ID_1,
+        SYS_EX_CONF_M_ID_2
+    };
+
     SysExConf::section_t testSections[NUMBER_OF_SECTIONS] = {
         {
             .numberOfParameters = SECTION_0_PARAMETERS,
@@ -83,12 +93,12 @@ namespace
         0xF7
     };
 
-    SysExTestingErrorGet sysEx;
+    SysExTestingErrorGet sysEx(mId);
 }    // namespace
 
 TEST_SETUP()
 {
-    sysEx = SysExTestingErrorGet();
+    sysEx.reset();
     sysEx.setLayout(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
 

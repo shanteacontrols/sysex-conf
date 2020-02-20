@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2019 Igor Petrovic
+    Copyright 2017-2020 Igor Petrovic
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the "Software"),
@@ -40,6 +40,16 @@ class SysExConf
 #else
 #error Incorrect parameter size for SysExConf
 #endif
+
+    ///
+    /// \brief Structure holding SysEx manufacturer ID bytes.
+    ///
+    typedef struct
+    {
+        uint8_t id1;
+        uint8_t id2;
+        uint8_t id3;
+    } manufacturerID_t;
 
     ///
     /// \brief Structure holding data for single SysEx section within block.
@@ -143,7 +153,11 @@ class SysExConf
         sysExParameter_t newValue;
     } decodedMessage_t;
 
-    SysExConf() = default;
+    SysExConf(manufacturerID_t& mID)
+        : mID(mID)
+    {}
+
+    void reset();
     bool setLayout(block_t* pointer, uint8_t numberOfBlocks);
     bool setupCustomRequests(customRequest_t* customRequests, size_t numberOfCustomRequests);
     void handleMessage(uint8_t* sysExArray, size_t size);
@@ -210,6 +224,11 @@ class SysExConf
         newValueByte_single = indexByte + sizeof(sysExParameter_t),
         newValueByte_all = indexByte
     } sysExParameterByteOrder;
+
+    ///
+    /// \brief Reference to structure containing manufacturer ID bytes.
+    ///
+    manufacturerID_t& mID;
 
     ///
     /// \brief Flag indicating whether or not configuration is possible.

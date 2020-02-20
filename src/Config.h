@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2018 Igor Petrovic
+    Copyright 2017-2020 Igor Petrovic
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the "Software"),
@@ -37,21 +37,3 @@
 #ifndef SYS_EX_CONF_PARAM_SIZE
 #define SYS_EX_CONF_PARAM_SIZE 1
 #endif
-
-///
-/// \brief Manufacturer SysEx bytes.
-/// @{
-
-#ifndef SYS_EX_CONF_M_ID_0
-#define SYS_EX_CONF_M_ID_0 0x00
-#endif
-
-#ifndef SYS_EX_CONF_M_ID_1
-#define SYS_EX_CONF_M_ID_1 0x53
-#endif
-
-#ifndef SYS_EX_CONF_M_ID_2
-#define SYS_EX_CONF_M_ID_2 0x43
-#endif
-
-/// @}

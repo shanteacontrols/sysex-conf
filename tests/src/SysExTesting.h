@@ -85,10 +85,10 @@
 class SysExTestingValid : public SysExConf
 {
     public:
-    SysExTestingValid()
+    SysExTestingValid(SysExConf::manufacturerID_t& mID)
+        : SysExConf(mID)
     {
-        responseCounter = 0;
-        userError = SysExConf::status_t::request;
+        reset();
     }
 
     ~SysExTestingValid() {}
@@ -96,6 +96,13 @@ class SysExTestingValid : public SysExConf
     int                 responseCounter;
     SysExConf::status_t userError;
     uint8_t             testArray[200];
+
+    void reset()
+    {
+        responseCounter = 0;
+        userError       = SysExConf::status_t::request;
+        SysExConf::reset();
+    }
 
     bool onCustomRequest(size_t value) override
     {
@@ -130,10 +137,11 @@ class SysExTestingValid : public SysExConf
 class SysExTestingErrorGet : public SysExConf
 {
     public:
-    SysExTestingErrorGet()
+    SysExTestingErrorGet(SysExConf::manufacturerID_t& mID)
+        : SysExConf(mID)
     {
         responseCounter = 0;
-        userError = SysExConf::status_t::request;
+        userError       = SysExConf::status_t::request;
     }
 
     ~SysExTestingErrorGet() {}
@@ -174,10 +182,11 @@ class SysExTestingErrorGet : public SysExConf
 class SysExTestingErrorSet : public SysExConf
 {
     public:
-    SysExTestingErrorSet()
+    SysExTestingErrorSet(SysExConf::manufacturerID_t& mID)
+        : SysExConf(mID)
     {
         responseCounter = 0;
-        userError = SysExConf::status_t::request;
+        userError       = SysExConf::status_t::request;
     }
 
     ~SysExTestingErrorSet() {}

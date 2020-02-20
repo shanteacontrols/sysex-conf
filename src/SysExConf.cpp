@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2019 Igor Petrovic
+    Copyright 2017-2020 Igor Petrovic
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the "Software"),
@@ -20,6 +20,25 @@
 */
 
 #include "SysExConf.h"
+
+///
+/// \brief Resets all variables to their default values.
+///
+void SysExConf::reset()
+{
+    sysExEnabled           = false;
+    silentModeEnabled      = false;
+    sysExMessage           = nullptr;
+    sysExBlockCounter      = 0;
+    decodedMessage         = {};
+    sysExArray             = nullptr;
+    sysExCustomRequest     = nullptr;
+    numberOfCustomRequests = 0;
+    receivedArraySize      = 0;
+    responseSize           = 0;
+    userStatus             = status_t::request;
+    customRequestCounter   = 0;
+}
 
 ///
 /// Configures user specifed configuration layout and initializes data to their default values.
@@ -484,9 +503,9 @@ bool SysExConf::processStandardRequest()
         //send status_t::ack message at the end
         responseSize = 0;
         addToResponse(0xF0);
-        addToResponse(SYS_EX_CONF_M_ID_0);
-        addToResponse(SYS_EX_CONF_M_ID_1);
-        addToResponse(SYS_EX_CONF_M_ID_2);
+        addToResponse(mID.id1);
+        addToResponse(mID.id2);
+        addToResponse(mID.id3);
         addToResponse(static_cast<uint8_t>(status_t::ack));
         addToResponse(0x7E);
         sendResponse(false);
@@ -502,9 +521,9 @@ bool SysExConf::processStandardRequest()
 bool SysExConf::checkID()
 {
     return (
-        (sysExArray[idByte_1] == SYS_EX_CONF_M_ID_0) &&
-        (sysExArray[idByte_2] == SYS_EX_CONF_M_ID_1) &&
-        (sysExArray[idByte_3] == SYS_EX_CONF_M_ID_2));
+        (sysExArray[idByte_1] == mID.id1) &&
+        (sysExArray[idByte_2] == mID.id2) &&
+        (sysExArray[idByte_3] == mID.id3));
 }
 
 ///
@@ -790,16 +809,18 @@ void SysExConf::sendCustomMessage(uint8_t* responseArray, sysExParameter_t* valu
 
     sysExArray[responseSize] = 0xF0;
     responseSize++;
-    sysExArray[responseSize] = SYS_EX_CONF_M_ID_0;
+    sysExArray[responseSize] = mID.id1;
     responseSize++;
-    sysExArray[responseSize] = SYS_EX_CONF_M_ID_1;
+    sysExArray[responseSize] = mID.id2;
     responseSize++;
-    sysExArray[responseSize] = SYS_EX_CONF_M_ID_2;
+    sysExArray[responseSize] = mID.id3;
     responseSize++;
+
     if (ack)
         sysExArray[responseSize] = static_cast<uint8_t>(status_t::ack);
     else
         sysExArray[responseSize] = static_cast<uint8_t>(status_t::request);
+
     responseSize++;
     sysExArray[responseSize] = 0;    //message part
     responseSize++;
