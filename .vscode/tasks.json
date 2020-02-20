@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "[Test] Build single test",
-            "command": "cd tests && make pre-build && make TESTS=${input:testName} && cp build/sysexconf/${input:testName}.out build/test.out",
+            "command": "cd tests && make pre-build && make TESTS=${input:testName} && cp build/sysexconf/src/${input:testName}/${input:testName}.out build/test.out",
             "type": "shell",
             "problemMatcher": [
                 "$gcc"
@@ -37,9 +37,9 @@
             "default": "all",
             "type": "pickString",
             "options": [
-                "test_valid",
-                "test_errorGet",
-                "test_errorSet"
+                "valid",
+                "errorGet",
+                "errorSet"
             ]
         }
     ]

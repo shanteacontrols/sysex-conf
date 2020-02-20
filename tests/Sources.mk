@@ -1,11 +1,10 @@
 vpath modules/%.cpp ../
 vpath modules/%.c ../
 
-TEST_FRAMEWORK_SOURCES := \
+COMMON_SOURCES := \
 modules/unity/src/unity.c
 
-#common include dirs
-INCLUDE_DIRS := \
+INCLUDE_DIRS_COMMON := \
+-I"./" \
 -I"../modules" \
--I"../src" \
--I"./"
+-I"../src"
