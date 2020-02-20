@@ -23,7 +23,6 @@
 
 #include <inttypes.h>
 #include <stdlib.h>
-#include "Config.h"
 
 ///
 /// \brief Configuration protocol created using custom SysEx MIDI messages.
@@ -156,9 +155,19 @@ class SysExConf
         _14bit = 2
     };
 
-    SysExConf(manufacturerID_t& mID, paramSize_t paramSize)
+    ///
+    /// \brief List of all possible sizes for number of parameters specified per single SysEx message.
+    ///
+    enum class nrOfParam_t : uint8_t
+    {
+        _32 = 32,
+        _64 = 64
+    };
+
+    SysExConf(manufacturerID_t& mID, paramSize_t paramSize, nrOfParam_t nrOfParam)
         : mID(mID)
         , paramSize(paramSize)
+        , nrOfParam(nrOfParam)
     {}
 
     void reset();
@@ -229,6 +238,11 @@ class SysExConf
     /// \brief Holds size of SysEx parameter indexes and values.
     ///
     const paramSize_t paramSize;
+
+    ///
+    /// \brief Holds total number of parameters per single SysEx message.
+    ///
+    const nrOfParam_t nrOfParam;
 
     ///
     /// \brief Flag indicating whether or not configuration is possible.

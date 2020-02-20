@@ -64,9 +64,9 @@ bool SysExConf::setLayout(block_t* pointer, uint8_t numberOfBlocks)
             for (int j = 0; j < sysExMessage[i].numberOfSections; j++)
             {
                 //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
-                sysExMessage[i].section[j].parts = sysExMessage[i].section[j].numberOfParameters / SYS_EX_CONF_PARAMETERS_PER_MESSAGE;
+                sysExMessage[i].section[j].parts = sysExMessage[i].section[j].numberOfParameters / static_cast<uint8_t>(nrOfParam);
 
-                if (sysExMessage[i].section[j].numberOfParameters % SYS_EX_CONF_PARAMETERS_PER_MESSAGE)
+                if (sysExMessage[i].section[j].numberOfParameters % static_cast<uint8_t>(nrOfParam))
                     sysExMessage[i].section[j].parts++;
             }
         }
@@ -294,7 +294,7 @@ bool SysExConf::decode()
             else
                 decodedMessage.index = sysExArray[indexByte];
 
-            decodedMessage.index += (SYS_EX_CONF_PARAMETERS_PER_MESSAGE * decodedMessage.part);
+            decodedMessage.index += (static_cast<uint8_t>(nrOfParam) * decodedMessage.part);
 
             if (decodedMessage.wish == wish_t::set)
             {
@@ -361,8 +361,8 @@ bool SysExConf::processStandardRequest()
 
         if (decodedMessage.amount == amount_t::all)
         {
-            startIndex = SYS_EX_CONF_PARAMETERS_PER_MESSAGE * decodedMessage.part;
-            endIndex   = startIndex + SYS_EX_CONF_PARAMETERS_PER_MESSAGE;
+            startIndex = static_cast<uint8_t>(nrOfParam) * decodedMessage.part;
+            endIndex   = startIndex + static_cast<uint8_t>(nrOfParam);
 
             if (endIndex > sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters)
                 endIndex = sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters;
@@ -589,7 +589,7 @@ bool SysExConf::processSpecialRequest()
         if (sysExEnabled)
         {
             setStatus(status_t::ack);
-            addToResponse(SYS_EX_CONF_PARAMETERS_PER_MESSAGE);
+            addToResponse(static_cast<uint8_t>(nrOfParam));
         }
         else
         {
@@ -663,12 +663,12 @@ size_t SysExConf::generateMessageLenght()
             // case wish_t::set:
             size = sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters;
 
-            if (size > SYS_EX_CONF_PARAMETERS_PER_MESSAGE)
+            if (size > static_cast<uint8_t>(nrOfParam))
             {
                 if ((decodedMessage.part + 1) == sysExMessage[decodedMessage.block].section[decodedMessage.section].parts)
-                    size = size - ((sysExMessage[decodedMessage.block].section[decodedMessage.section].parts - 1) * SYS_EX_CONF_PARAMETERS_PER_MESSAGE);
+                    size = size - ((sysExMessage[decodedMessage.block].section[decodedMessage.section].parts - 1) * static_cast<uint8_t>(nrOfParam));
                 else
-                    size = SYS_EX_CONF_PARAMETERS_PER_MESSAGE;
+                    size = static_cast<uint8_t>(nrOfParam);
             }
 
             size *= static_cast<uint8_t>(paramSize);

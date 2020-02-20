@@ -112,7 +112,7 @@ namespace
         0xF7
     };
 
-    SysExTestingErrorSet sysEx(mId, SysExConf::paramSize_t::_7bit);
+    SysExTestingErrorSet sysEx(mId, SysExConf::paramSize_t::_7bit, SysExConf::nrOfParam_t::_32);
 }    // namespace
 
 TEST_SETUP()

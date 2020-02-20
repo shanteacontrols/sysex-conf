@@ -85,8 +85,8 @@
 class SysExTestingValid : public SysExConf
 {
     public:
-    SysExTestingValid(SysExConf::manufacturerID_t& mID, SysExConf::paramSize_t paramSize)
-        : SysExConf(mID, paramSize)
+    SysExTestingValid(SysExConf::manufacturerID_t& _mID, SysExConf::paramSize_t _paramSize, SysExConf::nrOfParam_t _nrOfParam)
+        : SysExConf(_mID, _paramSize, _nrOfParam)
     {
         reset();
     }
@@ -137,8 +137,8 @@ class SysExTestingValid : public SysExConf
 class SysExTestingErrorGet : public SysExConf
 {
     public:
-    SysExTestingErrorGet(SysExConf::manufacturerID_t& mID, SysExConf::paramSize_t paramSize)
-        : SysExConf(mID, paramSize)
+    SysExTestingErrorGet(SysExConf::manufacturerID_t& _mID, SysExConf::paramSize_t _paramSize, SysExConf::nrOfParam_t _nrOfParam)
+        : SysExConf(_mID, _paramSize, _nrOfParam)
     {
         responseCounter = 0;
         userError       = SysExConf::status_t::request;
@@ -182,8 +182,8 @@ class SysExTestingErrorGet : public SysExConf
 class SysExTestingErrorSet : public SysExConf
 {
     public:
-    SysExTestingErrorSet(SysExConf::manufacturerID_t& mID, SysExConf::paramSize_t paramSize)
-        : SysExConf(mID, paramSize)
+    SysExTestingErrorSet(SysExConf::manufacturerID_t& _mID, SysExConf::paramSize_t _paramSize, SysExConf::nrOfParam_t _nrOfParam)
+        : SysExConf(_mID, _paramSize, _nrOfParam)
     {
         responseCounter = 0;
         userError       = SysExConf::status_t::request;

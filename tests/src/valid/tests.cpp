@@ -688,7 +688,7 @@ namespace
         0xF7
     };
 
-    SysExTestingValid sysEx(mId, SysExConf::paramSize_t::_7bit);
+    SysExTestingValid sysEx(mId, SysExConf::paramSize_t::_7bit, SysExConf::nrOfParam_t::_32);
 }    // namespace
 
 TEST_SETUP()
@@ -1947,7 +1947,7 @@ TEST_CASE(SpecialRequest)
     TEST_ASSERT(0x43 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
-    TEST_ASSERT(SYS_EX_CONF_PARAMETERS_PER_MESSAGE == sysEx.testArray[6]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::nrOfParam_t::_32) == sysEx.testArray[6]);
     TEST_ASSERT(0xF7 == sysEx.testArray[7]);
 
     //check number of received messages

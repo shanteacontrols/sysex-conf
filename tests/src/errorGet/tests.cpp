@@ -99,7 +99,7 @@ namespace
         0xF7
     };
 
-    SysExTestingErrorGet sysEx(mId, SysExConf::paramSize_t::_7bit);
+    SysExTestingErrorGet sysEx(mId, SysExConf::paramSize_t::_7bit, SysExConf::nrOfParam_t::_32);
 }    // namespace
 
 TEST_SETUP()
