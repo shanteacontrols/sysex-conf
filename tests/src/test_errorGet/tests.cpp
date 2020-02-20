@@ -17,37 +17,43 @@ namespace
     SysExConf::section_t testSections[NUMBER_OF_SECTIONS] = {
         {
             .numberOfParameters = SECTION_0_PARAMETERS,
-            .newValueMin = SECTION_0_MIN,
-            .newValueMax = SECTION_0_MAX,
+            .newValueMin        = SECTION_0_MIN,
+            .newValueMax        = SECTION_0_MAX,
         },
 
         {
             .numberOfParameters = SECTION_1_PARAMETERS,
-            .newValueMin = SECTION_1_MIN,
-            .newValueMax = SECTION_1_MAX,
+            .newValueMin        = SECTION_1_MIN,
+            .newValueMax        = SECTION_1_MAX,
         },
 
         {
             .numberOfParameters = SECTION_2_PARAMETERS,
-            .newValueMin = SECTION_2_MIN,
-            .newValueMax = SECTION_2_MAX,
+            .newValueMin        = SECTION_2_MIN,
+            .newValueMax        = SECTION_2_MAX,
         }
     };
 
     SysExConf::block_t sysExLayout[NUMBER_OF_BLOCKS] = {
         { .numberOfSections = NUMBER_OF_SECTIONS,
-          .section = testSections }
+          .section          = testSections }
     };
 
     SysExConf::customRequest_t customRequests[TOTAL_CUSTOM_REQUESTS] = {
-        { .requestID = CUSTOM_REQUEST_ID_VALID,
-          .connOpenCheck = true },
+        {
+            .requestID     = CUSTOM_REQUEST_ID_VALID,
+            .connOpenCheck = true,
+        },
 
-        { .requestID = CUSTOM_REQUEST_ID_NO_CONN_CHECK,
-          .connOpenCheck = false },
+        {
+            .requestID     = CUSTOM_REQUEST_ID_NO_CONN_CHECK,
+            .connOpenCheck = false,
+        },
 
-        { .requestID = CUSTOM_REQUEST_ID_ERROR_READ,
-          .connOpenCheck = true }
+        {
+            .requestID     = CUSTOM_REQUEST_ID_ERROR_READ,
+            .connOpenCheck = true,
+        }
     };
 
     const uint8_t connOpen[8] = {

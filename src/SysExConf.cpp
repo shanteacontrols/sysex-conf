@@ -56,7 +56,7 @@ bool SysExConf::setLayout(block_t* pointer, uint8_t numberOfBlocks)
 
     if ((pointer != nullptr) && numberOfBlocks)
     {
-        sysExMessage = pointer;
+        sysExMessage      = pointer;
         sysExBlockCounter = numberOfBlocks;
 
         for (int i = 0; i < numberOfBlocks; i++)
@@ -93,7 +93,7 @@ bool SysExConf::setupCustomRequests(customRequest_t* pointer, size_t _numberOfCu
         {
             if (sysExCustomRequest[i].requestID < static_cast<uint8_t>(specialRequest_t::AMOUNT))
             {
-                sysExCustomRequest = nullptr;
+                sysExCustomRequest     = nullptr;
                 numberOfCustomRequests = 0;
                 return false;    //id already used internally
             }
@@ -146,9 +146,9 @@ void SysExConf::handleMessage(uint8_t* array, size_t size)
     {
         resetDecodedMessage();
         //save pointer to received array so we can manipulate it directly
-        sysExArray = array;
+        sysExArray        = array;
         receivedArraySize = size;
-        responseSize = RESPONSE_SIZE;
+        responseSize      = RESPONSE_SIZE;
 
         if (receivedArraySize < MIN_MESSAGE_LENGTH)
             return;    //ignore small messages
@@ -206,13 +206,13 @@ void SysExConf::handleMessage(uint8_t* array, size_t size)
 void SysExConf::resetDecodedMessage()
 {
     //reset decodedMessage
-    decodedMessage.status = status_t::invalid;
-    decodedMessage.wish = wish_t::invalid;
-    decodedMessage.amount = amount_t::invalid;
-    decodedMessage.block = 0;
-    decodedMessage.section = 0;
-    decodedMessage.part = 0;
-    decodedMessage.index = 0;
+    decodedMessage.status   = status_t::invalid;
+    decodedMessage.wish     = wish_t::invalid;
+    decodedMessage.amount   = amount_t::invalid;
+    decodedMessage.block    = 0;
+    decodedMessage.section  = 0;
+    decodedMessage.part     = 0;
+    decodedMessage.index    = 0;
     decodedMessage.newValue = 0;
 }
 
@@ -242,10 +242,10 @@ bool SysExConf::decode()
         }
 
         //don't try to request these parameters if the size is too small
-        decodedMessage.part = sysExArray[(uint8_t)partByte];
-        decodedMessage.wish = static_cast<wish_t>(sysExArray[(uint8_t)wishByte]);
-        decodedMessage.amount = static_cast<amount_t>(sysExArray[(uint8_t)amountByte]);
-        decodedMessage.block = sysExArray[(uint8_t)blockByte];
+        decodedMessage.part    = sysExArray[(uint8_t)partByte];
+        decodedMessage.wish    = static_cast<wish_t>(sysExArray[(uint8_t)wishByte]);
+        decodedMessage.amount  = static_cast<amount_t>(sysExArray[(uint8_t)amountByte]);
+        decodedMessage.block   = sysExArray[(uint8_t)blockByte];
         decodedMessage.section = sysExArray[(uint8_t)sectionByte];
 
         if (!checkWish())
@@ -293,8 +293,8 @@ bool SysExConf::decode()
 #if SYS_EX_CONF_PARAM_SIZE == 2
             encDec_14bit decoded;
             //index
-            decoded.high = sysExArray[indexByte];
-            decoded.low = sysExArray[indexByte + 1];
+            decoded.high         = sysExArray[indexByte];
+            decoded.low          = sysExArray[indexByte + 1];
             decodedMessage.index = decoded.decode14bit();
 #elif SYS_EX_CONF_PARAM_SIZE == 1
             decodedMessage.index = sysExArray[indexByte];
@@ -305,8 +305,8 @@ bool SysExConf::decode()
             {
 //new value
 #if SYS_EX_CONF_PARAM_SIZE == 2
-                decoded.high = sysExArray[newValueByte_single];
-                decoded.low = sysExArray[newValueByte_single + 1];
+                decoded.high            = sysExArray[newValueByte_single];
+                decoded.low             = sysExArray[newValueByte_single + 1];
                 decodedMessage.newValue = decoded.decode14bit();
 #elif SYS_EX_CONF_PARAM_SIZE == 1
                 decodedMessage.newValue = sysExArray[newValueByte_single];
@@ -326,7 +326,7 @@ bool SysExConf::processStandardRequest()
 {
     size_t  startIndex = 0, endIndex = 1;
     uint8_t msgPartsLoop = 1, responseSize_ = responseSize;
-    bool    allPartsAck = false;
+    bool    allPartsAck  = false;
     bool    allPartsLoop = false;
 
     if ((decodedMessage.wish == wish_t::backup) || (decodedMessage.wish == wish_t::get))
@@ -363,14 +363,14 @@ bool SysExConf::processStandardRequest()
 
         if (allPartsLoop)
         {
-            decodedMessage.part = j;
+            decodedMessage.part  = j;
             sysExArray[partByte] = j;
         }
 
         if (decodedMessage.amount == amount_t::all)
         {
             startIndex = SYS_EX_CONF_PARAMETERS_PER_MESSAGE * decodedMessage.part;
-            endIndex = startIndex + SYS_EX_CONF_PARAMETERS_PER_MESSAGE;
+            endIndex   = startIndex + SYS_EX_CONF_PARAMETERS_PER_MESSAGE;
 
             if (endIndex > sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters)
                 endIndex = sysExMessage[decodedMessage.block].section[decodedMessage.section].numberOfParameters;
@@ -390,7 +390,7 @@ bool SysExConf::processStandardRequest()
                     }
                     else
                     {
-                        sysExParameter_t value = 0;
+                        sysExParameter_t value       = 0;
                         bool             returnValue = onGet(decodedMessage.block, decodedMessage.section, decodedMessage.index, value);
 
                         //check for custom status
@@ -413,7 +413,7 @@ bool SysExConf::processStandardRequest()
                 else
                 {
                     //get all params - no index is specified
-                    sysExParameter_t value = 0;
+                    sysExParameter_t value       = 0;
                     bool             returnValue = onGet(decodedMessage.block, decodedMessage.section, i, value);
 
                     if (userStatus != status_t::request)
@@ -467,8 +467,8 @@ bool SysExConf::processStandardRequest()
                     arrayIndex *= sizeof(sysExParameter_t);
                     arrayIndex += newValueByte_all;
                     encDec_14bit decoded;
-                    decoded.high = sysExArray[arrayIndex];
-                    decoded.low = sysExArray[arrayIndex + 1];
+                    decoded.high            = sysExArray[arrayIndex];
+                    decoded.low             = sysExArray[arrayIndex + 1];
                     decodedMessage.newValue = decoded.decode14bit();
 #elif SYS_EX_CONF_PARAM_SIZE == 1
                     decodedMessage.newValue = sysExArray[arrayIndex + newValueByte_all];
@@ -804,7 +804,7 @@ bool SysExConf::checkNewValue()
 ///
 void SysExConf::sendCustomMessage(uint8_t* responseArray, sysExParameter_t* values, size_t size, bool ack)
 {
-    sysExArray = responseArray;
+    sysExArray   = responseArray;
     responseSize = 0;
 
     sysExArray[responseSize] = 0xF0;

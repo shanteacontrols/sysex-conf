@@ -168,10 +168,10 @@ class SysExConf
     void setError(status_t status);
     bool addToResponse(sysExParameter_t value);
 
-    virtual bool onGet(uint8_t block, uint8_t section, size_t index, sysExParameter_t& value) = 0;
+    virtual bool onGet(uint8_t block, uint8_t section, size_t index, sysExParameter_t& value)   = 0;
     virtual bool onSet(uint8_t block, uint8_t section, size_t index, sysExParameter_t newValue) = 0;
-    virtual bool onCustomRequest(size_t value) = 0;
-    virtual void onWrite(uint8_t* sysExArray, size_t size) = 0;
+    virtual bool onCustomRequest(size_t value)                                                  = 0;
+    virtual void onWrite(uint8_t* sysExArray, size_t size)                                      = 0;
 
     private:
     bool decode();
@@ -210,9 +210,9 @@ class SysExConf
         blockByte,      //8
         sectionByte,    //9
         REQUEST_SIZE,
-        RESPONSE_SIZE = partByte + 1,
+        RESPONSE_SIZE      = partByte + 1,
         MIN_MESSAGE_LENGTH = (wishByte + 1) + 1,    //special requests
-        ML_REQ_STANDARD = REQUEST_SIZE + 1          //add end byte
+        ML_REQ_STANDARD    = REQUEST_SIZE + 1       //add end byte
     } sysExRequestByteOrder;
 
     ///
@@ -220,9 +220,9 @@ class SysExConf
     ///
     typedef enum
     {
-        indexByte = REQUEST_SIZE,
+        indexByte           = REQUEST_SIZE,
         newValueByte_single = indexByte + sizeof(sysExParameter_t),
-        newValueByte_all = indexByte
+        newValueByte_all    = indexByte
     } sysExParameterByteOrder;
 
     ///
