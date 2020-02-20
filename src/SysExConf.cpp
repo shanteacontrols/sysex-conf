@@ -289,28 +289,20 @@ bool SysExConf::decode()
 
         if (decodedMessage.amount == amount_t::single)
         {
-//param size should be handled here - relevant only on single param amount
-#if SYS_EX_CONF_PARAM_SIZE == 2
-            encDec_14bit decoded;
-            //index
-            decoded.high         = sysExArray[indexByte];
-            decoded.low          = sysExArray[indexByte + 1];
-            decodedMessage.index = decoded.decode14bit();
-#elif SYS_EX_CONF_PARAM_SIZE == 1
-            decodedMessage.index = sysExArray[indexByte];
-#endif
+            if (paramSize == paramSize_t::_14bit)
+                mergeTo14bit(decodedMessage.index, sysExArray[indexByte], sysExArray[indexByte + 1]);
+            else
+                decodedMessage.index = sysExArray[indexByte];
+
             decodedMessage.index += (SYS_EX_CONF_PARAMETERS_PER_MESSAGE * decodedMessage.part);
 
             if (decodedMessage.wish == wish_t::set)
             {
-//new value
-#if SYS_EX_CONF_PARAM_SIZE == 2
-                decoded.high            = sysExArray[newValueByte_single];
-                decoded.low             = sysExArray[newValueByte_single + 1];
-                decodedMessage.newValue = decoded.decode14bit();
-#elif SYS_EX_CONF_PARAM_SIZE == 1
-                decodedMessage.newValue = sysExArray[newValueByte_single];
-#endif
+                //new value
+                if (paramSize == paramSize_t::_14bit)
+                    mergeTo14bit(decodedMessage.newValue, sysExArray[indexByte + static_cast<uint8_t>(paramSize)], sysExArray[indexByte + static_cast<uint8_t>(paramSize) + 1]);
+                else
+                    decodedMessage.newValue = sysExArray[indexByte + static_cast<uint8_t>(paramSize)];
             }
         }
     }
@@ -463,16 +455,17 @@ bool SysExConf::processStandardRequest()
                 {
                     uint8_t arrayIndex = (i - startIndex);
 
-#if SYS_EX_CONF_PARAM_SIZE == 2
-                    arrayIndex *= sizeof(sysExParameter_t);
-                    arrayIndex += newValueByte_all;
-                    encDec_14bit decoded;
-                    decoded.high            = sysExArray[arrayIndex];
-                    decoded.low             = sysExArray[arrayIndex + 1];
-                    decodedMessage.newValue = decoded.decode14bit();
-#elif SYS_EX_CONF_PARAM_SIZE == 1
-                    decodedMessage.newValue = sysExArray[arrayIndex + newValueByte_all];
-#endif
+                    if (paramSize == paramSize_t::_14bit)
+                    {
+                        arrayIndex *= static_cast<uint8_t>(paramSize);
+                        arrayIndex += indexByte;
+
+                        mergeTo14bit(decodedMessage.newValue, sysExArray[arrayIndex], sysExArray[arrayIndex + 1]);
+                    }
+                    else
+                    {
+                        decodedMessage.newValue = sysExArray[arrayIndex + indexByte];
+                    }
 
                     if (!checkNewValue())
                     {
@@ -584,7 +577,7 @@ bool SysExConf::processSpecialRequest()
         if (sysExEnabled)
         {
             setStatus(status_t::ack);
-            addToResponse(SYS_EX_CONF_PARAM_SIZE);
+            addToResponse(static_cast<sysExParameter_t>(paramSize));
         }
         else
         {
@@ -648,12 +641,12 @@ size_t SysExConf::generateMessageLenght()
         {
         case wish_t::get:
         case wish_t::backup:
-            return ML_REQ_STANDARD + sizeof(sysExParameter_t);    //add parameter length
+            return ML_REQ_STANDARD + static_cast<uint8_t>(paramSize);    //add parameter length
             break;
 
         default:
             // case wish_t::set:
-            return ML_REQ_STANDARD + 2 * sizeof(sysExParameter_t);    //add parameter length and new value length
+            return ML_REQ_STANDARD + 2 * static_cast<uint8_t>(paramSize);    //add parameter length and new value length
             break;
         }
         break;
@@ -678,7 +671,7 @@ size_t SysExConf::generateMessageLenght()
                     size = SYS_EX_CONF_PARAMETERS_PER_MESSAGE;
             }
 
-            size *= sizeof(sysExParameter_t);
+            size *= static_cast<uint8_t>(paramSize);
             size += ML_REQ_STANDARD;
             return size;
         }
@@ -862,24 +855,30 @@ bool SysExConf::addToResponse(sysExParameter_t value)
     if (sysExArray == nullptr)
         return false;
 
-#if SYS_EX_CONF_PARAM_SIZE == 2
-    encDec_14bit encoded;
-    encoded.value = value;
-    encoded.encodeTo14bit();
-    sysExArray[responseSize] = encoded.high;
-    responseSize++;
-    sysExArray[responseSize] = encoded.low;
-    responseSize++;
-#elif SYS_EX_CONF_PARAM_SIZE == 1
-    if ((value != 0xF0) && (value != 0xF7))
+    if (paramSize == paramSize_t::_14bit)
     {
-        if (value > 127)
-            value = 127;
+        uint8_t high;
+        uint8_t low;
+
+        split14bit(value, high, low);
+
+        sysExArray[responseSize] = high;
+        responseSize++;
+
+        sysExArray[responseSize] = low;
+        responseSize++;
+    }
+    else
+    {
+        if ((value != 0xF0) && (value != 0xF7))
+        {
+            if (value > 127)
+                value = 127;
+        }
     }
 
     sysExArray[responseSize] = (uint8_t)value;
     responseSize++;
-#endif
 
     return true;
 }
@@ -921,4 +920,50 @@ void SysExConf::setError(status_t status)
         userStatus = status_t::errorWrite;
         break;
     }
+}
+
+///
+/// \brief Convert single 14-bit value to high and low bytes (7-bit each).
+/// @param [in]     value   14-bit value to split.
+/// @param [in,out] high    Higher 7 bits of original 14-bit value.
+/// @param [in,out] low     Lower 7 bits of original 14-bit value.
+///
+void SysExConf::split14bit(uint16_t value, uint8_t& high, uint8_t& low)
+{
+    uint8_t newHigh = (value >> 8) & 0xFF;
+    uint8_t newLow  = value & 0xFF;
+    newHigh         = (newHigh << 1) & 0x7F;
+
+    if ((newLow >> 7) & 0x01)
+        newHigh |= 0x01;
+    else
+        newHigh &= ~0x01;
+
+    newLow &= 0x7F;
+    high = newHigh;
+    low  = newLow;
+}
+
+///
+/// \brief Convert 7-bit high and low bytes to single 14-bit value.
+/// @param [in,out] value Resulting 14-bit value.
+/// @param [in,out] high    Higher 7 bits.
+/// @param [in,out] low     Lower 7 bits.
+///
+void SysExConf::mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low)
+{
+    if (high & 0x01)
+        low |= (1 << 7);
+    else
+        low &= ~(1 << 7);
+
+    high >>= 1;
+
+    uint16_t joined;
+
+    joined = high;
+    joined <<= 8;
+    joined |= low;
+
+    value = joined;
 }

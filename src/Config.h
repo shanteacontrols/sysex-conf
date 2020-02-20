@@ -28,12 +28,3 @@
 #ifndef SYS_EX_CONF_PARAMETERS_PER_MESSAGE
 #define SYS_EX_CONF_PARAMETERS_PER_MESSAGE 32
 #endif
-
-///
-/// \brief Size of single parameter value in SysEx message.
-/// 1 - one byte size for parameter index and new value (uint8_t)
-/// 2 - two byte size (uint16_t)
-///
-#ifndef SYS_EX_CONF_PARAM_SIZE
-#define SYS_EX_CONF_PARAM_SIZE 1
-#endif

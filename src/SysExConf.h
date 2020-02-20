@@ -33,13 +33,7 @@
 class SysExConf
 {
     public:
-#if SYS_EX_CONF_PARAM_SIZE == 2
     using sysExParameter_t = uint16_t;
-#elif SYS_EX_CONF_PARAM_SIZE == 1
-    using sysExParameter_t = uint8_t;
-#else
-#error Incorrect parameter size for SysExConf
-#endif
 
     ///
     /// \brief Structure holding SysEx manufacturer ID bytes.
@@ -149,12 +143,22 @@ class SysExConf
         uint8_t          block;
         uint8_t          section;
         uint8_t          part;
-        size_t           index;
+        sysExParameter_t index;
         sysExParameter_t newValue;
     } decodedMessage_t;
 
-    SysExConf(manufacturerID_t& mID)
+    ///
+    /// \brief List of all possible sizes for parameter indexes and values used during configuration.
+    ///
+    enum class paramSize_t : uint8_t
+    {
+        _7bit  = 1,
+        _14bit = 2
+    };
+
+    SysExConf(manufacturerID_t& mID, paramSize_t paramSize)
         : mID(mID)
+        , paramSize(paramSize)
     {}
 
     void reset();
@@ -174,26 +178,26 @@ class SysExConf
     virtual void onWrite(uint8_t* sysExArray, size_t size)                                      = 0;
 
     private:
-    bool decode();
-    void resetDecodedMessage();
-    bool processStandardRequest();
-    bool processSpecialRequest();
-    bool checkID();
-    bool checkStatus();
-    bool checkWish();
-    bool checkAmount();
-    bool checkBlock();
-    bool checkSection();
-    bool checkPart();
-    bool checkParameterIndex();
-    bool checkNewValue();
-    bool checkParameters();
-
+    bool   decode();
+    void   resetDecodedMessage();
+    bool   processStandardRequest();
+    bool   processSpecialRequest();
+    bool   checkID();
+    bool   checkStatus();
+    bool   checkWish();
+    bool   checkAmount();
+    bool   checkBlock();
+    bool   checkSection();
+    bool   checkPart();
+    bool   checkParameterIndex();
+    bool   checkNewValue();
+    bool   checkParameters();
     size_t generateMessageLenght();
     void   setStatus(status_t status);
     void   sendResponse(bool containsLastByte);
+    void   split14bit(uint16_t value, uint8_t& high, uint8_t& low);
+    void   mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low);
 
-    private:
     ///
     /// \brief Descriptive list of bytes in SysEx message.
     ///
@@ -212,23 +216,19 @@ class SysExConf
         REQUEST_SIZE,
         RESPONSE_SIZE      = partByte + 1,
         MIN_MESSAGE_LENGTH = (wishByte + 1) + 1,    //special requests
-        ML_REQ_STANDARD    = REQUEST_SIZE + 1       //add end byte
-    } sysExRequestByteOrder;
-
-    ///
-    /// \brief Byte order for parameters in SysEx message.
-    ///
-    typedef enum
-    {
-        indexByte           = REQUEST_SIZE,
-        newValueByte_single = indexByte + sizeof(sysExParameter_t),
-        newValueByte_all    = indexByte
-    } sysExParameterByteOrder;
+        ML_REQ_STANDARD    = REQUEST_SIZE + 1,      //add end byte
+        indexByte          = REQUEST_SIZE,
+    } sysExByteOrder;
 
     ///
     /// \brief Reference to structure containing manufacturer ID bytes.
     ///
     manufacturerID_t& mID;
+
+    ///
+    /// \brief Holds size of SysEx parameter indexes and values.
+    ///
+    const paramSize_t paramSize;
 
     ///
     /// \brief Flag indicating whether or not configuration is possible.
