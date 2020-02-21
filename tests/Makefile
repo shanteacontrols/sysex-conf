@@ -93,4 +93,4 @@ clean:
 
 #debugging
 print-%:
-	@echo '$*=$($*)'
+	@echo '$($*)'
