@@ -37,9 +37,11 @@
             "default": "all",
             "type": "pickString",
             "options": [
-                "valid",
-                "errorGet",
-                "errorSet"
+                "sb_valid",
+                "sb_errorGet",
+                "sb_errorSet",
+                "tb_errorGet",
+                "tb_errorSet"
             ]
         }
     ]
