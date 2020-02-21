@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "[Test] Build single test",
-            "command": "cd tests && make pre-build && make TESTS=${input:testName} && cp build/sysexconf/src/${input:testName}/${input:testName}.out build/test.out",
+            "command": "cd tests && make pre-build && make TESTS=${input:testName} && cp $(../scripts/test_dir_get.sh ${input:testName})/${input:testName}.out build/test.out",
             "type": "shell",
             "problemMatcher": [
                 "$gcc"
