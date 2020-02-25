@@ -41,7 +41,8 @@
                 "sb_errorGet",
                 "sb_errorSet",
                 "tb_errorGet",
-                "tb_errorSet"
+                "tb_errorSet",
+                "tb_valid"
             ]
         }
     ]
