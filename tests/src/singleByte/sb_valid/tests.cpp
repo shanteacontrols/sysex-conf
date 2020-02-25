@@ -721,9 +721,9 @@ TEST_CASE(Init)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -758,9 +758,9 @@ TEST_CASE(Init)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -792,9 +792,9 @@ TEST_CASE(Init)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -941,9 +941,9 @@ TEST_CASE(ErrorConnClosed)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -962,9 +962,9 @@ TEST_CASE(ErrorConnClosed)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorConnection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -983,9 +983,9 @@ TEST_CASE(ErrorStatus)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorStatus) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1003,9 +1003,9 @@ TEST_CASE(ErrorWish)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorWish) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1024,9 +1024,9 @@ TEST_CASE(ErrorAmount)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorAmount) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1045,9 +1045,9 @@ TEST_CASE(ErrorBlock)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorBlock) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1066,9 +1066,9 @@ TEST_CASE(ErrorSection)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorSection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1087,9 +1087,9 @@ TEST_CASE(ErrorPart)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorPart) == sysEx.testArray[4]);
     TEST_ASSERT(TEST_MSG_PART_INVALID == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1108,9 +1108,9 @@ TEST_CASE(ErrorIndex)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorIndex) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1129,9 +1129,9 @@ TEST_CASE(ErrorLength)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorMessageLength) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1150,9 +1150,9 @@ TEST_CASE(ErrorNewValue)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorNewValue) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1173,9 +1173,9 @@ TEST_CASE(ErrorUser)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorNotSupported) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1193,9 +1193,9 @@ TEST_CASE(ErrorUser)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorNotSupported) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1213,9 +1213,9 @@ TEST_CASE(ErrorUser)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorNotSupported) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1233,9 +1233,9 @@ TEST_CASE(ErrorUser)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorNotSupported) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1256,9 +1256,9 @@ TEST_CASE(ErrorUser)
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorWrite) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1276,9 +1276,9 @@ TEST_CASE(SetSingle)
 
     // check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1296,9 +1296,9 @@ TEST_CASE(SetSingle)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorIndex) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1317,9 +1317,9 @@ TEST_CASE(SetSingle)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1336,9 +1336,9 @@ TEST_CASE(SetSingle)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1355,9 +1355,9 @@ TEST_CASE(SetSingle)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1378,9 +1378,9 @@ TEST_CASE(SetAll)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1398,9 +1398,9 @@ TEST_CASE(SetAll)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1418,9 +1418,9 @@ TEST_CASE(SetAll)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x01 == sysEx.testArray[5]);    //second part
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1438,9 +1438,9 @@ TEST_CASE(SetAll)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorPart) == sysEx.testArray[4]);
     TEST_ASSERT(0x7F == sysEx.testArray[5]);    //same part as requested
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1459,9 +1459,9 @@ TEST_CASE(SetAll)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorNewValue) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1482,9 +1482,9 @@ TEST_CASE(GetSingle)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(TEST_VALUE_GET == sysEx.testArray[6]);
@@ -1504,9 +1504,9 @@ TEST_CASE(GetAll)
     //check response
     //10 values should be received
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(TEST_VALUE_GET == sysEx.testArray[6]);
@@ -1547,9 +1547,9 @@ TEST_CASE(GetAll)
 
     //check last response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x7E == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1570,9 +1570,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(CUSTOM_REQUEST_VALUE == sysEx.testArray[6]);
@@ -1592,9 +1592,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1613,9 +1613,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorWish) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1648,9 +1648,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorConnection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1726,9 +1726,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorConnection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1747,9 +1747,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(CUSTOM_REQUEST_VALUE == sysEx.testArray[6]);
@@ -1768,9 +1768,9 @@ TEST_CASE(CustomReq)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1817,9 +1817,9 @@ TEST_CASE(IgnoreMessage)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorMessageLength) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1841,9 +1841,9 @@ TEST_CASE(CustomMessage)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0x05 == sysEx.testArray[6]);
@@ -1862,9 +1862,9 @@ TEST_CASE(CustomMessage)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::request) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0x05 == sysEx.testArray[6]);
@@ -1899,9 +1899,9 @@ TEST_CASE(Backup)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorPart) == sysEx.testArray[4]);
     TEST_ASSERT(0x03 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -1921,9 +1921,9 @@ TEST_CASE(SpecialRequest)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::paramSize_t::_7bit) == sysEx.testArray[6]);
@@ -1942,9 +1942,9 @@ TEST_CASE(SpecialRequest)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::nrOfParam_t::_32) == sysEx.testArray[6]);
@@ -1980,9 +1980,9 @@ TEST_CASE(SpecialRequest)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorConnection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -2000,9 +2000,9 @@ TEST_CASE(SpecialRequest)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorConnection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -2020,9 +2020,9 @@ TEST_CASE(SpecialRequest)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorConnection) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
@@ -2054,9 +2054,9 @@ TEST_CASE(SpecialRequest)
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(0x00 == sysEx.testArray[1]);
-    TEST_ASSERT(0x53 == sysEx.testArray[2]);
-    TEST_ASSERT(0x43 == sysEx.testArray[3]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == sysEx.testArray[4]);
     TEST_ASSERT(0x00 == sysEx.testArray[5]);
     TEST_ASSERT(0xF7 == sysEx.testArray[6]);
