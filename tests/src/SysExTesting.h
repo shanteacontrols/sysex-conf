@@ -127,9 +127,6 @@ class SysExTestingValid : public SysExConf
 
     void onWrite(uint8_t testArray[], size_t arraysize) override
     {
-        for (size_t i = 0; i < arraysize; i++)
-            this->testArray[i] = testArray[i];
-
         responseCounter++;
     }
 };
@@ -172,9 +169,6 @@ class SysExTestingErrorGet : public SysExConf
 
     void onWrite(uint8_t testArray[], size_t arraysize) override
     {
-        for (size_t i = 0; i < arraysize; i++)
-            this->testArray[i] = testArray[i];
-
         responseCounter++;
     }
 };
@@ -217,9 +211,6 @@ class SysExTestingErrorSet : public SysExConf
 
     void onWrite(uint8_t testArray[], size_t arraysize) override
     {
-        for (size_t i = 0; i < arraysize; i++)
-            this->testArray[i] = testArray[i];
-
         responseCounter++;
     }
 };
