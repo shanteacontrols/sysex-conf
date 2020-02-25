@@ -1,10 +1,18 @@
 #include "unity/src/unity.h"
 #include "unity/Helpers.h"
 #include "src/SysExTesting.h"
+#include <vector>
 
 #define SYS_EX_CONF_M_ID_0 0x00
 #define SYS_EX_CONF_M_ID_1 0x53
 #define SYS_EX_CONF_M_ID_2 0x43
+
+#define HANDLE_MESSAGE(source, dest)                                     \
+    do                                                                   \
+    {                                                                    \
+        std::copy(source.begin(), source.end(), dest);                   \
+        sysEx.handleMessage(static_cast<uint8_t*>(dest), source.size()); \
+    } while (0)
 
 namespace
 {
@@ -58,7 +66,7 @@ namespace
         }
     };
 
-    const uint8_t connOpen[8] = {
+    const std::vector<uint8_t> connOpen = {
         //request used to enable sysex configuration
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -70,7 +78,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleValid[13] = {
+    const std::vector<uint8_t> setSingleValid = {
         //valid set singe command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -87,7 +95,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setAllValid[21] = {
+    const std::vector<uint8_t> setAllValid = {
         //valid set all command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -121,11 +129,8 @@ TEST_SETUP()
     sysEx.setLayout(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
 
-    uint8_t arraySize = sizeof(connOpen) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpen, arraySize);
-
     //send open connection request and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpen, sysEx.testArray);
 
     //sysex configuration should be enabled now
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
@@ -139,9 +144,7 @@ TEST_CASE(ErrorWrite)
     //check if status byte is SysExConf::status_t::errorWrite
 
     //send valid set message
-    uint8_t arraySize = sizeof(setSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleValid, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -163,9 +166,7 @@ TEST_CASE(ErrorWrite)
 
     //send valid set message
     //SysExConf::status_t::errorWrite should be reported since that error is assigned to userError
-    arraySize = sizeof(setSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -183,9 +184,7 @@ TEST_CASE(ErrorWrite)
 TEST_CASE(ErrorSet)
 {
     //verify that status is set to status_t::errorWrite if onSet returns false
-    uint8_t arraySize = sizeof(setAllValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllValid, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);

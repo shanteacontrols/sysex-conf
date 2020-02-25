@@ -1,10 +1,18 @@
 #include "unity/src/unity.h"
 #include "unity/Helpers.h"
 #include "src/SysExTesting.h"
+#include <vector>
 
 #define SYS_EX_CONF_M_ID_0 0x00
 #define SYS_EX_CONF_M_ID_1 0x53
 #define SYS_EX_CONF_M_ID_2 0x43
+
+#define HANDLE_MESSAGE(source, dest)                                     \
+    do                                                                   \
+    {                                                                    \
+        std::copy(source.begin(), source.end(), dest);                   \
+        sysEx.handleMessage(static_cast<uint8_t*>(dest), source.size()); \
+    } while (0)
 
 namespace
 {
@@ -58,7 +66,7 @@ namespace
         }
     };
 
-    const uint8_t connOpen[8] = {
+    const std::vector<uint8_t> connOpen = {
         //request used to enable sysex configuration
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -70,7 +78,7 @@ namespace
         0xF7
     };
 
-    const uint8_t connClose[8] = {
+    const std::vector<uint8_t> connClose = {
         //request used to disable sysex configuration
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -82,7 +90,7 @@ namespace
         0xF7
     };
 
-    const uint8_t connOpenSilent[8] = {
+    const std::vector<uint8_t> connOpenSilent = {
         //request used to enable sysex configuration in silent mode
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -94,7 +102,7 @@ namespace
         0xF7
     };
 
-    const uint8_t silentModeDisable[8] = {
+    const std::vector<uint8_t> silentModeDisable = {
         //request used to disable silent mode
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -106,7 +114,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorStatus[12] = {
+    const std::vector<uint8_t> errorStatus = {
         //get single message with invalid status byte for request message
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -122,7 +130,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorWish[12] = {
+    const std::vector<uint8_t> errorWish = {
         //wish byte set to invalid value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -138,7 +146,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorLength[13] = {
+    const std::vector<uint8_t> errorLength = {
         //message intentionally one byte too long
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -155,7 +163,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorBlock[12] = {
+    const std::vector<uint8_t> errorBlock = {
         //block byte set to invalid value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -171,7 +179,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorSection[12] = {
+    const std::vector<uint8_t> errorSection = {
         //section byte set to invalid value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -187,7 +195,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorIndex[12] = {
+    const std::vector<uint8_t> errorIndex = {
         //index byte set to invalid value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -203,7 +211,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorPart[12] = {
+    const std::vector<uint8_t> errorPart = {
         //part byte set to invalid value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -219,7 +227,7 @@ namespace
         0xF7
     };
 
-    const uint8_t errorAmount[13] = {
+    const std::vector<uint8_t> errorAmount = {
         //amount byte set to invalid value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -236,7 +244,7 @@ namespace
         0xF7
     };
 
-    const uint8_t customReq[8] = {
+    const std::vector<uint8_t> customReq = {
         //custom request with custom ID specified by user
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -248,7 +256,7 @@ namespace
         0xF7
     };
 
-    const uint8_t customReqErrorRead[8] = {
+    const std::vector<uint8_t> customReqErrorRead = {
         //custom request with custom ID specified by user
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -260,7 +268,7 @@ namespace
         0xF7
     };
 
-    const uint8_t customReqInvalid[8] = {
+    const std::vector<uint8_t> customReqInvalid = {
         //custom request with non-existing custom ID
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -272,7 +280,7 @@ namespace
         0xF7
     };
 
-    const uint8_t customReqNoConnCheck[8] = {
+    const std::vector<uint8_t> customReqNoConnCheck = {
         //custom request with non-existing custom ID
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -284,7 +292,7 @@ namespace
         0xF7
     };
 
-    const uint8_t shortMessage1[6] = {
+    const std::vector<uint8_t> shortMessage1 = {
         //short message which should be ignored by the protocol, variant 1
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -294,7 +302,7 @@ namespace
         0xF7
     };
 
-    const uint8_t shortMessage2[4] = {
+    const std::vector<uint8_t> shortMessage2 = {
         //short message which should be ignored by the protocol, variant 2
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -302,7 +310,7 @@ namespace
         0xF7
     };
 
-    const uint8_t shortMessage3[10] = {
+    const std::vector<uint8_t> shortMessage3 = {
         //short message on which protocol should throw MESSAGE_LENGTH error
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -316,7 +324,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getSingleValid[12] = {
+    const std::vector<uint8_t> getSingleValid = {
         //valid get single command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -332,7 +340,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getSingleInvalidSysExID[12] = {
+    const std::vector<uint8_t> getSingleInvalidSysExID = {
         //get single command with invalid sysex ids
         0xF0,
         SYS_EX_CONF_M_ID_2,
@@ -348,7 +356,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getAllValid_1part[11] = {
+    const std::vector<uint8_t> getAllValid_1part = {
         //valid get all command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -363,7 +371,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getAllValid_allParts_7F[11] = {
+    const std::vector<uint8_t> getAllValid_allParts_7F = {
         //valid get all command for all parts (7F variant)
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -378,7 +386,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getAllValid_allParts_7E[11] = {
+    const std::vector<uint8_t> getAllValid_allParts_7E = {
         //valid get all command for all parts (7E variant)
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -393,7 +401,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getSpecialReqBytesPerVal[8] = {
+    const std::vector<uint8_t> getSpecialReqBytesPerVal = {
         //built-in special request which returns number of bytes per value configured in protocol
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -405,7 +413,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getSpecialReqParamPerMsg[8] = {
+    const std::vector<uint8_t> getSpecialReqParamPerMsg = {
         //built-in special request which returns number of parameters per message configured in protocol
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -417,7 +425,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleValid[13] = {
+    const std::vector<uint8_t> setSingleValid = {
         //valid set singe command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -434,7 +442,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleInvalidNewValue[13] = {
+    const std::vector<uint8_t> setSingleInvalidNewValue = {
         //set single command - invalid new value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -451,7 +459,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setAllValid[21] = {
+    const std::vector<uint8_t> setAllValid = {
         //valid set all command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -476,7 +484,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setAllAllParts[21] = {
+    const std::vector<uint8_t> setAllAllParts = {
         //set all command with all parts modifier (invalid request)
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -501,7 +509,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleNoMinMax1[13] = {
+    const std::vector<uint8_t> setSingleNoMinMax1 = {
         //valid set single command for section without min/max checking, variant 1
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -518,7 +526,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleNoMinMax2[13] = {
+    const std::vector<uint8_t> setSingleNoMinMax2 = {
         //valid set single command for section without min/max checking, variant 2
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -535,7 +543,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleNoMinMax3[13] = {
+    const std::vector<uint8_t> setSingleNoMinMax3 = {
         //valid set single command for section without min/max checking, variant 3
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -552,7 +560,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setSingleInvalidParam[13] = {
+    const std::vector<uint8_t> setSingleInvalidParam = {
         //set single command with invalid parameter index
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -569,7 +577,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setAllnvalidNewVal[21] = {
+    const std::vector<uint8_t> setAllnvalidNewVal = {
         //set all command with invalid new value
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -594,7 +602,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setAllMoreParts1[43] = {
+    const std::vector<uint8_t> setAllMoreParts1 = {
         //set all command for section with more parts, part 0
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -641,7 +649,7 @@ namespace
         0xF7
     };
 
-    const uint8_t setAllMoreParts2[12] = {
+    const std::vector<uint8_t> setAllMoreParts2 = {
         //set all command for section with more parts, part 1
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -657,7 +665,7 @@ namespace
         0xF7
     };
 
-    const uint8_t backupAll[11] = {
+    const std::vector<uint8_t> backupAll = {
         //backup all command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -672,7 +680,7 @@ namespace
         0xF7
     };
 
-    const uint8_t backupSingleInvPart[12] = {
+    const std::vector<uint8_t> backupSingleInvPart = {
         //backup single command with invalid part set
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -697,11 +705,8 @@ TEST_SETUP()
     sysEx.setLayout(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
 
-    uint8_t arraySize = sizeof(connOpen) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpen, arraySize);
-
     //send open connection request and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpen, sysEx.testArray);
 
     //sysex configuration should be enabled now
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
@@ -712,9 +717,7 @@ TEST_SETUP()
 TEST_CASE(Init)
 {
     //close connection
-    uint8_t arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //sysex configuration should be disabled now
     TEST_ASSERT(false == sysEx.isConfigurationEnabled());
@@ -735,9 +738,7 @@ TEST_CASE(Init)
     sysEx.responseCounter = 0;
 
     //test silent mode
-    arraySize = sizeof(connOpenSilent) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpenSilent, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpenSilent, sysEx.testArray);
 
     //configuration and silent mode must be enabled
     TEST_ASSERT(true == sysEx.isSilentModeEnabled());
@@ -747,9 +748,7 @@ TEST_CASE(Init)
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //now disable silent mode
-    arraySize = sizeof(silentModeDisable) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, silentModeDisable, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(silentModeDisable, sysEx.testArray);
 
     //silent mode should be disabled, but connection should be still opened
     //response should be received
@@ -772,17 +771,13 @@ TEST_CASE(Init)
     sysEx.responseCounter = 0;
 
     //open silent mode again
-    arraySize = sizeof(connOpenSilent) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpenSilent, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpenSilent, sysEx.testArray);
 
     //verify no response was received
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //now close connection
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //verify that connection is closed
     TEST_ASSERT(false == sysEx.isConfigurationEnabled());
@@ -818,9 +813,7 @@ TEST_CASE(Init)
 TEST_CASE(SilentMode)
 {
     //open silent mode
-    uint8_t arraySize = sizeof(connOpenSilent) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpenSilent, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpenSilent, sysEx.testArray);
 
     //configuration and silent mode must be enabled
     TEST_ASSERT(true == sysEx.isSilentModeEnabled());
@@ -830,89 +823,67 @@ TEST_CASE(SilentMode)
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send set sigle request
-    arraySize = sizeof(setSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleValid, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send set all request
-    arraySize = sizeof(setAllValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllValid, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes status error
-    arraySize = sizeof(errorStatus) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorStatus, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorStatus, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes wish error
-    arraySize = sizeof(errorWish) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorWish, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorWish, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes amount error
-    arraySize = sizeof(errorAmount) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorAmount, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorAmount, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes block error
-    arraySize = sizeof(errorBlock) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorBlock, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorBlock, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes section error
-    arraySize = sizeof(errorSection) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorSection, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorSection, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes index error
-    arraySize = sizeof(errorIndex) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorIndex, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorIndex, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes part error
-    arraySize = sizeof(errorPart) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorPart, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorPart, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send request which causes length error
-    arraySize = sizeof(errorLength) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorLength, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorLength, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send custom request
-    arraySize = sizeof(customReq) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReq, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReq, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
@@ -929,12 +900,8 @@ TEST_CASE(ErrorInit)
 
 TEST_CASE(ErrorConnClosed)
 {
-    uint8_t arraySize;
-
     //close connection first
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //configuration should be closed now
     TEST_ASSERT(false == sysEx.isConfigurationEnabled());
@@ -956,9 +923,7 @@ TEST_CASE(ErrorConnClosed)
 
     //send valid get message
     //since connection is closed, SysExConf::status_t::errorConnection should be reported
-    arraySize = sizeof(getSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSingleValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -977,9 +942,7 @@ TEST_CASE(ErrorStatus)
 {
     //send message with invalid status byte
     //SysExConf::status_t::errorStatus should be reported
-    uint8_t arraySize = sizeof(errorStatus) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorStatus, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorStatus, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -997,9 +960,7 @@ TEST_CASE(ErrorStatus)
 TEST_CASE(ErrorWish)
 {
     //send message with invalid wish byte
-    uint8_t arraySize = sizeof(errorWish) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorWish, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorWish, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1018,9 +979,7 @@ TEST_CASE(ErrorAmount)
 {
     //send message with invalid amount byte
     //SysExConf::status_t::errorAmount should be reported
-    uint8_t arraySize = sizeof(errorAmount) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorAmount, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorAmount, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1039,9 +998,7 @@ TEST_CASE(ErrorBlock)
 {
     //send message with invalid block byte
     //SysExConf::status_t::errorBlock should be reported
-    uint8_t arraySize = sizeof(errorBlock) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorBlock, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorBlock, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1060,9 +1017,7 @@ TEST_CASE(ErrorSection)
 {
     //send message with invalid section byte
     //SysExConf::status_t::errorSection should be reported
-    uint8_t arraySize = sizeof(errorSection) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorSection, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorSection, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1081,9 +1036,7 @@ TEST_CASE(ErrorPart)
 {
     //send message with invalid index byte
     //SysExConf::status_t::errorPart should be reported
-    uint8_t arraySize = sizeof(errorPart) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorPart, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorPart, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1102,9 +1055,7 @@ TEST_CASE(ErrorIndex)
 {
     //send message with invalid index byte
     //SysExConf::status_t::errorIndex should be reported
-    uint8_t arraySize = sizeof(errorIndex) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorIndex, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorIndex, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1123,9 +1074,7 @@ TEST_CASE(ErrorLength)
 {
     //send message with invalid index byte
     //SysExConf::status_t::errorMessageLength should be reported
-    uint8_t arraySize = sizeof(errorLength) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, errorLength, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(errorLength, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1144,9 +1093,7 @@ TEST_CASE(ErrorNewValue)
 {
     //send invalid set message
     //SysExConf::status_t::errorNewValue should be reported
-    uint8_t arraySize = sizeof(setSingleInvalidNewValue) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleInvalidNewValue, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleInvalidNewValue, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1167,9 +1114,7 @@ TEST_CASE(ErrorUser)
 
     //send get request
     //SysExConf::status_t::errorNotSupported should be returned since that value is assigned to userError
-    uint8_t arraySize = sizeof(getSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSingleValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1187,9 +1132,7 @@ TEST_CASE(ErrorUser)
     sysEx.responseCounter = 0;
 
     //get all request
-    arraySize = sizeof(getAllValid_1part) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getAllValid_1part, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getAllValid_1part, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1207,9 +1150,7 @@ TEST_CASE(ErrorUser)
     sysEx.responseCounter = 0;
 
     //set single request
-    arraySize = sizeof(setSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1227,9 +1168,7 @@ TEST_CASE(ErrorUser)
     sysEx.responseCounter = 0;
 
     //set all request
-    arraySize = sizeof(setAllValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1250,9 +1189,7 @@ TEST_CASE(ErrorUser)
     //response should be just SysExConf::status_t::errorWrite in this case
     sysEx.userError = SysExConf::status_t::invalid;
 
-    arraySize = sizeof(setSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1270,9 +1207,7 @@ TEST_CASE(ErrorUser)
 TEST_CASE(SetSingle)
 {
     //send valid set message
-    uint8_t arraySize = sizeof(setSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleValid, sysEx.testArray);
 
     // check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1290,9 +1225,7 @@ TEST_CASE(SetSingle)
     sysEx.responseCounter = 0;
 
     //send set single command with invalid param index
-    arraySize = sizeof(setSingleInvalidParam) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleInvalidParam, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleInvalidParam, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1311,9 +1244,7 @@ TEST_CASE(SetSingle)
 
     //test block which has same min and max value
     //in this case, SysExConf::status_t::errorNewValue should never be reported on any value
-    arraySize = sizeof(setSingleNoMinMax1) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleNoMinMax1, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleNoMinMax1, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1330,9 +1261,7 @@ TEST_CASE(SetSingle)
     //reset message count
     sysEx.responseCounter = 0;
 
-    arraySize = sizeof(setSingleNoMinMax2) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleNoMinMax2, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleNoMinMax2, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1349,9 +1278,7 @@ TEST_CASE(SetSingle)
     //reset message count
     sysEx.responseCounter = 0;
 
-    arraySize = sizeof(setSingleNoMinMax3) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setSingleNoMinMax3, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setSingleNoMinMax3, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1372,9 +1299,7 @@ TEST_CASE(SetSingle)
 TEST_CASE(SetAll)
 {
     //send set all request
-    uint8_t arraySize = sizeof(setAllValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllValid, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1392,9 +1317,7 @@ TEST_CASE(SetAll)
     sysEx.responseCounter = 0;
 
     //send set all message for section with more parts
-    arraySize = sizeof(setAllMoreParts1) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllMoreParts1, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllMoreParts1, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1412,9 +1335,7 @@ TEST_CASE(SetAll)
     sysEx.responseCounter = 0;
 
     //send set all request with part byte being 0x01
-    arraySize = sizeof(setAllMoreParts2) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllMoreParts2, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllMoreParts2, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1432,9 +1353,7 @@ TEST_CASE(SetAll)
     sysEx.responseCounter = 0;
 
     //send set all requests for all parts and verify that status byte is set to SysExConf::status_t::errorPart
-    arraySize = sizeof(setAllAllParts) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllAllParts, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllAllParts, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1453,9 +1372,7 @@ TEST_CASE(SetAll)
 
     //send set all request with invalid value
     //status byte should be SysExConf::status_t::errorNewValue
-    arraySize = sizeof(setAllnvalidNewVal) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, setAllnvalidNewVal, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(setAllnvalidNewVal, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1476,9 +1393,7 @@ TEST_CASE(SetAll)
 TEST_CASE(GetSingle)
 {
     //send get single request
-    uint8_t arraySize = sizeof(getSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSingleValid, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1497,9 +1412,7 @@ TEST_CASE(GetSingle)
 TEST_CASE(GetAll)
 {
     //send get all request
-    uint8_t arraySize = sizeof(getAllValid_1part) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getAllValid_1part, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getAllValid_1part, sysEx.testArray);
 
     //check response
     //10 values should be received
@@ -1529,9 +1442,7 @@ TEST_CASE(GetAll)
 
     //now send same request for all parts
     //we are expecting 2 messages now
-    arraySize = sizeof(getAllValid_allParts_7F) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getAllValid_allParts_7F, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getAllValid_allParts_7F, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 2);
@@ -1541,9 +1452,7 @@ TEST_CASE(GetAll)
 
     //same message with part being 0x7E
     //in this case, last message should be SysExConf::status_t::ack message
-    arraySize = sizeof(getAllValid_allParts_7E) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getAllValid_allParts_7E, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getAllValid_allParts_7E, sysEx.testArray);
 
     //check last response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1564,9 +1473,7 @@ TEST_CASE(CustomReq)
     sysEx.responseCounter = 0;
 
     //send valid custom request message
-    uint8_t arraySize = sizeof(customReq) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReq, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReq, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1586,9 +1493,7 @@ TEST_CASE(CustomReq)
 
     //send custom request message which should return false in custom request handler
     //in this case, SysExConf::status_t::errorRead should be reported
-    arraySize = sizeof(customReqErrorRead) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReqErrorRead, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReqErrorRead, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1607,9 +1512,7 @@ TEST_CASE(CustomReq)
 
     //send non-existing custom request message
     //SysExConf::status_t::errorWish should be reported
-    arraySize = sizeof(customReqInvalid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReqInvalid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReqInvalid, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1627,9 +1530,7 @@ TEST_CASE(CustomReq)
     sysEx.responseCounter = 0;
 
     //disable configuration
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //verify that connection is closed
     TEST_ASSERT(false == sysEx.isConfigurationEnabled());
@@ -1642,9 +1543,7 @@ TEST_CASE(CustomReq)
 
     //send valid custom request message
     //SysExConf::status_t::errorConnection should be reported
-    arraySize = sizeof(customReq) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReq, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReq, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1705,9 +1604,7 @@ TEST_CASE(CustomReq)
     TEST_ASSERT(sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS) == true);
 
     //close sysex connection
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //sysex configuration should be disabled now
     TEST_ASSERT(false == sysEx.isConfigurationEnabled());
@@ -1720,9 +1617,7 @@ TEST_CASE(CustomReq)
 
     //send custom request 0
     //SysExConf::status_t::errorConnection should be returned because connection is closed
-    arraySize = sizeof(customReq) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReq, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReq, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1741,9 +1636,7 @@ TEST_CASE(CustomReq)
 
     //send another custom request which has flag set to ignore connection status
     //SysExConf::status_t::ack should be reported
-    arraySize = sizeof(customReqNoConnCheck) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, customReqNoConnCheck, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(customReqNoConnCheck, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1762,9 +1655,7 @@ TEST_CASE(CustomReq)
     sysEx.responseCounter = 0;
 
     //open connection again
-    arraySize = sizeof(connOpen) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpen, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpen, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1786,34 +1677,26 @@ TEST_CASE(IgnoreMessage)
 {
     //verify that no action takes place when sysex ids in message don't match
     //short message is any message without every required byte
-    uint8_t arraySize = sizeof(shortMessage1) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, shortMessage1, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(shortMessage1, sysEx.testArray);
 
     //if no action took place, responseCounter should be 0
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send another variant of short message
-    arraySize = sizeof(shortMessage2) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, shortMessage2, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(shortMessage2, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //send message with invalid SysEx ID
-    arraySize = sizeof(getSingleInvalidSysExID) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSingleInvalidSysExID, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSingleInvalidSysExID, sysEx.testArray);
 
     //check number of received messages
     TEST_ASSERT(sysEx.responseCounter == 0);
 
     //short message where SysExConf::status_t::errorMessageLength should be returned
-    arraySize = sizeof(shortMessage3) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, shortMessage3, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(shortMessage3, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1879,9 +1762,7 @@ TEST_CASE(CustomMessage)
 TEST_CASE(Backup)
 {
     //send backup all request
-    uint8_t arraySize = sizeof(backupAll) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, backupAll, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(backupAll, sysEx.testArray);
 
     //check if status byte is set to SysExConf::status_t::request value
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::request) == sysEx.testArray[4]);
@@ -1893,9 +1774,7 @@ TEST_CASE(Backup)
     sysEx.responseCounter = 0;
 
     //send backup/single request with incorrect part
-    arraySize = sizeof(backupSingleInvPart) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, backupSingleInvPart, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(backupSingleInvPart, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1915,9 +1794,7 @@ TEST_CASE(SpecialRequest)
     //test all pre-configured special requests and see if they return correct value
 
     //bytes per value request
-    uint8_t arraySize = sizeof(getSpecialReqBytesPerVal) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSpecialReqBytesPerVal, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSpecialReqBytesPerVal, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1936,9 +1813,7 @@ TEST_CASE(SpecialRequest)
     sysEx.responseCounter = 0;
 
     //params per msg request
-    arraySize = sizeof(getSpecialReqParamPerMsg) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSpecialReqParamPerMsg, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSpecialReqParamPerMsg, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1960,9 +1835,7 @@ TEST_CASE(SpecialRequest)
     //status byte must equal SysExConf::status_t::errorConnection
 
     //close connection first
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //configuration should be closed now
     TEST_ASSERT(false == sysEx.isConfigurationEnabled());
@@ -1974,9 +1847,7 @@ TEST_CASE(SpecialRequest)
     sysEx.responseCounter = 0;
 
     //bytes per value request
-    arraySize = sizeof(getSpecialReqBytesPerVal) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSpecialReqBytesPerVal, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSpecialReqBytesPerVal, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -1994,9 +1865,7 @@ TEST_CASE(SpecialRequest)
     sysEx.responseCounter = 0;
 
     //params per msg request
-    arraySize = sizeof(getSpecialReqParamPerMsg) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSpecialReqParamPerMsg, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSpecialReqParamPerMsg, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -2014,9 +1883,7 @@ TEST_CASE(SpecialRequest)
     sysEx.responseCounter = 0;
 
     //try to close configuration which is already closed
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -2034,9 +1901,7 @@ TEST_CASE(SpecialRequest)
     sysEx.responseCounter = 0;
 
     //send open connection request and check if sysEx.testArray is valid
-    arraySize = sizeof(connOpen) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpen, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpen, sysEx.testArray);
 
     //sysex configuration should be enabled now
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
@@ -2048,9 +1913,7 @@ TEST_CASE(SpecialRequest)
     sysEx.responseCounter = 0;
 
     //disable configuration again
-    arraySize = sizeof(connClose) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connClose, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connClose, sysEx.testArray);
 
     //check response
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);

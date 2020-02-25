@@ -1,10 +1,18 @@
 #include "unity/src/unity.h"
 #include "unity/Helpers.h"
 #include "src/SysExTesting.h"
+#include <vector>
 
 #define SYS_EX_CONF_M_ID_0 0x00
 #define SYS_EX_CONF_M_ID_1 0x53
 #define SYS_EX_CONF_M_ID_2 0x43
+
+#define HANDLE_MESSAGE(source, dest)                                     \
+    do                                                                   \
+    {                                                                    \
+        std::copy(source.begin(), source.end(), dest);                   \
+        sysEx.handleMessage(static_cast<uint8_t*>(dest), source.size()); \
+    } while (0)
 
 namespace
 {
@@ -35,8 +43,10 @@ namespace
     };
 
     SysExConf::block_t sysExLayout[NUMBER_OF_BLOCKS] = {
-        { .numberOfSections = NUMBER_OF_SECTIONS,
-          .section          = testSections }
+        {
+            .numberOfSections = NUMBER_OF_SECTIONS,
+            .section          = testSections,
+        }
     };
 
     SysExConf::customRequest_t customRequests[TOTAL_CUSTOM_REQUESTS] = {
@@ -56,7 +66,7 @@ namespace
         }
     };
 
-    const uint8_t connOpen[8] = {
+    const std::vector<uint8_t> connOpen = {
         //request used to enable sysex configuration
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -68,7 +78,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getSingleValid[12] = {
+    const std::vector<uint8_t> getSingleValid = {
         //valid get single command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -84,7 +94,7 @@ namespace
         0xF7
     };
 
-    const uint8_t getAllValid_1part[11] = {
+    const std::vector<uint8_t> getAllValid_1part = {
         //valid get all command
         0xF0,
         SYS_EX_CONF_M_ID_0,
@@ -108,11 +118,8 @@ TEST_SETUP()
     sysEx.setLayout(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
 
-    uint8_t arraySize = sizeof(connOpen) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, connOpen, arraySize);
-
     //send open connection request and see if sysExTestArray is valid
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(connOpen, sysEx.testArray);
 
     //sysex configuration should be enabled now
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
@@ -124,9 +131,7 @@ TEST_CASE(ErrorRead)
 {
     //send get single request
     //SysExConf::status_t::errorRead should be reported since onGet returns false
-    uint8_t arraySize = sizeof(getSingleValid) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getSingleValid, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getSingleValid, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
@@ -145,9 +150,7 @@ TEST_CASE(ErrorRead)
 
     //test get with all parameters
     //SysExConf::status_t::errorRead should be reported again
-    arraySize = sizeof(getAllValid_1part) / sizeof(uint8_t);
-    memcpy(sysEx.testArray, getAllValid_1part, arraySize);
-    sysEx.handleMessage((uint8_t*)sysEx.testArray, arraySize);
+    HANDLE_MESSAGE(getAllValid_1part, sysEx.testArray);
 
     //test sysex array
     TEST_ASSERT(0xF0 == sysEx.testArray[0]);
