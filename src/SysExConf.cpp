@@ -494,13 +494,13 @@ bool SysExConf::processStandardRequest()
     if (allPartsAck)
     {
         //send status_t::ack message at the end
-        responseSize = 0;
-        addToResponse(0xF0);
-        addToResponse(mID.id1);
-        addToResponse(mID.id2);
-        addToResponse(mID.id3);
-        addToResponse(static_cast<uint8_t>(status_t::ack));
-        addToResponse(0x7E);
+        responseSize               = 0;
+        sysExArray[responseSize++] = 0xF0;
+        sysExArray[responseSize++] = mID.id1;
+        sysExArray[responseSize++] = mID.id2;
+        sysExArray[responseSize++] = mID.id3;
+        sysExArray[responseSize++] = static_cast<uint8_t>(status_t::ack);
+        sysExArray[responseSize++] = 0x7E;
         sendResponse(false);
     }
 
@@ -577,7 +577,7 @@ bool SysExConf::processSpecialRequest()
         if (sysExEnabled)
         {
             setStatus(status_t::ack);
-            addToResponse(static_cast<sysExParameter_t>(paramSize));
+            sysExArray[responseSize++] = static_cast<uint8_t>(paramSize);
         }
         else
         {
@@ -589,7 +589,7 @@ bool SysExConf::processSpecialRequest()
         if (sysExEnabled)
         {
             setStatus(status_t::ack);
-            addToResponse(static_cast<uint8_t>(nrOfParam));
+            sysExArray[responseSize++] = static_cast<uint8_t>(nrOfParam);
         }
         else
         {
@@ -800,28 +800,20 @@ void SysExConf::sendCustomMessage(uint8_t* responseArray, sysExParameter_t* valu
     sysExArray   = responseArray;
     responseSize = 0;
 
-    sysExArray[responseSize] = 0xF0;
-    responseSize++;
-    sysExArray[responseSize] = mID.id1;
-    responseSize++;
-    sysExArray[responseSize] = mID.id2;
-    responseSize++;
-    sysExArray[responseSize] = mID.id3;
-    responseSize++;
+    sysExArray[responseSize++] = 0xF0;
+    sysExArray[responseSize++] = mID.id1;
+    sysExArray[responseSize++] = mID.id2;
+    sysExArray[responseSize++] = mID.id3;
 
     if (ack)
-        sysExArray[responseSize] = static_cast<uint8_t>(status_t::ack);
+        sysExArray[responseSize++] = static_cast<uint8_t>(status_t::ack);
     else
-        sysExArray[responseSize] = static_cast<uint8_t>(status_t::request);
+        sysExArray[responseSize++] = static_cast<uint8_t>(status_t::request);
 
-    responseSize++;
-    sysExArray[responseSize] = 0;    //message part
-    responseSize++;
+    sysExArray[responseSize++] = 0;    //message part
 
     for (size_t i = 0; i < size; i++)
-    {
-        addToResponse(values[i]);
-    }
+        sysExArray[responseSize++] = values[i];
 
     sendResponse(false);
 }
@@ -834,8 +826,7 @@ void SysExConf::sendResponse(bool containsLastByte)
 {
     if (!containsLastByte)
     {
-        sysExArray[responseSize] = 0xF7;
-        responseSize++;
+        sysExArray[responseSize++] = 0xF7;
     }
 
     if (silentModeEnabled && (decodedMessage.wish != wish_t::get))
@@ -862,11 +853,8 @@ bool SysExConf::addToResponse(sysExParameter_t value)
 
         split14bit(value, high, low);
 
-        sysExArray[responseSize] = high;
-        responseSize++;
-
-        sysExArray[responseSize] = low;
-        responseSize++;
+        sysExArray[responseSize++] = high;
+        sysExArray[responseSize++] = low;
     }
     else
     {
@@ -875,10 +863,9 @@ bool SysExConf::addToResponse(sysExParameter_t value)
             if (value > 127)
                 value = 127;
         }
-    }
 
-    sysExArray[responseSize] = (uint8_t)value;
-    responseSize++;
+        sysExArray[responseSize++] = (uint8_t)value;
+    }
 
     return true;
 }
