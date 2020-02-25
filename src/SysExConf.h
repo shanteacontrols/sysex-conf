@@ -186,6 +186,9 @@ class SysExConf
     virtual bool onCustomRequest(size_t value)                                                  = 0;
     virtual void onWrite(uint8_t* sysExArray, size_t size)                                      = 0;
 
+    static void split14bit(uint16_t value, uint8_t& high, uint8_t& low);
+    static void mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low);
+
     private:
     bool   decode();
     void   resetDecodedMessage();
@@ -204,8 +207,6 @@ class SysExConf
     size_t generateMessageLenght();
     void   setStatus(status_t status);
     void   sendResponse(bool containsLastByte);
-    void   split14bit(uint16_t value, uint8_t& high, uint8_t& low);
-    void   mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low);
 
     ///
     /// \brief Descriptive list of bytes in SysEx message.
