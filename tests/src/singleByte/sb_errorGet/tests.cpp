@@ -1,5 +1,6 @@
 #include "unity/src/unity.h"
 #include "unity/Helpers.h"
+#include "SysExConf.h"
 #include "src/SysExTesting.h"
 #include <vector>
 
@@ -7,11 +8,10 @@
 #define SYS_EX_CONF_M_ID_1 0x53
 #define SYS_EX_CONF_M_ID_2 0x43
 
-#define HANDLE_MESSAGE(source, dest)                                     \
-    do                                                                   \
-    {                                                                    \
-        std::copy(source.begin(), source.end(), dest);                   \
-        sysEx.handleMessage(static_cast<uint8_t*>(dest), source.size()); \
+#define HANDLE_MESSAGE(source)                          \
+    do                                                  \
+    {                                                   \
+        sysEx.handleMessage(&source[0], source.size()); \
     } while (0)
 
 namespace
@@ -109,58 +109,122 @@ namespace
         0xF7
     };
 
-    SysExTestingErrorGet sysEx(mId, SysExConf::paramSize_t::_7bit, SysExConf::nrOfParam_t::_32);
+    class SysExConfDataHandlerErrorGet : public SysExConf::DataHandler
+    {
+        public:
+        SysExConfDataHandlerErrorGet()
+        {}
+
+        result_t get(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value) override
+        {
+            return SysExConf::DataHandler::result_t::error;
+        }
+
+        result_t set(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) override
+        {
+            return SysExConf::DataHandler::result_t::ok;
+        }
+
+        result_t customRequest(size_t value, uint8_t*& array, size_t& size) override
+        {
+            switch (value)
+            {
+            case CUSTOM_REQUEST_ID_VALID:
+            case CUSTOM_REQUEST_ID_NO_CONN_CHECK:
+                array = &customReqArray[0];
+                size  = customReqArray.size();
+                return SysExConf::DataHandler::result_t::ok;
+                break;
+
+            case CUSTOM_REQUEST_ID_ERROR_READ:
+            default:
+                return SysExConf::DataHandler::result_t::error;
+                break;
+            }
+        }
+
+        void reset()
+        {
+            responseCounter = 0;
+        }
+
+        void sendResponse(uint8_t* array, size_t size) override
+        {
+            for (int i = 0; i < size; i++)
+                sysExArray[i] = array[i];
+
+            responseCounter++;
+        }
+
+        uint8_t sysExArray[200] = {};
+        uint8_t responseCounter = 0;
+
+        private:
+        std::vector<uint8_t> customReqArray = {
+            1
+        };
+    };
+
+    SysExConfDataHandlerErrorGet dataHandler;
+
+    SysExConf sysEx(dataHandler,
+                    mId,
+                    dataHandler.sysExArray,
+                    200,
+                    SysExConf::paramSize_t::_7bit,
+                    SysExConf::nrOfParam_t::_32);
 }    // namespace
 
 TEST_SETUP()
 {
     sysEx.reset();
+    dataHandler.reset();
     sysEx.setLayout(sysExLayout, NUMBER_OF_BLOCKS);
     sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
 
     //send open connection request and see if sysExTestArray is valid
-    HANDLE_MESSAGE(connOpen, sysEx.testArray);
+    HANDLE_MESSAGE(connOpen);
 
     //sysex configuration should be enabled now
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
 
-    sysEx.responseCounter = 0;
+    dataHandler.responseCounter = 0;
 }
 
 TEST_CASE(ErrorRead)
 {
-    //send get single request
-    //SysExConf::status_t::errorRead should be reported since onGet returns false
-    HANDLE_MESSAGE(getSingleValid, sysEx.testArray);
+    // send get single request
+    // SysExConf::status_t::errorRead should be reported since onGet returns false
+    HANDLE_MESSAGE(getSingleValid);
 
-    //test sysex array
-    TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
-    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == sysEx.testArray[4]);
-    TEST_ASSERT(0x00 == sysEx.testArray[5]);
-    TEST_ASSERT(0xF7 == sysEx.testArray[6]);
+    // test sysex array
+    TEST_ASSERT(0xF0 == dataHandler.sysExArray[0]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.sysExArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.sysExArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.sysExArray[3]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == dataHandler.sysExArray[4]);
+    TEST_ASSERT(0x00 == dataHandler.sysExArray[5]);
+    TEST_ASSERT(0xF7 == dataHandler.sysExArray[6]);
 
     //check number of received messages
-    TEST_ASSERT(sysEx.responseCounter == 1);
+    TEST_ASSERT(dataHandler.responseCounter == 1);
 
     //reset message count
-    sysEx.responseCounter = 0;
+    dataHandler.responseCounter = 0;
 
     //test get with all parameters
     //SysExConf::status_t::errorRead should be reported again
-    HANDLE_MESSAGE(getAllValid_1part, sysEx.testArray);
+    HANDLE_MESSAGE(getAllValid_1part);
 
     //test sysex array
-    TEST_ASSERT(0xF0 == sysEx.testArray[0]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == sysEx.testArray[1]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == sysEx.testArray[2]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == sysEx.testArray[3]);
-    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == sysEx.testArray[4]);
-    TEST_ASSERT(0x00 == sysEx.testArray[5]);
-    TEST_ASSERT(0xF7 == sysEx.testArray[6]);
+    TEST_ASSERT(0xF0 == dataHandler.sysExArray[0]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.sysExArray[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.sysExArray[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.sysExArray[3]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == dataHandler.sysExArray[4]);
+    TEST_ASSERT(0x00 == dataHandler.sysExArray[5]);
+    TEST_ASSERT(0xF7 == dataHandler.sysExArray[6]);
 
     //check number of received messages
-    TEST_ASSERT(sysEx.responseCounter == 1);
+    TEST_ASSERT(dataHandler.responseCounter == 1);
 }

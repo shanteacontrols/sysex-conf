@@ -114,7 +114,6 @@ class SysExConf
         errorWrite,            //0x0C
         errorNotSupported,     //0x0D
         errorRead,             //0x0E
-        invalid
     };
 
     ///
@@ -164,8 +163,34 @@ class SysExConf
         _64 = 64
     };
 
-    SysExConf(manufacturerID_t& mID, paramSize_t paramSize, nrOfParam_t nrOfParam)
-        : mID(mID)
+    class DataHandler
+    {
+        public:
+        DataHandler() {}
+
+        enum class result_t : uint8_t
+        {
+            ok,
+            error,
+            notSupported,
+        };
+
+        virtual result_t get(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value)   = 0;
+        virtual result_t set(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) = 0;
+        virtual result_t customRequest(size_t value, uint8_t*& array, size_t& size)                              = 0;
+        virtual void     sendResponse(uint8_t* array, size_t size)                                               = 0;
+    };
+
+    SysExConf(DataHandler&      dataHandler,
+              manufacturerID_t& mID,
+              uint8_t*          responseArray,
+              size_t            responseArraySize,
+              paramSize_t       paramSize,
+              nrOfParam_t       nrOfParam)
+        : dataHandler(dataHandler)
+        , mID(mID)
+        , responseArray(responseArray)
+        , responseArraySize(responseArraySize)
         , paramSize(paramSize)
         , nrOfParam(nrOfParam)
     {}
@@ -173,26 +198,20 @@ class SysExConf
     void reset();
     bool setLayout(block_t* pointer, uint8_t numberOfBlocks);
     bool setupCustomRequests(customRequest_t* customRequests, size_t numberOfCustomRequests);
-    void handleMessage(uint8_t* sysExArray, size_t size);
+    void handleMessage(const uint8_t* sysExArray, size_t size);
     bool isConfigurationEnabled();
     bool isSilentModeEnabled();
     void setSilentMode(bool state);
-    void sendCustomMessage(uint8_t* responseArray, sysExParameter_t* values, size_t size, bool ack = true);
-    void setError(status_t status);
-    bool addToResponse(sysExParameter_t value);
-
-    virtual bool onGet(uint8_t block, uint8_t section, size_t index, sysExParameter_t& value)   = 0;
-    virtual bool onSet(uint8_t block, uint8_t section, size_t index, sysExParameter_t newValue) = 0;
-    virtual bool onCustomRequest(size_t value)                                                  = 0;
-    virtual void onWrite(uint8_t* sysExArray, size_t size)                                      = 0;
+    void sendCustomMessage(const sysExParameter_t* values, size_t size, bool ack = true);
 
     static void split14bit(uint16_t value, uint8_t& high, uint8_t& low);
     static void mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low);
 
     private:
-    bool   decode();
+    bool   addToResponse(sysExParameter_t value);
+    bool   decode(const uint8_t* receivedArray, size_t receivedArraySize);
     void   resetDecodedMessage();
-    bool   processStandardRequest();
+    bool   processStandardRequest(size_t receivedArraySize);
     bool   processSpecialRequest();
     bool   checkID();
     bool   checkStatus();
@@ -231,9 +250,29 @@ class SysExConf
     } sysExByteOrder;
 
     ///
+    /// \brief Reference to object performing reading and writing of actual data.
+    ///
+    DataHandler& dataHandler;
+
+    ///
     /// \brief Reference to structure containing manufacturer ID bytes.
     ///
     manufacturerID_t& mID;
+
+    ///
+    /// \brief Pointer to array in which response will be stored.
+    ///
+    uint8_t* const responseArray;
+
+    ///
+    /// \brief Holds maximum size of response array.
+    ///
+    const size_t responseArraySize;
+
+    ///
+    /// \brief Holds current size of response array.
+    ///
+    size_t responseCounter = 0;
 
     ///
     /// \brief Holds size of SysEx parameter indexes and values.
@@ -272,13 +311,6 @@ class SysExConf
     decodedMessage_t decodedMessage;
 
     ///
-    /// \brief Pointer to SysEx array.
-    /// Same array is used for request and response.
-    /// Response modifies received request so that arrays aren't duplicated.
-    ///
-    uint8_t* sysExArray = nullptr;
-
-    ///
     /// \brief Pointer to structure containing data for custom requests.
     ///
     customRequest_t* sysExCustomRequest = nullptr;
@@ -287,22 +319,6 @@ class SysExConf
     /// \brief Total number of custom SysEx requests stored in pointed structure.
     ///
     size_t numberOfCustomRequests = 0;
-
-    ///
-    /// \brief Size of received SysEx array.
-    ///
-    size_t receivedArraySize = 0;
-
-    ///
-    /// \brief Size of SysEx response.
-    ///
-    size_t responseSize = 0;
-
-    ///
-    /// \brief User-set SysEx status.
-    /// Used when user sets custom status.
-    ///
-    status_t userStatus = status_t::request;
 
     ///
     /// \brief Holds amount of user-specified custom requests.
