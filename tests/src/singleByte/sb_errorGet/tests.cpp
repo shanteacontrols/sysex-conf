@@ -125,14 +125,15 @@ namespace
             return SysExConf::DataHandler::result_t::ok;
         }
 
-        result_t customRequest(size_t value, uint8_t*& array, size_t& size) override
+        result_t customRequest(size_t request, CustomResponse& customResponse) override
         {
-            switch (value)
+            switch (request)
             {
             case CUSTOM_REQUEST_ID_VALID:
             case CUSTOM_REQUEST_ID_NO_CONN_CHECK:
-                array = &customReqArray[0];
-                size  = customReqArray.size();
+                for (int i = 0; i < customReqArray.size(); i++)
+                    customResponse.append(customReqArray[i]);
+
                 return SysExConf::DataHandler::result_t::ok;
                 break;
 

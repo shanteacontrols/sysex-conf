@@ -166,6 +166,24 @@ class SysExConf
     class DataHandler
     {
         public:
+        class CustomResponse
+        {
+            public:
+            CustomResponse(uint8_t* responseArray, size_t& responseCounter)
+                : responseArray(responseArray)
+                , responseCounter(responseCounter)
+            {}
+
+            void append(uint8_t value)
+            {
+                responseArray[responseCounter++] = value;
+            }
+
+            private:
+            uint8_t* responseArray;
+            size_t&  responseCounter;
+        };
+
         DataHandler() {}
 
         enum class result_t : uint8_t
@@ -177,7 +195,7 @@ class SysExConf
 
         virtual result_t get(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value)   = 0;
         virtual result_t set(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) = 0;
-        virtual result_t customRequest(size_t value, uint8_t*& array, size_t& size)                              = 0;
+        virtual result_t customRequest(size_t request, CustomResponse& customResponse)                           = 0;
         virtual void     sendResponse(uint8_t* array, size_t size)                                               = 0;
     };
 

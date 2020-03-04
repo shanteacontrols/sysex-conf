@@ -799,14 +799,15 @@ namespace
             return SysExConf::DataHandler::result_t::ok;
         }
 
-        result_t customRequest(size_t value, uint8_t*& array, size_t& size) override
+        result_t customRequest(size_t request, CustomResponse& customResponse) override
         {
-            switch (value)
+            switch (request)
             {
             case CUSTOM_REQUEST_ID_VALID:
             case CUSTOM_REQUEST_ID_NO_CONN_CHECK:
-                array = (uint8_t*)&customReqArray[0];
-                size  = customReqArray.size();
+                for (int i = 0; i < customReqArray.size(); i++)
+                    customResponse.append(customReqArray[i]);
+
                 return SysExConf::DataHandler::result_t::ok;
                 break;
 
@@ -1558,10 +1559,8 @@ TEST_CASE(CustomReq)
     TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.sysExArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == dataHandler.sysExArray[4]);
     TEST_ASSERT(0x00 == dataHandler.sysExArray[5]);
-
-    TEST_ASSERT(0x00 == dataHandler.sysExArray[6]);
-    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.sysExArray[7]);
-    TEST_ASSERT(0xF7 == dataHandler.sysExArray[8]);
+    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.sysExArray[6]);
+    TEST_ASSERT(0xF7 == dataHandler.sysExArray[7]);
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter == 1);
@@ -1723,11 +1722,8 @@ TEST_CASE(CustomReq)
     TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.sysExArray[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == dataHandler.sysExArray[4]);
     TEST_ASSERT(0x00 == dataHandler.sysExArray[5]);
-
-    TEST_ASSERT(0x00 == dataHandler.sysExArray[6]);
-    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.sysExArray[7]);
-
-    TEST_ASSERT(0xF7 == dataHandler.sysExArray[8]);
+    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.sysExArray[6]);
+    TEST_ASSERT(0xF7 == dataHandler.sysExArray[7]);
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter == 1);

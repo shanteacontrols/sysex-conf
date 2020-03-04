@@ -622,21 +622,11 @@ bool SysExConf::processSpecialRequest()
             {
                 setStatus(status_t::ack);
 
-                size_t   customReqSize  = 0;
-                uint8_t* customReqArray = nullptr;
-
-                DataHandler::result_t result = dataHandler.customRequest(sysExCustomRequest[i].requestID, customReqArray, customReqSize);
+                DataHandler::CustomResponse customResponse(responseArray, responseCounter);
+                DataHandler::result_t       result = dataHandler.customRequest(sysExCustomRequest[i].requestID, customResponse);
 
                 switch (result)
                 {
-                case DataHandler::result_t::ok:
-                    if (customReqArray != nullptr)
-                    {
-                        for (int i = 0; i < customReqSize; i++)
-                            addToResponse(customReqArray[i]);
-                    }
-                    break;
-
                 case DataHandler::result_t::error:
                     setStatus(status_t::errorRead);
                     return false;
@@ -644,6 +634,9 @@ bool SysExConf::processSpecialRequest()
                 case DataHandler::result_t::notSupported:
                     setStatus(status_t::errorNotSupported);
                     return false;
+
+                default:
+                    break;
                 }
             }
             else
