@@ -181,12 +181,12 @@ class SysExConf
         virtual void     sendResponse(uint8_t* array, size_t size)                                               = 0;
     };
 
-    SysExConf(DataHandler&      dataHandler,
-              manufacturerID_t& mID,
-              uint8_t*          responseArray,
-              size_t            responseArraySize,
-              paramSize_t       paramSize,
-              nrOfParam_t       nrOfParam)
+    SysExConf(DataHandler&            dataHandler,
+              const manufacturerID_t& mID,
+              uint8_t*                responseArray,
+              size_t                  responseArraySize,
+              paramSize_t             paramSize,
+              nrOfParam_t             nrOfParam)
         : dataHandler(dataHandler)
         , mID(mID)
         , responseArray(responseArray)
@@ -257,7 +257,7 @@ class SysExConf
     ///
     /// \brief Reference to structure containing manufacturer ID bytes.
     ///
-    manufacturerID_t& mID;
+    const manufacturerID_t& mID;
 
     ///
     /// \brief Pointer to array in which response will be stored.

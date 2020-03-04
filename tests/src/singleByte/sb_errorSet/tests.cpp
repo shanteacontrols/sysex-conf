@@ -16,7 +16,7 @@
 
 namespace
 {
-    SysExConf::manufacturerID_t mId = {
+    const SysExConf::manufacturerID_t mId = {
         SYS_EX_CONF_M_ID_0,
         SYS_EX_CONF_M_ID_1,
         SYS_EX_CONF_M_ID_2
