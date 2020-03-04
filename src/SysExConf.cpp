@@ -150,7 +150,7 @@ void SysExConf::handleMessage(const uint8_t* array, size_t size)
     resetDecodedMessage();
 
     //copy entire incoming message to internal buffer
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
         responseArray[i] = array[i];
 
     //response counter should at this point hold index of the array at which

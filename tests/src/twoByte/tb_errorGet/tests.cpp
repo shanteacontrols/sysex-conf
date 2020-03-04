@@ -152,7 +152,7 @@ namespace
 
         void sendResponse(uint8_t* array, size_t size) override
         {
-            for (int i = 0; i < size; i++)
+            for (size_t i = 0; i < size; i++)
                 sysExArray[i] = array[i];
 
             responseCounter++;
