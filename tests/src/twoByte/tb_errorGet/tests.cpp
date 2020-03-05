@@ -147,24 +147,40 @@ namespace
 
         void reset()
         {
-            responseCounter = 0;
+            _responseCounter = 0;
+            _response.clear();
+        }
+
+        size_t responseCounter()
+        {
+            return _response.size();
+        }
+
+        std::vector<uint8_t> response(uint8_t index)
+        {
+            if (index >= _response.size())
+                return {};
+
+            return _response.at(index);
         }
 
         void sendResponse(uint8_t* array, size_t size) override
         {
-            for (size_t i = 0; i < size; i++)
-                sysExArray[i] = array[i];
+            std::vector<uint8_t> tempResponse;
 
-            responseCounter++;
+            for (size_t i = 0; i < size; i++)
+                tempResponse.push_back(array[i]);
+
+            _response.push_back(tempResponse);
         }
 
-        uint8_t sysExArray[200] = {};
-        uint8_t responseCounter = 0;
-
         private:
-        std::vector<uint8_t> customReqArray = {
+        std::vector<std::vector<uint8_t>> _response;
+        std::vector<uint8_t>              customReqArray = {
             1
         };
+
+        size_t _responseCounter = 0;
     };
 
     SysExConfDataHandlerErrorGet dataHandler;
@@ -187,7 +203,7 @@ TEST_SETUP()
     //sysex configuration should be enabled now
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
 
-    dataHandler.responseCounter = 0;
+    dataHandler.reset();
 }
 
 TEST_CASE(ErrorRead)
@@ -197,33 +213,33 @@ TEST_CASE(ErrorRead)
     HANDLE_MESSAGE(getSingleValid);
 
     //test sysex array
-    TEST_ASSERT(0xF0 == dataHandler.sysExArray[0]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.sysExArray[1]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.sysExArray[2]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.sysExArray[3]);
-    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == dataHandler.sysExArray[4]);
-    TEST_ASSERT(0x00 == dataHandler.sysExArray[5]);
-    TEST_ASSERT(0xF7 == dataHandler.sysExArray[6]);
+    TEST_ASSERT(0xF0 == dataHandler.response(dataHandler.responseCounter() - 1)[0]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.response(dataHandler.responseCounter() - 1)[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.response(dataHandler.responseCounter() - 1)[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.response(dataHandler.responseCounter() - 1)[3]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
+    TEST_ASSERT(0x00 == dataHandler.response(dataHandler.responseCounter() - 1)[5]);
+    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
 
     //check number of received messages
-    TEST_ASSERT(dataHandler.responseCounter == 1);
+    TEST_ASSERT(dataHandler.responseCounter() == 1);
 
     //reset message count
-    dataHandler.responseCounter = 0;
+    dataHandler.reset();
 
     //test get with all parameters
     //SysExConf::status_t::errorRead should be reported again
     HANDLE_MESSAGE(getAllValid_1part);
 
     //test sysex array
-    TEST_ASSERT(0xF0 == dataHandler.sysExArray[0]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.sysExArray[1]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.sysExArray[2]);
-    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.sysExArray[3]);
-    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == dataHandler.sysExArray[4]);
-    TEST_ASSERT(0x00 == dataHandler.sysExArray[5]);
-    TEST_ASSERT(0xF7 == dataHandler.sysExArray[6]);
+    TEST_ASSERT(0xF0 == dataHandler.response(dataHandler.responseCounter() - 1)[0]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.response(dataHandler.responseCounter() - 1)[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.response(dataHandler.responseCounter() - 1)[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.response(dataHandler.responseCounter() - 1)[3]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorRead) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
+    TEST_ASSERT(0x00 == dataHandler.response(dataHandler.responseCounter() - 1)[5]);
+    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
 
     //check number of received messages
-    TEST_ASSERT(dataHandler.responseCounter == 1);
+    TEST_ASSERT(dataHandler.responseCounter() == 1);
 }
