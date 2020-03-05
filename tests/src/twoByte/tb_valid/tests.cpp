@@ -844,8 +844,6 @@ namespace
 
     SysExConf sysEx(dataHandler,
                     mId,
-                    dataHandler.sysExArray,
-                    200,
                     SysExConf::paramSize_t::_14bit,
                     SysExConf::nrOfParam_t::_32);
 }    // namespace

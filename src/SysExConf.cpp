@@ -865,9 +865,6 @@ void SysExConf::sendResponse(bool containsLastByte)
 ///
 bool SysExConf::addToResponse(sysExParameter_t value)
 {
-    if (responseArray == nullptr)
-        return false;
-
     if (paramSize == paramSize_t::_14bit)
     {
         uint8_t high;

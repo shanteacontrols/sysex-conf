@@ -151,7 +151,8 @@ class SysExConf
     enum class paramSize_t : uint8_t
     {
         _7bit  = 1,
-        _14bit = 2
+        _14bit = 2,
+        MAX    = _14bit
     };
 
     ///
@@ -160,7 +161,8 @@ class SysExConf
     enum class nrOfParam_t : uint8_t
     {
         _32 = 32,
-        _64 = 64
+        _64 = 64,
+        MAX = _64
     };
 
     class DataHandler
@@ -201,14 +203,10 @@ class SysExConf
 
     SysExConf(DataHandler&            dataHandler,
               const manufacturerID_t& mID,
-              uint8_t*                responseArray,
-              size_t                  responseArraySize,
               paramSize_t             paramSize,
               nrOfParam_t             nrOfParam)
         : dataHandler(dataHandler)
         , mID(mID)
-        , responseArray(responseArray)
-        , responseArraySize(responseArraySize)
         , paramSize(paramSize)
         , nrOfParam(nrOfParam)
     {}
@@ -278,21 +276,6 @@ class SysExConf
     const manufacturerID_t& mID;
 
     ///
-    /// \brief Pointer to array in which response will be stored.
-    ///
-    uint8_t* const responseArray;
-
-    ///
-    /// \brief Holds maximum size of response array.
-    ///
-    const size_t responseArraySize;
-
-    ///
-    /// \brief Holds current size of response array.
-    ///
-    size_t responseCounter = 0;
-
-    ///
     /// \brief Holds size of SysEx parameter indexes and values.
     ///
     const paramSize_t paramSize;
@@ -301,6 +284,23 @@ class SysExConf
     /// \brief Holds total number of parameters per single SysEx message.
     ///
     const nrOfParam_t nrOfParam;
+
+    ///
+    /// \brief Holds maximum size of response array.
+    ///
+    static constexpr size_t _maxResponseSize = (static_cast<size_t>(nrOfParam_t::MAX) *
+                                                static_cast<size_t>(paramSize_t::MAX)) +
+                                               RESPONSE_SIZE;
+
+    ///
+    /// \brief Array in which response will be stored.
+    ///
+    uint8_t responseArray[_maxResponseSize];
+
+    ///
+    /// \brief Holds current size of response array.
+    ///
+    size_t responseCounter = 0;
 
     ///
     /// \brief Flag indicating whether or not configuration is possible.
