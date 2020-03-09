@@ -178,7 +178,9 @@ class SysExConf
 
             void append(uint8_t value)
             {
-                responseArray[responseCounter++] = value;
+                //make sure to leave space for 0xF7 byte
+                if ((responseCounter - 1) < _maxResponseSize)
+                    responseArray[responseCounter++] = value;
             }
 
             private:
