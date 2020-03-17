@@ -296,8 +296,6 @@ bool SysExConf::decode(const uint8_t* receivedArray, size_t receivedArraySize)
             else
                 decodedMessage.index = receivedArray[indexByte];
 
-            decodedMessage.index += (static_cast<uint8_t>(nrOfParam) * decodedMessage.part);
-
             if (decodedMessage.wish == wish_t::set)
             {
                 //new value
@@ -747,42 +745,30 @@ bool SysExConf::checkSection()
 ///
 bool SysExConf::checkPart()
 {
-    switch (decodedMessage.wish)
+    if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
     {
-    case wish_t::get:
-        if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
+        if ((decodedMessage.wish == wish_t::get) || (decodedMessage.wish == wish_t::backup))
             return true;
-
-        if (decodedMessage.part >= sysExMessage[decodedMessage.block].section[decodedMessage.section].parts)
+        else
             return false;
-        else
-            return true;
-        break;
-
-    default:
-        // case wish_t::set:
-        // case wish_t::backup:
-        if (decodedMessage.wish == wish_t::backup)
-        {
-            if ((decodedMessage.part == 127) || (decodedMessage.part == 126))
-                return true;
-        }
-
+    }
+    else
+    {
         if (decodedMessage.amount == amount_t::all)
-        {
-            if (decodedMessage.part < sysExMessage[decodedMessage.block].section[decodedMessage.section].parts)
-                return true;
-            else
-                return false;
-        }
-        else
         {
             if (decodedMessage.part >= sysExMessage[decodedMessage.block].section[decodedMessage.section].parts)
                 return false;
             else
                 return true;
         }
-        break;
+        else
+        {
+            //do not allow part other than 0 in single mode
+            if (decodedMessage.part)
+                return false;
+
+            return true;
+        }
     }
 }
 

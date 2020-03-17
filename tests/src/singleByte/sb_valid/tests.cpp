@@ -340,6 +340,39 @@ namespace
         0xF7
     };
 
+    const std::vector<uint8_t> getSinglePart1 = {
+        //get single command with part id set to 1
+        0xF0,
+        SYS_EX_CONF_M_ID_0,
+        SYS_EX_CONF_M_ID_1,
+        SYS_EX_CONF_M_ID_2,
+        static_cast<uint8_t>(SysExConf::status_t::request),
+        1,
+        static_cast<uint8_t>(SysExConf::wish_t::get),
+        static_cast<uint8_t>(SysExConf::amount_t::single),
+        TEST_BLOCK_ID,
+        TEST_SECTION_MULTIPLE_PARTS_ID,
+        TEST_INDEX_ID,
+        0xF7
+    };
+
+    const std::vector<uint8_t> setSinglePart1 = {
+        //set single command with part id set to 1
+        0xF0,
+        SYS_EX_CONF_M_ID_0,
+        SYS_EX_CONF_M_ID_1,
+        SYS_EX_CONF_M_ID_2,
+        static_cast<uint8_t>(SysExConf::status_t::request),
+        1,
+        static_cast<uint8_t>(SysExConf::wish_t::set),
+        static_cast<uint8_t>(SysExConf::amount_t::single),
+        TEST_BLOCK_ID,
+        TEST_SECTION_MULTIPLE_PARTS_ID,
+        TEST_INDEX_ID,
+        0,
+        0xF7
+    };
+
     const std::vector<uint8_t> getSingleInvalidSysExID = {
         //get single command with invalid sysex ids
         0xF0,
@@ -1128,6 +1161,41 @@ TEST_CASE(ErrorPart)
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
+
+    //reset number of received messages
+    dataHandler.reset();
+
+    //send get single request with section which normally contains more parts,
+    //however, set message part byte to 1
+    //error part should be thrown because message part must always be at value 0
+    //when the amount is single
+
+    HANDLE_MESSAGE(getSinglePart1);
+
+    TEST_ASSERT(0xF0 == dataHandler.response(dataHandler.responseCounter() - 1)[0]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.response(dataHandler.responseCounter() - 1)[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.response(dataHandler.responseCounter() - 1)[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.response(dataHandler.responseCounter() - 1)[3]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorPart) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
+    TEST_ASSERT(1 == dataHandler.response(dataHandler.responseCounter() - 1)[5]);
+    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
+
+    //check number of received messages
+    TEST_ASSERT(dataHandler.responseCounter() == 1);
+
+    //reset number of received messages
+    dataHandler.reset();
+
+    //same outcome is expected for set single message with part 1
+    HANDLE_MESSAGE(setSinglePart1);
+
+    TEST_ASSERT(0xF0 == dataHandler.response(dataHandler.responseCounter() - 1)[0]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_0 == dataHandler.response(dataHandler.responseCounter() - 1)[1]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_1 == dataHandler.response(dataHandler.responseCounter() - 1)[2]);
+    TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.response(dataHandler.responseCounter() - 1)[3]);
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::errorPart) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
+    TEST_ASSERT(1 == dataHandler.response(dataHandler.responseCounter() - 1)[5]);
+    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
 }
 
 TEST_CASE(ErrorIndex)
