@@ -3,6 +3,7 @@
 TARGETNAME := sysexconf
 BUILD_DIR_BASE := ./build
 BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGETNAME)
+GEN_DIR := test_run
 SCRIPTS_DIR := ../scripts
 
 ifeq ($(shell uname), Linux)
@@ -38,6 +39,10 @@ COMMON_FLAGS := \
 -g \
 -Wall
 
+#common defines
+DEFINES := \
+UNITY_INCLUDE_CONFIG_H
+
 #c++ compiler only
 CPP_FLAGS := \
 -std=c++11
@@ -65,14 +70,12 @@ define LINK_OBJECTS
 endef
 
 pre-build:
-	@chmod +x $(SCRIPTS_DIR)/gen_test_targets.sh && $(SCRIPTS_DIR)/gen_test_targets.sh
-	@chmod +x $(SCRIPTS_DIR)/gen_test_runners.sh && $(SCRIPTS_DIR)/gen_test_runners.sh
+	@chmod +x $(SCRIPTS_DIR)/gen_test_targets.sh && $(SCRIPTS_DIR)/gen_test_targets.sh $(GEN_DIR)/$(TARGETNAME)
+	@chmod +x $(SCRIPTS_DIR)/gen_test_runners.sh && $(SCRIPTS_DIR)/gen_test_runners.sh $(GEN_DIR)/$(TARGETNAME)
 
 exec:
 	@echo Running all compiled tests.
-	@rm -rf $(wildcard $(BUILD_DIR_BASE)/*.profraw)
-	@export LLVM_PROFILE_FILE="$(BUILD_DIR_BASE)/test-%p.profraw" && \
-	$(FIND) $(BUILD_DIR_BASE) -type f -name "*.out" -printf 'Running %p\n' -exec {} \;
+	@chmod +x $(SCRIPTS_DIR)/tests_exec.sh && $(SCRIPTS_DIR)/tests_exec.sh $(BUILD_DIR_BASE)
 
 coverage:
 	@echo Creating coverage report.
@@ -89,7 +92,7 @@ format:
 clean:
 	@echo Cleaning up.
 	@rm -rf $(BUILD_DIR_BASE)/
-	@rm -rf gen/
+	@rm -rf $(GEN_DIR)/
 
 #debugging
 print-%:

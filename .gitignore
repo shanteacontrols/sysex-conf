@@ -5,4 +5,4 @@ Documentation/*
 *ipch*
 *Objects.mk*
 *.profraw
-tests/gen/*
+tests/test_run/*
