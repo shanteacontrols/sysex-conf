@@ -620,7 +620,7 @@ bool SysExConf::processSpecialRequest()
             {
                 setStatus(status_t::ack);
 
-                DataHandler::CustomResponse customResponse(responseArray, responseCounter);
+                DataHandler::CustomResponse customResponse(paramSize, responseArray, responseCounter);
                 DataHandler::result_t       result = dataHandler.customRequest(sysExCustomRequest[i].requestID, customResponse);
 
                 switch (result)

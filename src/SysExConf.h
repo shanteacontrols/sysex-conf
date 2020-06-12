@@ -171,21 +171,54 @@ class SysExConf
         class CustomResponse
         {
             public:
-            CustomResponse(uint8_t* responseArray, size_t& responseCounter)
-                : responseArray(responseArray)
+            CustomResponse(SysExConf::paramSize_t paramSize, uint8_t* responseArray, size_t& responseCounter)
+                : paramSize(paramSize)
+                , responseArray(responseArray)
                 , responseCounter(responseCounter)
             {}
 
-            void append(uint8_t value)
+            void append(uint16_t value)
             {
-                //make sure to leave space for 0xF7 byte
-                if ((responseCounter - 1) < _maxResponseSize)
-                    responseArray[responseCounter++] = value;
+                switch (paramSize)
+                {
+                case SysExConf::paramSize_t::_7bit:
+                {
+                    value &= 0x7F;
+
+                    //make sure to leave space for 0xF7 byte
+                    if ((responseCounter - 1) < _maxResponseSize)
+                        responseArray[responseCounter++] = value;
+                }
+                break;
+
+                case SysExConf::paramSize_t::_14bit:
+                {
+                    value &= 0x3FFF;
+
+                    //make sure to leave space for 0xF7 byte
+                    if ((responseCounter - 2) < _maxResponseSize)
+                    {
+                        //split into two 7-bit values
+                        uint8_t high;
+                        uint8_t low;
+
+                        SysExConf::split14bit(value, high, low);
+
+                        responseArray[responseCounter++] = high;
+                        responseArray[responseCounter++] = low;
+                    }
+                }
+                break;
+
+                default:
+                    return;
+                }
             }
 
             private:
-            uint8_t* responseArray;
-            size_t&  responseCounter;
+            const paramSize_t paramSize;
+            uint8_t*          responseArray;
+            size_t&           responseCounter;
         };
 
         DataHandler() {}
