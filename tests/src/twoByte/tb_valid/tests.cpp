@@ -1573,8 +1573,12 @@ TEST_CASE(CustomReq)
     TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.response(dataHandler.responseCounter() - 1)[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
     TEST_ASSERT(0x00 == dataHandler.response(dataHandler.responseCounter() - 1)[5]);
-    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
-    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[7]);
+
+    //value should be split into two bytes
+    TEST_ASSERT(0x00 == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
+    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.response(dataHandler.responseCounter() - 1)[7]);
+
+    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[8]);
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
@@ -1736,8 +1740,9 @@ TEST_CASE(CustomReq)
     TEST_ASSERT(SYS_EX_CONF_M_ID_2 == dataHandler.response(dataHandler.responseCounter() - 1)[3]);
     TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
     TEST_ASSERT(0x00 == dataHandler.response(dataHandler.responseCounter() - 1)[5]);
-    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
-    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[7]);
+    TEST_ASSERT(0x00 == dataHandler.response(dataHandler.responseCounter() - 1)[6]);
+    TEST_ASSERT(CUSTOM_REQUEST_VALUE == dataHandler.response(dataHandler.responseCounter() - 1)[7]);
+    TEST_ASSERT(0xF7 == dataHandler.response(dataHandler.responseCounter() - 1)[8]);
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
