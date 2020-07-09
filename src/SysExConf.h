@@ -172,22 +172,22 @@ class SysExConf
         {
             public:
             CustomResponse(SysExConf::paramSize_t paramSize, uint8_t* responseArray, size_t& responseCounter)
-                : paramSize(paramSize)
-                , responseArray(responseArray)
-                , responseCounter(responseCounter)
+                : _paramSize(paramSize)
+                , _responseArray(responseArray)
+                , _responseCounter(responseCounter)
             {}
 
             void append(uint16_t value)
             {
-                switch (paramSize)
+                switch (_paramSize)
                 {
                 case SysExConf::paramSize_t::_7bit:
                 {
                     value &= 0x7F;
 
                     //make sure to leave space for 0xF7 byte
-                    if ((responseCounter - 1) < _maxResponseSize)
-                        responseArray[responseCounter++] = value;
+                    if ((_responseCounter - 1) < _maxResponseSize)
+                        _responseArray[_responseCounter++] = value;
                 }
                 break;
 
@@ -196,7 +196,7 @@ class SysExConf
                     value &= 0x3FFF;
 
                     //make sure to leave space for 0xF7 byte
-                    if ((responseCounter - 2) < _maxResponseSize)
+                    if ((_responseCounter - 2) < _maxResponseSize)
                     {
                         //split into two 7-bit values
                         uint8_t high;
@@ -204,8 +204,8 @@ class SysExConf
 
                         SysExConf::split14bit(value, high, low);
 
-                        responseArray[responseCounter++] = high;
-                        responseArray[responseCounter++] = low;
+                        _responseArray[_responseCounter++] = high;
+                        _responseArray[_responseCounter++] = low;
                     }
                 }
                 break;
@@ -216,9 +216,9 @@ class SysExConf
             }
 
             private:
-            const paramSize_t paramSize;
-            uint8_t*          responseArray;
-            size_t&           responseCounter;
+            const paramSize_t _paramSize;
+            uint8_t*          _responseArray;
+            size_t&           _responseCounter;
         };
 
         DataHandler() {}
@@ -240,10 +240,10 @@ class SysExConf
               const manufacturerID_t& mID,
               paramSize_t             paramSize,
               nrOfParam_t             nrOfParam)
-        : dataHandler(dataHandler)
-        , mID(mID)
-        , paramSize(paramSize)
-        , nrOfParam(nrOfParam)
+        : _dataHandler(dataHandler)
+        , _mID(mID)
+        , _paramSize(paramSize)
+        , _nrOfParam(nrOfParam)
     {}
 
     void reset();
@@ -303,22 +303,22 @@ class SysExConf
     ///
     /// \brief Reference to object performing reading and writing of actual data.
     ///
-    DataHandler& dataHandler;
+    DataHandler& _dataHandler;
 
     ///
     /// \brief Reference to structure containing manufacturer ID bytes.
     ///
-    const manufacturerID_t& mID;
+    const manufacturerID_t& _mID;
 
     ///
     /// \brief Holds size of SysEx parameter indexes and values.
     ///
-    const paramSize_t paramSize;
+    const paramSize_t _paramSize;
 
     ///
     /// \brief Holds total number of parameters per single SysEx message.
     ///
-    const nrOfParam_t nrOfParam;
+    const nrOfParam_t _nrOfParam;
 
     ///
     /// \brief Holds maximum size of response array.
@@ -330,53 +330,53 @@ class SysExConf
     ///
     /// \brief Array in which response will be stored.
     ///
-    uint8_t responseArray[_maxResponseSize];
+    uint8_t _responseArray[_maxResponseSize];
 
     ///
     /// \brief Holds current size of response array.
     ///
-    size_t responseCounter = 0;
+    size_t _responseCounter = 0;
 
     ///
     /// \brief Flag indicating whether or not configuration is possible.
     ///
-    bool sysExEnabled = false;
+    bool _sysExEnabled = false;
 
     ///
     /// \brief Flag indicating whether or not silent mode is active.
     /// When silent mode is active, protocol won't return any error or status_t:ack messages.
     ///
-    bool silentModeEnabled = false;
+    bool _silentModeEnabled = false;
 
     ///
     /// \brief Pointer to SysEx layout.
     ///
-    block_t* sysExMessage = nullptr;
+    block_t* _sysExMessage = nullptr;
 
     ///
     /// \brief Total number of blocks for a received SysEx layout.
     ///
-    uint8_t sysExBlockCounter = 0;
+    uint8_t _sysExBlockCounter = 0;
 
     ///
     /// \brief Structure containing decoded data from SysEx request for easier access.
     ///
-    decodedMessage_t decodedMessage;
+    decodedMessage_t _decodedMessage;
 
     ///
     /// \brief Pointer to structure containing data for custom requests.
     ///
-    customRequest_t* sysExCustomRequest = nullptr;
+    customRequest_t* _sysExCustomRequest = nullptr;
 
     ///
     /// \brief Total number of custom SysEx requests stored in pointed structure.
     ///
-    size_t numberOfCustomRequests = 0;
+    size_t _numberOfCustomRequests = 0;
 
     ///
     /// \brief Holds amount of user-specified custom requests.
     ///
-    size_t customRequestCounter = 0;
+    size_t _customRequestCounter = 0;
 };
 
 /// @}
