@@ -246,6 +246,9 @@ class SysExConf
         , _nrOfParam(nrOfParam)
     {}
 
+    paramSize_t paramSize();
+    nrOfParam_t nrOfParam();
+
     void reset();
     bool setLayout(block_t* pointer, uint8_t numberOfBlocks);
     bool setupCustomRequests(customRequest_t* customRequests, size_t numberOfCustomRequests);

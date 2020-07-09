@@ -21,6 +21,16 @@
 
 #include "SysExConf.h"
 
+SysExConf::paramSize_t SysExConf::paramSize()
+{
+    return _paramSize;
+}
+
+SysExConf::nrOfParam_t SysExConf::nrOfParam()
+{
+    return _nrOfParam;
+}
+
 ///
 /// \brief Resets all variables to their default values.
 ///
