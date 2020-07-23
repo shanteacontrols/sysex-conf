@@ -165,10 +165,8 @@ void SysExConf::handleMessage(const uint8_t* array, size_t size)
     for (size_t i = 0; i < size; i++)
         _responseArray[i] = array[i];
 
-    //response counter should at this point hold index of the array at which
-    //response will differ from the original message, which is why we're not assigning
-    //responseCounter to be total size of received array
-    _responseCounter = RESPONSE_SIZE;
+    //for now, set the response counter to last position in request
+    _responseCounter = size - 1;
 
     if (!checkID())
         return;    //don't send response to wrong ID
@@ -522,6 +520,10 @@ bool SysExConf::processStandardRequest(size_t receivedArraySize)
         _responseArray[_responseCounter++] = _mID.id3;
         _responseArray[_responseCounter++] = static_cast<uint8_t>(status_t::ack);
         _responseArray[_responseCounter++] = 0x7E;
+        _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.wish);
+        _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.amount);
+        _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.block);
+        _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.section);
         sendResponse(false);
     }
 
@@ -691,7 +693,8 @@ size_t SysExConf::generateMessageLenght()
         {
         case wish_t::get:
         case wish_t::backup:
-            return ML_REQ_STANDARD;
+            //although not required, add parameter length here as well so that requests have consistent size
+            return ML_REQ_STANDARD + static_cast<uint8_t>(_paramSize);
 
         default:
             // case wish_t::set:
