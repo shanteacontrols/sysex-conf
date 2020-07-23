@@ -156,6 +156,9 @@ void SysExConf::handleMessage(const uint8_t* array, size_t size)
     if (array[size - 1] != 0xF7)
         return;
 
+    if (size >= _maxResponseSize)
+        return;
+
     resetDecodedMessage();
 
     //copy entire incoming message to internal buffer
