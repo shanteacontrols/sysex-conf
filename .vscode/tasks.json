@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "[Test] Build single test",
-            "command": "cd tests && make pre-build && make TESTS=${input:testName} && cp $(../scripts/test_dir_get.sh ${input:testName})/${input:testName}.out build/test.out",
+            "command": "cd tests && make pre-build TARGETNAME=${input:protocolVariant} && make TESTS=${input:testName} TARGETNAME=${input:protocolVariant} && cp $(../scripts/test_dir_get.sh ${input:protocolVariant} ${input:testName})/${input:testName}.out build/test.out",
             "type": "shell",
             "problemMatcher": [
                 "$gcc"
@@ -37,12 +37,17 @@
             "default": "all",
             "type": "pickString",
             "options": [
-                "sb_valid",
-                "sb_errorGet",
-                "sb_errorSet",
-                "tb_errorGet",
-                "tb_errorSet",
-                "tb_valid"
+                "all"
+            ]
+        },
+        {
+            "id": "protocolVariant",
+            "description": "Select protocol variant:",
+            "default": "sysexconf1b",
+            "type": "pickString",
+            "options": [
+                "sysexconf1b",
+                "sysexconf2b"
             ]
         }
     ]

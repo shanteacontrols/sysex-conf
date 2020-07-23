@@ -1,7 +1,7 @@
 vpath modules/%.cpp ../
 vpath modules/%.c ../
 
-COMMON_SOURCES := \
+SOURCES_COMMON := \
 modules/unity/src/unity.c
 
 INCLUDE_DIRS_COMMON := \

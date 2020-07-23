@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := test
 
-TARGETNAME := sysexconf
+TARGETNAME := 1b
 BUILD_DIR_BASE := ./build
 BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGETNAME)
 GEN_DIR := test_run
@@ -14,20 +14,25 @@ else
     $(error Unsupported platform)
 endif
 
+ifeq ($(shell uname), Linux)
+    FIND := find
+else ifeq ($(shell uname), Darwin)
+    FIND := gfind
+else
+    $(error Unsupported platform)
+endif
+
 -include Defines.mk
 include Sources.mk
 -include Objects.mk
 
-C_COMPILER := clang
-CPP_COMPILER := clang++
-LLVM_PROFDATA := llvm-profdata
-LLVM_COV := llvm-cov
-CLANG_FORMAT := clang-format
+C_COMPILER ?= clang
+CPP_COMPILER ?= clang++
+LLVM_PROFDATA ?= llvm-profdata
+LLVM_COV ?= llvm-cov
+CLANG_FORMAT ?= clang-format
 
 TEST_BINARIES := $(addprefix -object ,$(shell $(FIND) $(BUILD_DIR_BASE) -name "*.out" 2>/dev/null))
-
-#do not allow overriding this variable via command-line
-override undefine TESTS_EXPANDED
 
 FW_ROOT_DIR := ../src
 
@@ -35,12 +40,12 @@ FW_ROOT_DIR := ../src
 COMMON_FLAGS := \
 -fprofile-instr-generate \
 -fcoverage-mapping \
--Og \
+-O0 \
 -g \
 -Wall
 
 #common defines
-DEFINES := \
+DEFINES += \
 UNITY_INCLUDE_CONFIG_H
 
 #c++ compiler only
@@ -88,6 +93,9 @@ format:
 	@echo Checking code formatting...
 	@$(FIND) . -regex '.*\.\(cpp\|hpp\|h\|cc\|cxx\)' \
 	-exec $(CLANG_FORMAT) -style=file -i {} \;
+ifeq ($(CF_FAIL_ON_DIFF), 1)
+	git diff -s --exit-code
+endif
 
 clean:
 	@echo Cleaning up.
