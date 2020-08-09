@@ -851,8 +851,17 @@ void SysExConf::sendResponse(bool containsLastByte)
         _responseArray[_responseCounter++] = 0xF7;
     }
 
-    if (_silentModeEnabled && (_decodedMessage.wish != wish_t::get))
-        return;
+    if (_silentModeEnabled)
+    {
+        //don't report any errors in silent mode
+        if ((_responseArray[statusByte] != static_cast<uint8_t>(status_t::ack)) &&
+            (_responseArray[statusByte] != static_cast<uint8_t>(status_t::request)))
+            return;
+
+        //respond only to get messages
+        if (_decodedMessage.wish != wish_t::get)
+            return;
+    }
 
     _dataHandler.sendResponse(_responseArray, _responseCounter);
 }
