@@ -279,7 +279,7 @@ class SysExConf
     bool   checkParameters();
     size_t generateMessageLenght();
     void   setStatus(status_t status);
-    void   sendResponse(bool containsLastByte);
+    void   sendResponse(bool containsLastByte, bool customMessage = false);
 
     ///
     /// \brief Descriptive list of bytes in SysEx message.

@@ -837,21 +837,22 @@ void SysExConf::sendCustomMessage(const sysExParameter_t* values, size_t size, b
     for (size_t i = 0; i < size; i++)
         _responseArray[_responseCounter++] = values[i];
 
-    sendResponse(false);
+    sendResponse(false, true);
 }
 
 ///
 /// \brief Used to send SysEx response.
 /// @param [in] containsLastByte If set to true, last SysEx byte (0x07) won't be appended.
+/// @param [in] customMessage    If set to true, custom user-specified message is being sent and silent mode is being ignored.
 ///
-void SysExConf::sendResponse(bool containsLastByte)
+void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
 {
     if (!containsLastByte)
     {
         _responseArray[_responseCounter++] = 0xF7;
     }
 
-    if (_silentModeEnabled)
+    if (_silentModeEnabled && !customMessage)
     {
         //don't report any errors in silent mode
         if ((_responseArray[statusByte] != static_cast<uint8_t>(status_t::ack)) &&
