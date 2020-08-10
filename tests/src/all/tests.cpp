@@ -135,6 +135,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -151,6 +152,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -168,6 +170,7 @@ namespace
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -184,6 +187,7 @@ namespace
         0x41,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -200,6 +204,7 @@ namespace
         TEST_BLOCK_ID,
         0x61,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -216,6 +221,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(0x7F),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -232,6 +238,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -248,6 +255,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -344,6 +352,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -360,6 +369,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_MULTIPLE_PARTS_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -393,6 +403,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(TEST_INDEX_ID),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -408,6 +419,7 @@ namespace
         static_cast<uint8_t>(SysExConf::amount_t::all),
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
+        SYSEX_PARAM(0),
         SYSEX_PARAM(0),
         0xF7
     };
@@ -425,6 +437,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_MULTIPLE_PARTS_ID,
         SYSEX_PARAM(0),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -440,6 +453,7 @@ namespace
         static_cast<uint8_t>(SysExConf::amount_t::all),
         TEST_BLOCK_ID,
         TEST_SECTION_MULTIPLE_PARTS_ID,
+        SYSEX_PARAM(0),
         SYSEX_PARAM(0),
         0xF7
     };
@@ -721,6 +735,7 @@ namespace
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
         SYSEX_PARAM(0),
+        SYSEX_PARAM(0),
         0xF7
     };
 
@@ -736,7 +751,8 @@ namespace
         static_cast<uint8_t>(SysExConf::amount_t::single),
         TEST_BLOCK_ID,
         TEST_SECTION_SINGLE_PART_ID,
-        SYSEX_PARAM(0x00),
+        SYSEX_PARAM(0),
+        SYSEX_PARAM(0),
         0xF7
     };
 

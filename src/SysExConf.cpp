@@ -675,17 +675,7 @@ size_t SysExConf::generateMessageLenght()
     switch (_decodedMessage.amount)
     {
     case amount_t::single:
-        switch (_decodedMessage.wish)
-        {
-        case wish_t::get:
-        case wish_t::backup:
-            return ML_REQ_STANDARD + static_cast<uint8_t>(_paramSize);    //add parameter length
-
-        default:
-            // case wish_t::set:
-            return ML_REQ_STANDARD + 2 * static_cast<uint8_t>(_paramSize);    //add parameter length and new value length
-        }
-        break;
+        return ML_REQ_STANDARD + 2 * static_cast<uint8_t>(_paramSize);
 
     default:
         // case amount_t::all:
@@ -693,8 +683,7 @@ size_t SysExConf::generateMessageLenght()
         {
         case wish_t::get:
         case wish_t::backup:
-            //although not required, add parameter length here as well so that requests have consistent size
-            return ML_REQ_STANDARD + static_cast<uint8_t>(_paramSize);
+            return ML_REQ_STANDARD + 2 * static_cast<uint8_t>(_paramSize);
 
         default:
             // case wish_t::set:
