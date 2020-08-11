@@ -524,6 +524,15 @@ bool SysExConf::processStandardRequest(size_t receivedArraySize)
         _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.amount);
         _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.block);
         _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.section);
+        _responseArray[_responseCounter++] = 0;
+        _responseArray[_responseCounter++] = 0;
+
+        if (_paramSize == paramSize_t::_14bit)
+        {
+            _responseArray[_responseCounter++] = 0;
+            _responseArray[_responseCounter++] = 0;
+        }
+
         sendResponse(false);
     }
 
