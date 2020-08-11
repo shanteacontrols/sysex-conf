@@ -1767,7 +1767,7 @@ TEST_CASE(SpecialRequest)
     handleMessage(getSpecialReqBytesPerVal);
 
     data = {
-        static_cast<uint8_t>(SYSEX_PARAMSIZE)
+        SYSEX_PARAM(static_cast<uint8_t>(SYSEX_PARAMSIZE))
     };
 
     //check response
@@ -1783,7 +1783,7 @@ TEST_CASE(SpecialRequest)
     handleMessage(getSpecialReqParamPerMsg);
 
     data = {
-        static_cast<uint8_t>(SysExConf::nrOfParam_t::_32)
+        SYSEX_PARAM(static_cast<uint8_t>(SysExConf::nrOfParam_t::_32))
     };
 
     //check response

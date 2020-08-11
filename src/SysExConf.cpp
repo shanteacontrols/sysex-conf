@@ -610,6 +610,10 @@ bool SysExConf::processSpecialRequest()
         if (_sysExEnabled)
         {
             setStatus(status_t::ack);
+
+            if (_paramSize == paramSize_t::_14bit)
+                _responseArray[_responseCounter++] = 0;
+
             _responseArray[_responseCounter++] = static_cast<uint8_t>(_paramSize);
         }
         else
@@ -622,6 +626,10 @@ bool SysExConf::processSpecialRequest()
         if (_sysExEnabled)
         {
             setStatus(status_t::ack);
+
+            if (_paramSize == paramSize_t::_14bit)
+                _responseArray[_responseCounter++] = 0;
+
             _responseArray[_responseCounter++] = static_cast<uint8_t>(_nrOfParam);
         }
         else
