@@ -1744,6 +1744,12 @@ TEST_CASE(Backup)
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
 
+    //now, try to send received response back
+    handleMessage(dataHandler.response(0));
+
+    //check if status byte is set to SysExConf::status_t::ack value
+    TEST_ASSERT(static_cast<uint8_t>(SysExConf::status_t::ack) == dataHandler.response(dataHandler.responseCounter() - 1)[4]);
+
     //reset message count
     dataHandler.reset();
 

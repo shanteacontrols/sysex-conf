@@ -353,8 +353,8 @@ bool SysExConf::processStandardRequest(size_t receivedArraySize)
             _responseArray[(uint8_t)wishByte] = (uint8_t)wish_t::set;
             //decoded message wish needs to be set to get so that we can retrieve parameters
             _decodedMessage.wish = wish_t::get;
-            //don't overwrite anything when backup is requested - just append
-            responseCounterLocal = receivedArraySize - 1;
+            //when backup is request, erase received index/new value in response
+            responseCounterLocal = receivedArraySize - 1 - (2 * static_cast<size_t>(_paramSize));
         }
     }
 
