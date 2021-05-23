@@ -49,7 +49,7 @@ class SysExConf
     ///
     typedef struct
     {
-        size_t           numberOfParameters;
+        sysExParameter_t numberOfParameters;
         sysExParameter_t newValueMin;
         sysExParameter_t newValueMax;
         uint8_t          parts;
