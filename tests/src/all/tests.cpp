@@ -4,23 +4,13 @@
 #include "src/SysExTesting.h"
 #include <vector>
 
-#ifdef SYSEX_2B
-#define SYSEX_PARAMSIZE SysExConf::paramSize_t::_14bit
-#else
-#define SYSEX_PARAMSIZE SysExConf::paramSize_t::_7bit
-#endif
-
 #define SYS_EX_CONF_M_ID_0 0x00
 #define SYS_EX_CONF_M_ID_1 0x53
 #define SYS_EX_CONF_M_ID_2 0x43
 
-#ifdef SYSEX_2B
 #define SYSEX_PARAM(value)                                                                                                         \
     (((value & 0xFF) >> 7) & 0x01) ? ((((value >> 8) & 0xFF) << 1) & 0x7F) | 0x01 : ((((value >> 8) & 0xFF) << 1) & 0x7F) & ~0x01, \
         (value & 0xFF) & 0x7F
-#else
-#define SYSEX_PARAM(value) value
-#endif
 
 namespace
 {
@@ -30,34 +20,33 @@ namespace
         SYS_EX_CONF_M_ID_2
     };
 
-    SysExConf::section_t testSections[NUMBER_OF_SECTIONS] = {
+    std::vector<SysExConf::Section> testSections = {
         {
-            .numberOfParameters = SECTION_0_PARAMETERS,
-            .newValueMin        = SECTION_0_MIN,
-            .newValueMax        = SECTION_0_MAX,
+            SECTION_0_PARAMETERS,
+            SECTION_0_MIN,
+            SECTION_0_MAX,
         },
 
         {
-            .numberOfParameters = SECTION_1_PARAMETERS,
-            .newValueMin        = SECTION_1_MIN,
-            .newValueMax        = SECTION_1_MAX,
+            SECTION_1_PARAMETERS,
+            SECTION_1_MIN,
+            SECTION_1_MAX,
         },
 
         {
-            .numberOfParameters = SECTION_2_PARAMETERS,
-            .newValueMin        = SECTION_2_MIN,
-            .newValueMax        = SECTION_2_MAX,
+            SECTION_2_PARAMETERS,
+            SECTION_2_MIN,
+            SECTION_2_MAX,
         }
     };
 
-    SysExConf::block_t sysExLayout[NUMBER_OF_BLOCKS] = {
+    std::vector<SysExConf::block_t> sysExLayout = {
         {
-            .numberOfSections = NUMBER_OF_SECTIONS,
-            .section          = testSections,
+            .section = testSections,
         }
     };
 
-    SysExConf::customRequest_t customRequests[TOTAL_CUSTOM_REQUESTS] = {
+    std::vector<SysExConf::customRequest_t> customRequests = {
         {
             .requestID     = CUSTOM_REQUEST_ID_VALID,
             .connOpenCheck = true,
@@ -762,18 +751,18 @@ namespace
         SysExConfDataHandlerValid()
         {}
 
-        result_t get(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value) override
+        result_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value) override
         {
             value = TEST_VALUE_GET;
             return getResult;
         }
 
-        result_t set(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) override
+        result_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) override
         {
             return setResult;
         }
 
-        result_t customRequest(size_t request, CustomResponse& customResponse) override
+        result_t customRequest(uint16_t request, CustomResponse& customResponse) override
         {
             switch (request)
             {
@@ -811,11 +800,11 @@ namespace
             return _response.at(index);
         }
 
-        void sendResponse(uint8_t* array, size_t size) override
+        void sendResponse(uint8_t* array, uint16_t size) override
         {
             std::vector<uint8_t> tempResponse;
 
-            for (size_t i = 0; i < size; i++)
+            for (uint16_t i = 0; i < size; i++)
                 tempResponse.push_back(array[i]);
 
             _response.push_back(tempResponse);
@@ -835,10 +824,9 @@ namespace
 
     SysExConfDataHandlerValid dataHandler;
 
-    SysExConf sysEx(dataHandler,
-                    mId,
-                    SYSEX_PARAMSIZE,
-                    SysExConf::nrOfParam_t::_32);
+    SysExConf sysEx(dataHandler, mId);
+
+    bool initialized;
 
     void handleMessage(const std::vector<uint8_t>& source)
     {
@@ -873,9 +861,22 @@ namespace
 
 TEST_SETUP()
 {
-    sysEx.reset();
-    sysEx.setLayout(sysExLayout, NUMBER_OF_BLOCKS);
-    sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS);
+    if (initialized)
+    {
+        //send open connection request and see if sysExTestArray is valid
+        handleMessage(connOpen);
+
+        //sysex configuration should be enabled now
+        TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
+    }
+
+    dataHandler.reset();
+}
+
+TEST_CASE(Init)
+{
+    sysEx.setLayout(sysExLayout);
+    sysEx.setupCustomRequests(customRequests);
 
     //send open connection request and see if sysExTestArray is valid
     handleMessage(connOpen);
@@ -884,10 +885,7 @@ TEST_SETUP()
     TEST_ASSERT(1 == sysEx.isConfigurationEnabled());
 
     dataHandler.reset();
-}
 
-TEST_CASE(Init)
-{
     //close connection
     handleMessage(connClose);
 
@@ -962,6 +960,8 @@ TEST_CASE(Init)
 
     //verify silent mode is disabled
     TEST_ASSERT(false == sysEx.isSilentModeEnabled());
+
+    initialized = true;
 }
 
 TEST_CASE(SilentMode)
@@ -1041,15 +1041,6 @@ TEST_CASE(SilentMode)
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 0);
-}
-
-TEST_CASE(ErrorInit)
-{
-    //try to init sysex with null pointer
-    TEST_ASSERT(false == sysEx.setLayout(nullptr, 1));
-
-    //try to init sysex with zero blocks
-    TEST_ASSERT(false == sysEx.setLayout(sysExLayout, 0));
 }
 
 TEST_CASE(ErrorConnClosed)
@@ -1555,49 +1546,6 @@ TEST_CASE(CustomReq)
     //reset message count
     dataHandler.reset();
 
-    //try defining custom requests with invalid pointer
-    TEST_ASSERT(sysEx.setupCustomRequests(nullptr, 0) == false);
-
-    //try defining illegal custom requests
-    SysExConf::customRequest_t customRequests_invalid[static_cast<uint8_t>(SysExConf::specialRequest_t::AMOUNT)] = {
-        {
-            .requestID     = 0,
-            .connOpenCheck = true,
-        },
-
-        {
-            .requestID     = 1,
-            .connOpenCheck = true,
-        },
-
-        {
-            .requestID     = 2,
-            .connOpenCheck = true,
-        },
-
-        {
-            .requestID     = 3,
-            .connOpenCheck = true,
-        },
-
-        {
-            .requestID     = 4,
-            .connOpenCheck = true,
-        },
-
-        {
-            .requestID     = 5,
-            .connOpenCheck = true,
-        }
-    };
-
-    //setupCustomRequests should return false because special requests which
-    //are already used internally are defined in pointed structure
-    TEST_ASSERT(sysEx.setupCustomRequests(customRequests_invalid, static_cast<uint8_t>(SysExConf::specialRequest_t::AMOUNT)) == false);
-
-    //restore valid custom requests
-    TEST_ASSERT(sysEx.setupCustomRequests(customRequests, TOTAL_CUSTOM_REQUESTS) == true);
-
     //close sysex connection
     handleMessage(connClose);
 
@@ -1651,6 +1599,43 @@ TEST_CASE(CustomReq)
 
     //check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
+
+    //try defining illegal custom requests
+    std::vector<SysExConf::customRequest_t> customRequests_invalid = {
+        {
+            .requestID     = 0,
+            .connOpenCheck = true,
+        },
+
+        {
+            .requestID     = 1,
+            .connOpenCheck = true,
+        },
+
+        {
+            .requestID     = 2,
+            .connOpenCheck = true,
+        },
+
+        {
+            .requestID     = 3,
+            .connOpenCheck = true,
+        },
+
+        {
+            .requestID     = 4,
+            .connOpenCheck = true,
+        },
+
+        {
+            .requestID     = 5,
+            .connOpenCheck = true,
+        }
+    };
+
+    //setupCustomRequests should return false because special requests which
+    //are already used internally are defined in pointed structure
+    TEST_ASSERT(sysEx.setupCustomRequests(customRequests_invalid) == false);
 }
 
 TEST_CASE(IgnoreMessage)
@@ -1688,7 +1673,7 @@ TEST_CASE(IgnoreMessage)
 TEST_CASE(CustomMessage)
 {
     //construct custom message and see if output matches
-    std::vector<SysExConf::sysExParameter_t> values = {
+    std::vector<uint16_t> values = {
         0x05,
         0x06,
         0x07
@@ -1773,7 +1758,7 @@ TEST_CASE(SpecialRequest)
     handleMessage(getSpecialReqBytesPerVal);
 
     data = {
-        SYSEX_PARAM(static_cast<uint8_t>(SYSEX_PARAMSIZE))
+        SYSEX_PARAM(2)
     };
 
     //check response
@@ -1789,7 +1774,7 @@ TEST_CASE(SpecialRequest)
     handleMessage(getSpecialReqParamPerMsg);
 
     data = {
-        SYSEX_PARAM(static_cast<uint8_t>(SysExConf::nrOfParam_t::_32))
+        SYSEX_PARAM(SysExConf::PARAMS_PER_MESSAGE)
     };
 
     //check response

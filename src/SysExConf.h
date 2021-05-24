@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <vector>
 #include <inttypes.h>
 #include <stdlib.h>
 
@@ -32,7 +33,8 @@
 class SysExConf
 {
     public:
-    using sysExParameter_t = uint16_t;
+    static constexpr uint16_t PARAMS_PER_MESSAGE = 32;
+    static constexpr uint16_t BYTES_PER_VALUE    = 2;
 
     ///
     /// \brief Structure holding SysEx manufacturer ID bytes.
@@ -47,21 +49,57 @@ class SysExConf
     ///
     /// \brief Structure holding data for single SysEx section within block.
     ///
-    typedef struct
+    class Section
     {
-        sysExParameter_t numberOfParameters;
-        sysExParameter_t newValueMin;
-        sysExParameter_t newValueMax;
-        uint8_t          parts;
-    } section_t;
+        public:
+        Section(
+            uint16_t numberOfParameters,
+            uint16_t newValueMin,
+            uint16_t newValueMax)
+            : _numberOfParameters(numberOfParameters)
+            , _newValueMin(newValueMin)
+            , _newValueMax(newValueMax)
+        {
+            //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
+            _parts = numberOfParameters / SysExConf::PARAMS_PER_MESSAGE;
+
+            if (numberOfParameters % SysExConf::PARAMS_PER_MESSAGE)
+                _parts++;
+        }
+
+        uint16_t numberOfParameters() const
+        {
+            return _numberOfParameters;
+        }
+
+        uint16_t newValueMin() const
+        {
+            return _newValueMin;
+        }
+
+        uint16_t newValueMax() const
+        {
+            return _newValueMax;
+        }
+
+        uint8_t parts() const
+        {
+            return _parts;
+        }
+
+        private:
+        const uint16_t _numberOfParameters;
+        const uint16_t _newValueMin;
+        const uint16_t _newValueMax;
+        uint8_t        _parts;
+    };
 
     ///
     /// \brief Structure holding data for single SysEx block.
     ///
     typedef struct
     {
-        uint8_t    numberOfSections;
-        section_t* section;
+        std::vector<Section> section;
     } block_t;
 
     ///
@@ -69,8 +107,8 @@ class SysExConf
     ///
     typedef struct
     {
-        size_t requestID;        ///< ID byte representing specific request.
-        bool   connOpenCheck;    ///< Flag indicating whether or not SysEx connection should be enabled before processing request.
+        uint16_t requestID;        ///< ID byte representing specific request.
+        bool     connOpenCheck;    ///< Flag indicating whether or not SysEx connection should be enabled before processing request.
     } customRequest_t;
 
     ///
@@ -135,35 +173,15 @@ class SysExConf
     ///
     typedef struct
     {
-        status_t         status;
-        wish_t           wish;
-        amount_t         amount;
-        uint8_t          block;
-        uint8_t          section;
-        uint8_t          part;
-        sysExParameter_t index;
-        sysExParameter_t newValue;
+        status_t status;
+        wish_t   wish;
+        amount_t amount;
+        uint8_t  block;
+        uint8_t  section;
+        uint8_t  part;
+        uint16_t index;
+        uint16_t newValue;
     } decodedMessage_t;
-
-    ///
-    /// \brief List of all possible sizes for parameter indexes and values used during configuration.
-    ///
-    enum class paramSize_t : uint8_t
-    {
-        _7bit  = 1,
-        _14bit = 2,
-        MAX    = _14bit
-    };
-
-    ///
-    /// \brief List of all possible sizes for number of parameters specified per single SysEx message.
-    ///
-    enum class nrOfParam_t : uint8_t
-    {
-        _32 = 32,
-        _64 = 64,
-        MAX = _64
-    };
 
     class DataHandler
     {
@@ -171,54 +189,32 @@ class SysExConf
         class CustomResponse
         {
             public:
-            CustomResponse(SysExConf::paramSize_t paramSize, uint8_t* responseArray, size_t& responseCounter)
-                : _paramSize(paramSize)
-                , _responseArray(responseArray)
+            CustomResponse(uint8_t* responseArray, uint16_t& responseCounter)
+                : _responseArray(responseArray)
                 , _responseCounter(responseCounter)
             {}
 
             void append(uint16_t value)
             {
-                switch (_paramSize)
+                value &= 0x3FFF;
+
+                //make sure to leave space for 0xF7 byte
+                if ((_responseCounter - 2) < MAX_MESSAGE_SIZE)
                 {
-                case SysExConf::paramSize_t::_7bit:
-                {
-                    value &= 0x7F;
+                    //split into two 7-bit values
+                    uint8_t high;
+                    uint8_t low;
 
-                    //make sure to leave space for 0xF7 byte
-                    if ((_responseCounter - 1) < _maxResponseSize)
-                        _responseArray[_responseCounter++] = value;
-                }
-                break;
+                    SysExConf::split14bit(value, high, low);
 
-                case SysExConf::paramSize_t::_14bit:
-                {
-                    value &= 0x3FFF;
-
-                    //make sure to leave space for 0xF7 byte
-                    if ((_responseCounter - 2) < _maxResponseSize)
-                    {
-                        //split into two 7-bit values
-                        uint8_t high;
-                        uint8_t low;
-
-                        SysExConf::split14bit(value, high, low);
-
-                        _responseArray[_responseCounter++] = high;
-                        _responseArray[_responseCounter++] = low;
-                    }
-                }
-                break;
-
-                default:
-                    return;
+                    _responseArray[_responseCounter++] = high;
+                    _responseArray[_responseCounter++] = low;
                 }
             }
 
             private:
-            const paramSize_t _paramSize;
-            uint8_t*          _responseArray;
-            size_t&           _responseCounter;
+            uint8_t*  _responseArray;
+            uint16_t& _responseCounter;
         };
 
         DataHandler() {}
@@ -230,56 +226,50 @@ class SysExConf
             notSupported,
         };
 
-        virtual result_t get(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t& value)   = 0;
-        virtual result_t set(uint8_t block, uint8_t section, size_t index, SysExConf::sysExParameter_t newValue) = 0;
-        virtual result_t customRequest(size_t request, CustomResponse& customResponse)                           = 0;
-        virtual void     sendResponse(uint8_t* array, size_t size)                                               = 0;
+        virtual result_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value)   = 0;
+        virtual result_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) = 0;
+        virtual result_t customRequest(uint16_t request, CustomResponse& customResponse)        = 0;
+        virtual void     sendResponse(uint8_t* array, uint16_t size)                            = 0;
     };
 
     SysExConf(DataHandler&            dataHandler,
-              const manufacturerID_t& mID,
-              paramSize_t             paramSize,
-              nrOfParam_t             nrOfParam)
+              const manufacturerID_t& mID)
         : _dataHandler(dataHandler)
         , _mID(mID)
-        , _paramSize(paramSize)
-        , _nrOfParam(nrOfParam)
     {}
 
-    paramSize_t paramSize();
-    nrOfParam_t nrOfParam();
-
-    void reset();
-    bool setLayout(block_t* pointer, uint8_t numberOfBlocks);
-    bool setupCustomRequests(customRequest_t* customRequests, size_t numberOfCustomRequests);
-    void handleMessage(const uint8_t* sysExArray, size_t size);
-    bool isConfigurationEnabled();
-    bool isSilentModeEnabled();
-    void setSilentMode(bool state);
-    void sendCustomMessage(const sysExParameter_t* values, size_t size, bool ack = true);
-
+    void        reset();
+    bool        setLayout(std::vector<block_t>& layout);
+    bool        setupCustomRequests(std::vector<customRequest_t>& customRequests);
+    void        handleMessage(const uint8_t* sysExArray, uint16_t size);
+    bool        isConfigurationEnabled();
+    bool        isSilentModeEnabled();
+    void        setSilentMode(bool state);
+    void        sendCustomMessage(const uint16_t* values, uint16_t size, bool ack = true);
+    uint8_t     blocks() const;
+    uint8_t     sections(uint8_t blockID) const;
     static void split14bit(uint16_t value, uint8_t& high, uint8_t& low);
     static void mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low);
 
     private:
-    bool   addToResponse(sysExParameter_t value);
-    bool   decode(const uint8_t* receivedArray, size_t receivedArraySize);
-    void   resetDecodedMessage();
-    bool   processStandardRequest(size_t receivedArraySize);
-    bool   processSpecialRequest();
-    bool   checkID();
-    bool   checkStatus();
-    bool   checkWish();
-    bool   checkAmount();
-    bool   checkBlock();
-    bool   checkSection();
-    bool   checkPart();
-    bool   checkParameterIndex();
-    bool   checkNewValue();
-    bool   checkParameters();
-    size_t generateMessageLenght();
-    void   setStatus(status_t status);
-    void   sendResponse(bool containsLastByte, bool customMessage = false);
+    bool     addToResponse(uint16_t value);
+    bool     decode(const uint8_t* receivedArray, uint16_t receivedArraySize);
+    void     resetDecodedMessage();
+    bool     processStandardRequest(uint16_t receivedArraySize);
+    bool     processSpecialRequest();
+    bool     checkID();
+    bool     checkStatus();
+    bool     checkWish();
+    bool     checkAmount();
+    bool     checkBlock();
+    bool     checkSection();
+    bool     checkPart();
+    bool     checkParameterIndex();
+    bool     checkNewValue();
+    bool     checkParameters();
+    uint16_t generateMessageLenght();
+    void     setStatus(status_t status);
+    void     sendResponse(bool containsLastByte, bool customMessage = false);
 
     ///
     /// \brief Descriptive list of bytes in SysEx message.
@@ -296,11 +286,7 @@ class SysExConf
         amountByte,     //7
         blockByte,      //8
         sectionByte,    //9
-        REQUEST_SIZE,
-        RESPONSE_SIZE      = partByte + 1,
-        MIN_MESSAGE_LENGTH = (wishByte + 1) + 1,    //special requests
-        ML_REQ_STANDARD    = REQUEST_SIZE + 1,      //add end byte
-        indexByte          = REQUEST_SIZE,
+        indexByte,      //10
     } sysExByteOrder;
 
     ///
@@ -313,32 +299,19 @@ class SysExConf
     ///
     const manufacturerID_t& _mID;
 
-    ///
-    /// \brief Holds size of SysEx parameter indexes and values.
-    ///
-    const paramSize_t _paramSize;
-
-    ///
-    /// \brief Holds total number of parameters per single SysEx message.
-    ///
-    const nrOfParam_t _nrOfParam;
-
-    ///
-    /// \brief Holds maximum size of response array.
-    ///
-    static constexpr size_t _maxResponseSize = (static_cast<size_t>(nrOfParam_t::MAX) *
-                                                static_cast<size_t>(paramSize_t::MAX)) +
-                                               RESPONSE_SIZE;
+    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (wishByte + 1) + 1;    //extra byte for end
+    static constexpr uint8_t  STD_REQ_MIN_MSG_SIZE = indexByte + (BYTES_PER_VALUE * 2) + 1;
+    static constexpr uint16_t MAX_MESSAGE_SIZE     = STD_REQ_MIN_MSG_SIZE + (PARAMS_PER_MESSAGE * BYTES_PER_VALUE);
 
     ///
     /// \brief Array in which response will be stored.
     ///
-    uint8_t _responseArray[_maxResponseSize];
+    uint8_t _responseArray[MAX_MESSAGE_SIZE];
 
     ///
     /// \brief Holds current size of response array.
     ///
-    size_t _responseCounter = 0;
+    uint16_t _responseCounter = 0;
 
     ///
     /// \brief Flag indicating whether or not configuration is possible.
@@ -352,14 +325,9 @@ class SysExConf
     bool _silentModeEnabled = false;
 
     ///
-    /// \brief Pointer to SysEx layout.
+    /// \brief SysEx layout.
     ///
-    block_t* _sysExMessage = nullptr;
-
-    ///
-    /// \brief Total number of blocks for a received SysEx layout.
-    ///
-    uint8_t _sysExBlockCounter = 0;
+    std::vector<block_t> _layout = {};
 
     ///
     /// \brief Structure containing decoded data from SysEx request for easier access.
@@ -367,19 +335,9 @@ class SysExConf
     decodedMessage_t _decodedMessage;
 
     ///
-    /// \brief Pointer to structure containing data for custom requests.
+    /// \brief Vector of structures containing data for custom requests.
     ///
-    customRequest_t* _sysExCustomRequest = nullptr;
-
-    ///
-    /// \brief Total number of custom SysEx requests stored in pointed structure.
-    ///
-    size_t _numberOfCustomRequests = 0;
-
-    ///
-    /// \brief Holds amount of user-specified custom requests.
-    ///
-    size_t _customRequestCounter = 0;
+    std::vector<customRequest_t> _sysExCustomRequest = {};
 };
 
 /// @}

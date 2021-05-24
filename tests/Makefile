@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := test
 
-TARGETNAME := 1b
+TARGETNAME := sysex
 BUILD_DIR_BASE := ./build
 BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGETNAME)
 GEN_DIR := test_run
@@ -50,7 +50,7 @@ UNITY_INCLUDE_CONFIG_H
 
 #c++ compiler only
 CPP_FLAGS := \
--std=c++11
+-std=c++17
 
 #c compiler only
 C_FLAGS := \
