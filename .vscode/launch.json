@@ -10,11 +10,17 @@
             "request": "launch",
             "program": "${workspaceFolder}/tests/build/sysex/src/all/all.out",
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "environment": [],
             "externalConsole": false,
-            "cwd": "${workspaceFolder}",
-            "MIMode": "gdb",
+            "linux": {
+                "cwd": "${workspaceFolder}",
+                "MIMode": "gdb"
+            },
+            "osx": {
+                "cwd": "${workspaceFolder}",
+                "MIMode": "lldb"
+            },
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
