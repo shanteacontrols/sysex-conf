@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 run_dir="tests"
 
@@ -15,11 +15,6 @@ elif [ "$(uname -s)" == "Linux" ]
 then
     find="find"
 fi
-
-# first argument should be directory in which generated files should be stored
-
-GEN_DIR=$1
-mkdir -p "$GEN_DIR"
 
 #find all directories containing test source
 #to do so, only take into account directories which contain Makefile
@@ -43,7 +38,7 @@ do
     {
         printf '%s\n' '-include '${test_dir}'/Makefile'
         printf '%s\n' 'TEST_DIR_'${test}' := '${test_dir}''
-        printf '%s\n' 'SOURCES_'${test}' += '$GEN_DIR'/'${test}'.cpp'
+        printf '%s\n' 'SOURCES_'${test}' += unity/Framework.cpp'
         printf '%s\n' 'SOURCES_'${test}' += $(shell $(FIND) '${test_dir}' -type f -name "*.cpp")'
         printf '%s\n' 'OBJECTS_'${test}' := $(addprefix $(BUILD_DIR)/$(TEST_DIR_'${test}')/,$(SOURCES_'${test}'))'
         printf '%s\n' 'OBJECTS_'${test}' := $(addsuffix .o,$(OBJECTS_'${test}'))'

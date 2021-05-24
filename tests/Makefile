@@ -1,28 +1,21 @@
+ifeq ($(shell uname), Linux)
+    FIND := find
+else ifeq ($(shell uname), Darwin)
+    FIND := gfind
+else
+    $(error Unsupported platform)
+endif
+
 .DEFAULT_GOAL := test
 
-TARGETNAME := sysex
 BUILD_DIR_BASE := ./build
-BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGETNAME)
-GEN_DIR := test_run
+TARGET := sysex
+BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGET)
+TEST_BINARIES := $(addprefix -object ,$(shell $(FIND) $(BUILD_DIR_BASE) -name "*.out" 2>/dev/null))
+FW_ROOT_DIR := ../src
 SCRIPTS_DIR := ../scripts
 
-ifeq ($(shell uname), Linux)
-    FIND := find
-else ifeq ($(shell uname), Darwin)
-    FIND := gfind
-else
-    $(error Unsupported platform)
-endif
-
-ifeq ($(shell uname), Linux)
-    FIND := find
-else ifeq ($(shell uname), Darwin)
-    FIND := gfind
-else
-    $(error Unsupported platform)
-endif
-
--include Defines.mk
+include Defines.mk
 include Sources.mk
 -include Objects.mk
 
@@ -32,10 +25,6 @@ LLVM_PROFDATA ?= llvm-profdata
 LLVM_COV ?= llvm-cov
 CLANG_FORMAT ?= clang-format
 
-TEST_BINARIES := $(addprefix -object ,$(shell $(FIND) $(BUILD_DIR_BASE) -name "*.out" 2>/dev/null))
-
-FW_ROOT_DIR := ../src
-
 #passed to both c and c++ compiler
 COMMON_FLAGS := \
 -fprofile-instr-generate \
@@ -43,10 +32,6 @@ COMMON_FLAGS := \
 -O0 \
 -g \
 -Wall
-
-#common defines
-DEFINES += \
-UNITY_INCLUDE_CONFIG_H
 
 #c++ compiler only
 CPP_FLAGS := \
@@ -75,12 +60,11 @@ define LINK_OBJECTS
 endef
 
 pre-build:
-	@chmod +x $(SCRIPTS_DIR)/gen_test_targets.sh && $(SCRIPTS_DIR)/gen_test_targets.sh $(GEN_DIR)/$(TARGETNAME)
-	@chmod +x $(SCRIPTS_DIR)/gen_test_runners.sh && $(SCRIPTS_DIR)/gen_test_runners.sh $(GEN_DIR)/$(TARGETNAME)
+	@$(SCRIPTS_DIR)/gen_test_targets.sh
 
 exec:
 	@echo Running all compiled tests.
-	@chmod +x $(SCRIPTS_DIR)/tests_exec.sh && $(SCRIPTS_DIR)/tests_exec.sh $(BUILD_DIR_BASE)
+	@$(SCRIPTS_DIR)/tests_exec.sh $(BUILD_DIR_BASE)
 
 coverage:
 	@echo Creating coverage report.
@@ -100,7 +84,6 @@ endif
 clean:
 	@echo Cleaning up.
 	@rm -rf $(BUILD_DIR_BASE)/
-	@rm -rf $(GEN_DIR)/
 
 #debugging
 print-%:

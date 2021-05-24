@@ -1,8 +1,6 @@
-#include "unity/src/unity.h"
-#include "unity/Helpers.h"
+#include "unity/Framework.h"
 #include "SysExConf.h"
 #include "src/SysExTesting.h"
-#include <vector>
 
 #define SYS_EX_CONF_M_ID_0 0x00
 #define SYS_EX_CONF_M_ID_1 0x53
