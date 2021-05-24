@@ -5,54 +5,56 @@ on: [push]
 jobs:
   build:
     name: Build library
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Pull the repository
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
         with:
           fetch-depth: 1
           submodules: false
       - name: Prepare env
         run: |
-          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+          sudo apt update
+          sudo apt install -y clang
       - name: Build
         run: |
           cd src/
-          make C_COMPILER=clang-9 CPP_COMPILER=clang++-9
+          make
   test:
     name: Run tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
        - name: Pull the repository and submodules
-         uses: actions/checkout@v1
+         uses: actions/checkout@v2
          with:
            fetch-depth: 1
            submodules: true
        - name: Prepare env
          run: |
-           sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+          sudo apt update
+          sudo apt install -y clang
        - name: Build
          run: |
            cd tests
-           make pre-build TARGETNAME=1b && make TARGETNAME=1b C_COMPILER=clang-9 CPP_COMPILER=clang++-9
-           make pre-build TARGETNAME=2b && make TARGETNAME=2b C_COMPILER=clang-9 CPP_COMPILER=clang++-9
+           make pre-build
+           make
            make exec
   format:
     name: Code formatting
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
        - name: Pull the repository
-         uses: actions/checkout@v1
+         uses: actions/checkout@v2
          with:
            fetch-depth: 1
            submodules: false
        - name: Prepare env
          run: |
-           sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-           sudo apt install clang-format-9
+           sudo apt update
+           sudo apt install clang-format
        - name: Build
          run: |
            cd src
-           make format CF_FAIL_ON_DIFF=1 CLANG_FORMAT=clang-format-9
+           make format CF_FAIL_ON_DIFF=1
            cd ../tests
-           make format CF_FAIL_ON_DIFF=1 CLANG_FORMAT=clang-format-9
+           make format CF_FAIL_ON_DIFF=1
