@@ -219,17 +219,16 @@ class SysExConf
 
         DataHandler() {}
 
-        enum class result_t : uint8_t
+        enum
         {
-            ok,
-            error,
-            notSupported,
-        };
+            STATUS_OK,
+            STATUS_ERROR_RW
+        } status_t;
 
-        virtual result_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value)   = 0;
-        virtual result_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) = 0;
-        virtual result_t customRequest(uint16_t request, CustomResponse& customResponse)        = 0;
-        virtual void     sendResponse(uint8_t* array, uint16_t size)                            = 0;
+        virtual uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value)   = 0;
+        virtual uint8_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) = 0;
+        virtual uint8_t customRequest(uint16_t request, CustomResponse& customResponse)        = 0;
+        virtual void    sendResponse(uint8_t* array, uint16_t size)                            = 0;
     };
 
     SysExConf(DataHandler&            dataHandler,
@@ -268,8 +267,17 @@ class SysExConf
     bool     checkNewValue();
     bool     checkParameters();
     uint16_t generateMessageLenght();
-    void     setStatus(status_t status);
-    void     sendResponse(bool containsLastByte, bool customMessage = false);
+
+    template<typename T>
+    void setStatus(T status)
+    {
+        uint8_t status_uint8 = static_cast<uint8_t>(status);
+        status_uint8 &= 0x7F;
+
+        _responseArray[statusByte] = status_uint8;
+    }
+
+    void sendResponse(bool containsLastByte, bool customMessage = false);
 
     ///
     /// \brief Descriptive list of bytes in SysEx message.

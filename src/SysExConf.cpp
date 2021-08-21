@@ -354,21 +354,21 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     }
                     else
                     {
-                        uint16_t              value  = 0;
-                        DataHandler::result_t result = _dataHandler.get(_decodedMessage.block, _decodedMessage.section, _decodedMessage.index, value);
+                        uint16_t value  = 0;
+                        uint8_t  result = _dataHandler.get(_decodedMessage.block, _decodedMessage.section, _decodedMessage.index, value);
 
                         switch (result)
                         {
-                        case DataHandler::result_t::ok:
+                        case DataHandler::STATUS_OK:
                             addToResponse(value);
                             break;
 
-                        case DataHandler::result_t::error:
+                        case DataHandler::STATUS_ERROR_RW:
                             setStatus(status_t::errorRead);
                             return false;
 
-                        case DataHandler::result_t::notSupported:
-                            setStatus(status_t::errorNotSupported);
+                        default:
+                            setStatus(result);
                             return false;
                         }
                     }
@@ -376,21 +376,21 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                 else
                 {
                     //get all params - no index is specified
-                    uint16_t              value  = 0;
-                    DataHandler::result_t result = _dataHandler.get(_decodedMessage.block, _decodedMessage.section, i, value);
+                    uint16_t value  = 0;
+                    uint8_t  result = _dataHandler.get(_decodedMessage.block, _decodedMessage.section, i, value);
 
                     switch (result)
                     {
-                    case DataHandler::result_t::ok:
+                    case DataHandler::STATUS_OK:
                         addToResponse(value);
                         break;
 
-                    case DataHandler::result_t::error:
+                    case DataHandler::STATUS_ERROR_RW:
                         setStatus(status_t::errorRead);
                         return false;
 
-                    case DataHandler::result_t::notSupported:
-                        setStatus(status_t::errorNotSupported);
+                    default:
+                        setStatus(result);
                         return false;
                     }
                 }
@@ -412,19 +412,19 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                         return false;
                     }
 
-                    DataHandler::result_t result = _dataHandler.set(_decodedMessage.block, _decodedMessage.section, _decodedMessage.index, _decodedMessage.newValue);
+                    uint8_t result = _dataHandler.set(_decodedMessage.block, _decodedMessage.section, _decodedMessage.index, _decodedMessage.newValue);
 
                     switch (result)
                     {
-                    case DataHandler::result_t::ok:
+                    case DataHandler::STATUS_OK:
                         break;
 
-                    case DataHandler::result_t::error:
+                    case DataHandler::STATUS_ERROR_RW:
                         setStatus(status_t::errorWrite);
                         return false;
 
-                    case DataHandler::result_t::notSupported:
-                        setStatus(status_t::errorNotSupported);
+                    default:
+                        setStatus(result);
                         return false;
                     }
                 }
@@ -443,19 +443,19 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                         return false;
                     }
 
-                    DataHandler::result_t result = _dataHandler.set(_decodedMessage.block, _decodedMessage.section, i, _decodedMessage.newValue);
+                    uint8_t result = _dataHandler.set(_decodedMessage.block, _decodedMessage.section, i, _decodedMessage.newValue);
 
                     switch (result)
                     {
-                    case DataHandler::result_t::ok:
+                    case DataHandler::STATUS_OK:
                         break;
 
-                    case DataHandler::result_t::error:
+                    case DataHandler::STATUS_ERROR_RW:
                         setStatus(status_t::errorWrite);
                         return false;
 
-                    case DataHandler::result_t::notSupported:
-                        setStatus(status_t::errorNotSupported);
+                    default:
+                        setStatus(result);
                         return false;
                     }
                 }
@@ -599,20 +599,20 @@ bool SysExConf::processSpecialRequest()
                 setStatus(status_t::ack);
 
                 DataHandler::CustomResponse customResponse(_responseArray, _responseCounter);
-                DataHandler::result_t       result = _dataHandler.customRequest(_sysExCustomRequest[i].requestID, customResponse);
+                uint8_t                     result = _dataHandler.customRequest(_sysExCustomRequest[i].requestID, customResponse);
 
                 switch (result)
                 {
-                case DataHandler::result_t::error:
+                case DataHandler::STATUS_OK:
+                    break;
+
+                case DataHandler::STATUS_ERROR_RW:
                     setStatus(status_t::errorRead);
                     return false;
 
-                case DataHandler::result_t::notSupported:
-                    setStatus(status_t::errorNotSupported);
-                    return false;
-
                 default:
-                    break;
+                    setStatus(result);
+                    return false;
                 }
             }
             else
@@ -842,15 +842,6 @@ bool SysExConf::addToResponse(uint16_t value)
     _responseArray[_responseCounter++] = low;
 
     return true;
-}
-
-///
-/// \brief Sets status byte in SysEx response.
-/// @param [in] status New status value. See status_t enum.
-///
-void SysExConf::setStatus(status_t status)
-{
-    _responseArray[statusByte] = static_cast<uint8_t>(status);
 }
 
 ///

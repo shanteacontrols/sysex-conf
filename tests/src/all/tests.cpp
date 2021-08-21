@@ -749,18 +749,18 @@ namespace
         SysExConfDataHandlerValid()
         {}
 
-        result_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value) override
+        uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value) override
         {
             value = TEST_VALUE_GET;
             return getResult;
         }
 
-        result_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) override
+        uint8_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) override
         {
             return setResult;
         }
 
-        result_t customRequest(uint16_t request, CustomResponse& customResponse) override
+        uint8_t customRequest(uint16_t request, CustomResponse& customResponse) override
         {
             switch (request)
             {
@@ -769,12 +769,12 @@ namespace
                 for (int i = 0; i < customReqArray.size(); i++)
                     customResponse.append(customReqArray[i]);
 
-                return SysExConf::DataHandler::result_t::ok;
+                return SysExConf::DataHandler::STATUS_OK;
                 break;
 
             case CUSTOM_REQUEST_ID_ERROR_READ:
             default:
-                return SysExConf::DataHandler::result_t::error;
+                return SysExConf::DataHandler::STATUS_ERROR_RW;
                 break;
             }
         }
@@ -808,8 +808,8 @@ namespace
             _response.push_back(tempResponse);
         }
 
-        SysExConf::DataHandler::result_t setResult = SysExConf::DataHandler::result_t::ok;
-        SysExConf::DataHandler::result_t getResult = SysExConf::DataHandler::result_t::ok;
+        uint8_t setResult = SysExConf::DataHandler::STATUS_OK;
+        uint8_t getResult = SysExConf::DataHandler::STATUS_OK;
 
         private:
         std::vector<std::vector<uint8_t>> _response;
@@ -831,7 +831,8 @@ namespace
         sysEx.handleMessage(&source[0], source.size());
     }
 
-    void verifyMessage(const std::vector<uint8_t>& source, SysExConf::status_t status, const std::vector<uint8_t>* data = nullptr)
+    template<typename T>
+    void verifyMessage(const std::vector<uint8_t>& source, T status, const std::vector<uint8_t>* data = nullptr)
     {
         size_t size = source.size();
 
@@ -1215,7 +1216,7 @@ TEST_CASE(ErrorWrite)
     //configure set function to always return error
     //check if status byte is SysExConf::status_t::errorWrite
 
-    dataHandler.setResult = SysExConf::DataHandler::result_t::error;
+    dataHandler.setResult = SysExConf::DataHandler::STATUS_ERROR_RW;
 
     //send valid set message
     handleMessage(setSingleValid);
@@ -1238,7 +1239,7 @@ TEST_CASE(ErrorWrite)
     TEST_ASSERT(dataHandler.responseCounter() == 1);
 
     //revert back
-    dataHandler.setResult = SysExConf::DataHandler::result_t::ok;
+    dataHandler.setResult = SysExConf::DataHandler::STATUS_OK;
 }
 
 TEST_CASE(ErrorRead)
@@ -1246,7 +1247,7 @@ TEST_CASE(ErrorRead)
     //configure get function to always return error
     //check if status byte is SysExConf::status_t::errorRead
 
-    dataHandler.getResult = SysExConf::DataHandler::result_t::error;
+    dataHandler.getResult = SysExConf::DataHandler::STATUS_ERROR_RW;
 
     handleMessage(getSingleValid);
 
@@ -1270,7 +1271,37 @@ TEST_CASE(ErrorRead)
     TEST_ASSERT(dataHandler.responseCounter() == 1);
 
     //revert back
-    dataHandler.getResult = SysExConf::DataHandler::result_t::ok;
+    dataHandler.getResult = SysExConf::DataHandler::STATUS_OK;
+}
+
+TEST_CASE(ErrorCustom)
+{
+    //configure set function to always return custom error
+
+    dataHandler.setResult = 63;
+
+    //send valid set message
+    handleMessage(setSingleValid);
+
+    //check response
+    verifyMessage(setSingleValid, dataHandler.setResult);
+
+    //check number of received messages
+    TEST_ASSERT(dataHandler.responseCounter() == 1);
+
+    //reset number of received messages
+    dataHandler.reset();
+
+    handleMessage(setAllValid);
+
+    //check response
+    verifyMessage(setAllValid, dataHandler.setResult);
+
+    //check number of received messages
+    TEST_ASSERT(dataHandler.responseCounter() == 1);
+
+    //revert back
+    dataHandler.setResult = SysExConf::DataHandler::STATUS_OK;
 }
 
 TEST_CASE(SetSingle)
