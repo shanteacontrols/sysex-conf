@@ -222,11 +222,11 @@ bool SysExConf::decode(const uint8_t* receivedArray, uint16_t receivedArraySize)
         }
 
         //don't try to request these parameters if the size is too small
-        _decodedMessage.part    = receivedArray[(uint8_t)partByte];
-        _decodedMessage.wish    = static_cast<wish_t>(receivedArray[(uint8_t)wishByte]);
-        _decodedMessage.amount  = static_cast<amount_t>(receivedArray[(uint8_t)amountByte]);
-        _decodedMessage.block   = receivedArray[(uint8_t)blockByte];
-        _decodedMessage.section = receivedArray[(uint8_t)sectionByte];
+        _decodedMessage.part    = receivedArray[static_cast<uint8_t>(byteOrder_t::partByte)];
+        _decodedMessage.wish    = static_cast<wish_t>(receivedArray[static_cast<uint8_t>(byteOrder_t::wishByte)]);
+        _decodedMessage.amount  = static_cast<amount_t>(receivedArray[static_cast<uint8_t>(byteOrder_t::amountByte)]);
+        _decodedMessage.block   = receivedArray[static_cast<uint8_t>(byteOrder_t::blockByte)];
+        _decodedMessage.section = receivedArray[static_cast<uint8_t>(byteOrder_t::sectionByte)];
 
         if (!checkWish())
         {
@@ -269,12 +269,12 @@ bool SysExConf::decode(const uint8_t* receivedArray, uint16_t receivedArraySize)
 
         if (_decodedMessage.amount == amount_t::single)
         {
-            mergeTo14bit(_decodedMessage.index, receivedArray[indexByte], receivedArray[indexByte + 1]);
+            mergeTo14bit(_decodedMessage.index, receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte)], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + 1]);
 
             if (_decodedMessage.wish == wish_t::set)
             {
                 //new value
-                mergeTo14bit(_decodedMessage.newValue, receivedArray[indexByte + BYTES_PER_VALUE], receivedArray[indexByte + BYTES_PER_VALUE + 1]);
+                mergeTo14bit(_decodedMessage.newValue, receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE + 1]);
             }
         }
     }
@@ -311,9 +311,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
         if (_decodedMessage.wish == wish_t::backup)
         {
             //convert response to request
-            _responseArray[(uint8_t)statusByte] = static_cast<uint8_t>(status_t::request);
+            _responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] = static_cast<uint8_t>(status_t::request);
             //now convert wish to set
-            _responseArray[(uint8_t)wishByte] = (uint8_t)wish_t::set;
+            _responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)] = (uint8_t)wish_t::set;
             //decoded message wish needs to be set to get so that we can retrieve parameters
             _decodedMessage.wish = wish_t::get;
             //when backup is request, erase received index/new value in response
@@ -327,8 +327,8 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 
         if (allPartsLoop)
         {
-            _decodedMessage.part     = j;
-            _responseArray[partByte] = j;
+            _decodedMessage.part                                        = j;
+            _responseArray[static_cast<uint8_t>(byteOrder_t::partByte)] = j;
         }
 
         if (_decodedMessage.amount == amount_t::all)
@@ -433,7 +433,7 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     uint8_t arrayIndex = (i - startIndex);
 
                     arrayIndex *= BYTES_PER_VALUE;
-                    arrayIndex += indexByte;
+                    arrayIndex += static_cast<uint8_t>(byteOrder_t::indexByte);
 
                     mergeTo14bit(_decodedMessage.newValue, _responseArray[arrayIndex], _responseArray[arrayIndex + 1]);
 
@@ -498,9 +498,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 bool SysExConf::checkID()
 {
     return (
-        (_responseArray[idByte_1] == _mID.id1) &&
-        (_responseArray[idByte_2] == _mID.id2) &&
-        (_responseArray[idByte_3] == _mID.id3));
+        (_responseArray[static_cast<uint8_t>(byteOrder_t::idByte_1)] == _mID.id1) &&
+        (_responseArray[static_cast<uint8_t>(byteOrder_t::idByte_2)] == _mID.id2) &&
+        (_responseArray[static_cast<uint8_t>(byteOrder_t::idByte_3)] == _mID.id3));
 }
 
 ///
@@ -509,7 +509,7 @@ bool SysExConf::checkID()
 ///
 bool SysExConf::checkStatus()
 {
-    return (static_cast<status_t>(_responseArray[static_cast<uint8_t>(statusByte)]) == status_t::request);
+    return (static_cast<status_t>(_responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)]) == status_t::request);
 }
 
 ///
@@ -518,7 +518,7 @@ bool SysExConf::checkStatus()
 ///
 bool SysExConf::processSpecialRequest()
 {
-    switch (_responseArray[wishByte])
+    switch (_responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)])
     {
     case static_cast<uint8_t>(specialRequest_t::connClose):
         if (!_sysExEnabled)
@@ -547,7 +547,7 @@ bool SysExConf::processSpecialRequest()
         //necessary to allow the configuration
         _sysExEnabled = true;
 
-        if (_responseArray[wishByte] == static_cast<uint8_t>(specialRequest_t::connOpenSilent))
+        if (_responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)] == static_cast<uint8_t>(specialRequest_t::connOpenSilent))
             _silentModeEnabled = true;
 
         setStatus(status_t::ack);
@@ -591,7 +591,7 @@ bool SysExConf::processSpecialRequest()
         for (size_t i = 0; i < _sysExCustomRequest.size(); i++)
         {
             //check only current wish/request
-            if (_sysExCustomRequest[i].requestID != _responseArray[wishByte])
+            if (_sysExCustomRequest[i].requestID != _responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)])
                 continue;
 
             if (_sysExEnabled || !_sysExCustomRequest[i].connOpenCheck)
@@ -663,7 +663,7 @@ uint16_t SysExConf::generateMessageLenght()
             }
 
             size *= BYTES_PER_VALUE;
-            size += indexByte + 1;
+            size += static_cast<uint8_t>(byteOrder_t::indexByte) + 1;
 
             return size;
         }
@@ -810,8 +810,8 @@ void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
     if (_silentModeEnabled && !customMessage)
     {
         //don't report any errors in silent mode
-        if ((_responseArray[statusByte] != static_cast<uint8_t>(status_t::ack)) &&
-            (_responseArray[statusByte] != static_cast<uint8_t>(status_t::request)))
+        if ((_responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] != static_cast<uint8_t>(status_t::ack)) &&
+            (_responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] != static_cast<uint8_t>(status_t::request)))
             return;
 
         //respond only to get messages

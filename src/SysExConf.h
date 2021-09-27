@@ -183,6 +183,24 @@ class SysExConf
         uint16_t newValue;
     } decodedMessage_t;
 
+    ///
+    /// \brief Descriptive list of bytes in SysEx message.
+    ///
+    enum class byteOrder_t : uint8_t
+    {
+        startByte,      //0
+        idByte_1,       //1
+        idByte_2,       //2
+        idByte_3,       //3
+        statusByte,     //4
+        partByte,       //5
+        wishByte,       //6
+        amountByte,     //7
+        blockByte,      //8
+        sectionByte,    //9
+        indexByte,      //10
+    };
+
     class DataHandler
     {
         public:
@@ -231,6 +249,10 @@ class SysExConf
         virtual void    sendResponse(uint8_t* array, uint16_t size)                            = 0;
     };
 
+    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (static_cast<uint8_t>(byteOrder_t::wishByte) + 1) + 1;    //extra byte for end
+    static constexpr uint8_t  STD_REQ_MIN_MSG_SIZE = static_cast<uint8_t>(byteOrder_t::indexByte) + (BYTES_PER_VALUE * 2) + 1;
+    static constexpr uint16_t MAX_MESSAGE_SIZE     = STD_REQ_MIN_MSG_SIZE + (PARAMS_PER_MESSAGE * BYTES_PER_VALUE);
+
     SysExConf(DataHandler&            dataHandler,
               const manufacturerID_t& mID)
         : _dataHandler(dataHandler)
@@ -274,28 +296,10 @@ class SysExConf
         uint8_t status_uint8 = static_cast<uint8_t>(status);
         status_uint8 &= 0x7F;
 
-        _responseArray[statusByte] = status_uint8;
+        _responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] = status_uint8;
     }
 
     void sendResponse(bool containsLastByte, bool customMessage = false);
-
-    ///
-    /// \brief Descriptive list of bytes in SysEx message.
-    ///
-    typedef enum
-    {
-        startByte,      //0
-        idByte_1,       //1
-        idByte_2,       //2
-        idByte_3,       //3
-        statusByte,     //4
-        partByte,       //5
-        wishByte,       //6
-        amountByte,     //7
-        blockByte,      //8
-        sectionByte,    //9
-        indexByte,      //10
-    } sysExByteOrder;
 
     ///
     /// \brief Reference to object performing reading and writing of actual data.
@@ -306,10 +310,6 @@ class SysExConf
     /// \brief Reference to structure containing manufacturer ID bytes.
     ///
     const manufacturerID_t& _mID;
-
-    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (wishByte + 1) + 1;    //extra byte for end
-    static constexpr uint8_t  STD_REQ_MIN_MSG_SIZE = indexByte + (BYTES_PER_VALUE * 2) + 1;
-    static constexpr uint16_t MAX_MESSAGE_SIZE     = STD_REQ_MIN_MSG_SIZE + (PARAMS_PER_MESSAGE * BYTES_PER_VALUE);
 
     ///
     /// \brief Array in which response will be stored.
