@@ -769,12 +769,12 @@ namespace
                 for (int i = 0; i < customReqArray.size(); i++)
                     customResponse.append(customReqArray[i]);
 
-                return SysExConf::DataHandler::STATUS_OK;
+                return static_cast<uint8_t>(SysExConf::status_t::ack);
                 break;
 
             case CUSTOM_REQUEST_ID_ERROR_READ:
             default:
-                return SysExConf::DataHandler::STATUS_ERROR_RW;
+                return static_cast<uint8_t>(SysExConf::status_t::errorRead);
                 break;
             }
         }
@@ -783,6 +783,8 @@ namespace
         {
             _responseCounter = 0;
             _response.clear();
+            setResult = static_cast<uint8_t>(SysExConf::status_t::ack);
+            getResult = static_cast<uint8_t>(SysExConf::status_t::ack);
         }
 
         size_t responseCounter()
@@ -808,8 +810,8 @@ namespace
             _response.push_back(tempResponse);
         }
 
-        uint8_t setResult = SysExConf::DataHandler::STATUS_OK;
-        uint8_t getResult = SysExConf::DataHandler::STATUS_OK;
+        uint8_t setResult = static_cast<uint8_t>(SysExConf::status_t::ack);
+        uint8_t getResult = static_cast<uint8_t>(SysExConf::status_t::ack);
 
         private:
         std::vector<std::vector<uint8_t>> _response;
@@ -1216,7 +1218,7 @@ TEST_CASE(ErrorWrite)
     // configure set function to always return error
     // check if status byte is SysExConf::status_t::errorWrite
 
-    dataHandler.setResult = SysExConf::DataHandler::STATUS_ERROR_RW;
+    dataHandler.setResult = static_cast<uint8_t>(SysExConf::status_t::errorWrite);
 
     // send valid set message
     handleMessage(setSingleValid);
@@ -1229,6 +1231,7 @@ TEST_CASE(ErrorWrite)
 
     // reset number of received messages
     dataHandler.reset();
+    dataHandler.setResult = static_cast<uint8_t>(SysExConf::status_t::errorWrite);
 
     handleMessage(setAllValid);
 
@@ -1237,9 +1240,6 @@ TEST_CASE(ErrorWrite)
 
     // check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
-
-    // revert back
-    dataHandler.setResult = SysExConf::DataHandler::STATUS_OK;
 }
 
 TEST_CASE(ErrorRead)
@@ -1247,7 +1247,7 @@ TEST_CASE(ErrorRead)
     // configure get function to always return error
     // check if status byte is SysExConf::status_t::errorRead
 
-    dataHandler.getResult = SysExConf::DataHandler::STATUS_ERROR_RW;
+    dataHandler.getResult = static_cast<uint8_t>(SysExConf::status_t::errorRead);
 
     handleMessage(getSingleValid);
 
@@ -1259,6 +1259,7 @@ TEST_CASE(ErrorRead)
 
     // reset message count
     dataHandler.reset();
+    dataHandler.getResult = static_cast<uint8_t>(SysExConf::status_t::errorRead);
 
     // test get with all parameters
     // SysExConf::status_t::errorRead should be reported again
@@ -1269,9 +1270,6 @@ TEST_CASE(ErrorRead)
 
     // check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
-
-    // revert back
-    dataHandler.getResult = SysExConf::DataHandler::STATUS_OK;
 }
 
 TEST_CASE(ErrorCustom)
@@ -1299,9 +1297,6 @@ TEST_CASE(ErrorCustom)
 
     // check number of received messages
     TEST_ASSERT(dataHandler.responseCounter() == 1);
-
-    // revert back
-    dataHandler.setResult = SysExConf::DataHandler::STATUS_OK;
 }
 
 TEST_CASE(SetSingle)

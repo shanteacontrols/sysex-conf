@@ -237,12 +237,6 @@ class SysExConf
 
         DataHandler() {}
 
-        enum
-        {
-            STATUS_OK,
-            STATUS_ERROR_RW
-        } status_t;
-
         virtual uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value)   = 0;
         virtual uint8_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) = 0;
         virtual uint8_t customRequest(uint16_t request, CustomResponse& customResponse)        = 0;

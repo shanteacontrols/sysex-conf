@@ -359,13 +359,13 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 
                         switch (result)
                         {
-                        case DataHandler::STATUS_OK:
+                        case static_cast<uint8_t>(status_t::ack):
                             addToResponse(value);
                             break;
 
-                        case DataHandler::STATUS_ERROR_RW:
-                            setStatus(status_t::errorRead);
-                            return false;
+                        case static_cast<uint8_t>(status_t::request):
+                            setStatus(status_t::errorStatus);
+                            break;
 
                         default:
                             setStatus(result);
@@ -381,13 +381,13 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 
                     switch (result)
                     {
-                    case DataHandler::STATUS_OK:
+                    case static_cast<uint8_t>(status_t::ack):
                         addToResponse(value);
                         break;
 
-                    case DataHandler::STATUS_ERROR_RW:
-                        setStatus(status_t::errorRead);
-                        return false;
+                    case static_cast<uint8_t>(status_t::request):
+                        setStatus(status_t::errorStatus);
+                        break;
 
                     default:
                         setStatus(result);
@@ -416,12 +416,12 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 
                     switch (result)
                     {
-                    case DataHandler::STATUS_OK:
+                    case static_cast<uint8_t>(status_t::ack):
                         break;
 
-                    case DataHandler::STATUS_ERROR_RW:
-                        setStatus(status_t::errorWrite);
-                        return false;
+                    case static_cast<uint8_t>(status_t::request):
+                        setStatus(status_t::errorStatus);
+                        break;
 
                     default:
                         setStatus(result);
@@ -447,12 +447,12 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 
                     switch (result)
                     {
-                    case DataHandler::STATUS_OK:
+                    case static_cast<uint8_t>(status_t::ack):
                         break;
 
-                    case DataHandler::STATUS_ERROR_RW:
-                        setStatus(status_t::errorWrite);
-                        return false;
+                    case static_cast<uint8_t>(status_t::request):
+                        setStatus(status_t::errorStatus);
+                        break;
 
                     default:
                         setStatus(result);
@@ -603,12 +603,12 @@ bool SysExConf::processSpecialRequest()
 
                 switch (result)
                 {
-                case DataHandler::STATUS_OK:
+                case static_cast<uint8_t>(status_t::ack):
                     break;
 
-                case DataHandler::STATUS_ERROR_RW:
-                    setStatus(status_t::errorRead);
-                    return false;
+                case static_cast<uint8_t>(status_t::request):
+                    setStatus(status_t::errorStatus);
+                    break;
 
                 default:
                     setStatus(result);
