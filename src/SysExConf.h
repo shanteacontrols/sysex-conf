@@ -60,7 +60,7 @@ class SysExConf
             , _newValueMin(newValueMin)
             , _newValueMax(newValueMax)
         {
-            //based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
+            // based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
             _parts = numberOfParameters / SysExConf::PARAMS_PER_MESSAGE;
 
             if (numberOfParameters % SysExConf::PARAMS_PER_MESSAGE)
@@ -137,21 +137,21 @@ class SysExConf
     ///
     enum class status_t : uint8_t
     {
-        request,               //0x00
-        ack,                   //0x01
-        errorStatus,           //0x02
-        errorConnection,       //0x03
-        errorWish,             //0x04
-        errorAmount,           //0x05
-        errorBlock,            //0x06
-        errorSection,          //0x07
-        errorPart,             //0x08
-        errorIndex,            //0x09
-        errorNewValue,         //0x0A
-        errorMessageLength,    //0x0B
-        errorWrite,            //0x0C
-        errorNotSupported,     //0x0D
-        errorRead,             //0x0E
+        request,               // 0x00
+        ack,                   // 0x01
+        errorStatus,           // 0x02
+        errorConnection,       // 0x03
+        errorWish,             // 0x04
+        errorAmount,           // 0x05
+        errorBlock,            // 0x06
+        errorSection,          // 0x07
+        errorPart,             // 0x08
+        errorIndex,            // 0x09
+        errorNewValue,         // 0x0A
+        errorMessageLength,    // 0x0B
+        errorWrite,            // 0x0C
+        errorNotSupported,     // 0x0D
+        errorRead,             // 0x0E
     };
 
     ///
@@ -159,12 +159,12 @@ class SysExConf
     ///
     enum class specialRequest_t : uint8_t
     {
-        connClose,            //0x00
-        connOpen,             //0x01
-        bytesPerValue,        //0x02
-        paramsPerMessage,     //0x03
-        connOpenSilent,       //0x04
-        connSilentDisable,    //0x05
+        connClose,            // 0x00
+        connOpen,             // 0x01
+        bytesPerValue,        // 0x02
+        paramsPerMessage,     // 0x03
+        connOpenSilent,       // 0x04
+        connSilentDisable,    // 0x05
         AMOUNT
     };
 
@@ -188,17 +188,17 @@ class SysExConf
     ///
     enum class byteOrder_t : uint8_t
     {
-        startByte,      //0
-        idByte_1,       //1
-        idByte_2,       //2
-        idByte_3,       //3
-        statusByte,     //4
-        partByte,       //5
-        wishByte,       //6
-        amountByte,     //7
-        blockByte,      //8
-        sectionByte,    //9
-        indexByte,      //10
+        startByte,      // 0
+        idByte_1,       // 1
+        idByte_2,       // 2
+        idByte_3,       // 3
+        statusByte,     // 4
+        partByte,       // 5
+        wishByte,       // 6
+        amountByte,     // 7
+        blockByte,      // 8
+        sectionByte,    // 9
+        indexByte,      // 10
     };
 
     class DataHandler
@@ -216,10 +216,10 @@ class SysExConf
             {
                 value &= 0x3FFF;
 
-                //make sure to leave space for 0xF7 byte
+                // make sure to leave space for 0xF7 byte
                 if ((_responseCounter - 2) < MAX_MESSAGE_SIZE)
                 {
-                    //split into two 7-bit values
+                    // split into two 7-bit values
                     uint8_t high;
                     uint8_t low;
 
@@ -249,7 +249,7 @@ class SysExConf
         virtual void    sendResponse(uint8_t* array, uint16_t size)                            = 0;
     };
 
-    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (static_cast<uint8_t>(byteOrder_t::wishByte) + 1) + 1;    //extra byte for end
+    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (static_cast<uint8_t>(byteOrder_t::wishByte) + 1) + 1;    // extra byte for end
     static constexpr uint8_t  STD_REQ_MIN_MSG_SIZE = static_cast<uint8_t>(byteOrder_t::indexByte) + (BYTES_PER_VALUE * 2) + 1;
     static constexpr uint16_t MAX_MESSAGE_SIZE     = STD_REQ_MIN_MSG_SIZE + (PARAMS_PER_MESSAGE * BYTES_PER_VALUE);
 
