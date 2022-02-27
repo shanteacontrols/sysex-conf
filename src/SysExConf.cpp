@@ -269,12 +269,13 @@ bool SysExConf::decode(const uint8_t* receivedArray, uint16_t receivedArraySize)
 
         if (_decodedMessage.amount == amount_t::single)
         {
-            mergeTo14bit(_decodedMessage.index, receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte)], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + 1]);
+            auto mergedIndex      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte)], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + 1]);
+            _decodedMessage.index = mergedIndex.value();
 
             if (_decodedMessage.wish == wish_t::set)
             {
-                // new value
-                mergeTo14bit(_decodedMessage.newValue, receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE + 1]);
+                auto mergedNewValue      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE + 1]);
+                _decodedMessage.newValue = mergedNewValue.value();
             }
         }
     }
@@ -435,7 +436,8 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     arrayIndex *= BYTES_PER_VALUE;
                     arrayIndex += static_cast<uint8_t>(byteOrder_t::indexByte);
 
-                    mergeTo14bit(_decodedMessage.newValue, _responseArray[arrayIndex], _responseArray[arrayIndex + 1]);
+                    auto merge               = Merge14bit(_responseArray[arrayIndex], _responseArray[arrayIndex + 1]);
+                    _decodedMessage.newValue = merge.value();
 
                     if (!checkNewValue())
                     {
@@ -830,64 +832,15 @@ void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
 ///
 bool SysExConf::addToResponse(uint16_t value)
 {
-    uint8_t high;
-    uint8_t low;
-
-    split14bit(value, high, low);
+    auto split = Split14bit(value);
 
     if (_responseCounter >= (MAX_MESSAGE_SIZE - 1))
         return false;
 
-    _responseArray[_responseCounter++] = high;
-    _responseArray[_responseCounter++] = low;
+    _responseArray[_responseCounter++] = split.high();
+    _responseArray[_responseCounter++] = split.low();
 
     return true;
-}
-
-///
-/// \brief Convert single 14-bit value to high and low bytes (7-bit each).
-/// @param [in]     value   14-bit value to split.
-/// @param [in,out] high    Higher 7 bits of original 14-bit value.
-/// @param [in,out] low     Lower 7 bits of original 14-bit value.
-///
-void SysExConf::split14bit(uint16_t value, uint8_t& high, uint8_t& low)
-{
-    uint8_t newHigh = (value >> 8) & 0xFF;
-    uint8_t newLow  = value & 0xFF;
-    newHigh         = (newHigh << 1) & 0x7F;
-
-    if ((newLow >> 7) & 0x01)
-        newHigh |= 0x01;
-    else
-        newHigh &= ~0x01;
-
-    newLow &= 0x7F;
-    high = newHigh;
-    low  = newLow;
-}
-
-///
-/// \brief Convert 7-bit high and low bytes to single 14-bit value.
-/// @param [in,out] value Resulting 14-bit value.
-/// @param [in,out] high    Higher 7 bits.
-/// @param [in,out] low     Lower 7 bits.
-///
-void SysExConf::mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low)
-{
-    if (high & 0x01)
-        low |= (1 << 7);
-    else
-        low &= ~(1 << 7);
-
-    high >>= 1;
-
-    uint16_t joined;
-
-    joined = high;
-    joined <<= 8;
-    joined |= low;
-
-    value = joined;
 }
 
 uint8_t SysExConf::blocks() const

@@ -220,13 +220,10 @@ class SysExConf
                 if ((_responseCounter - 2) < MAX_MESSAGE_SIZE)
                 {
                     // split into two 7-bit values
-                    uint8_t high;
-                    uint8_t low;
 
-                    SysExConf::split14bit(value, high, low);
-
-                    _responseArray[_responseCounter++] = high;
-                    _responseArray[_responseCounter++] = low;
+                    auto split                         = SysExConf::Split14bit(value);
+                    _responseArray[_responseCounter++] = split.high();
+                    _responseArray[_responseCounter++] = split.low();
                 }
             }
 
@@ -253,18 +250,90 @@ class SysExConf
         , _mID(mID)
     {}
 
-    void        reset();
-    bool        setLayout(std::vector<block_t>& layout);
-    bool        setupCustomRequests(std::vector<customRequest_t>& customRequests);
-    void        handleMessage(const uint8_t* sysExArray, uint16_t size);
-    bool        isConfigurationEnabled();
-    bool        isSilentModeEnabled();
-    void        setSilentMode(bool state);
-    void        sendCustomMessage(const uint16_t* values, uint16_t size, bool ack = true);
-    uint8_t     blocks() const;
-    uint8_t     sections(uint8_t blockID) const;
-    static void split14bit(uint16_t value, uint8_t& high, uint8_t& low);
-    static void mergeTo14bit(uint16_t& value, uint8_t high, uint8_t low);
+    void    reset();
+    bool    setLayout(std::vector<block_t>& layout);
+    bool    setupCustomRequests(std::vector<customRequest_t>& customRequests);
+    void    handleMessage(const uint8_t* sysExArray, uint16_t size);
+    bool    isConfigurationEnabled();
+    bool    isSilentModeEnabled();
+    void    setSilentMode(bool state);
+    void    sendCustomMessage(const uint16_t* values, uint16_t size, bool ack = true);
+    uint8_t blocks() const;
+    uint8_t sections(uint8_t blockID) const;
+
+    // define these helper classes here so that they're usable without compiling the .cpp file
+
+    ///
+    /// \brief Helper class used to convert 7-bit high and low bytes to single 14-bit value.
+    /// @param [in] high    Higher 7 bits.
+    /// @param [in] low     Lower 7 bits.
+    ///
+    class Merge14bit
+    {
+        public:
+        Merge14bit(uint8_t high, uint8_t low)
+        {
+            if (high & 0x01)
+                low |= (1 << 7);
+            else
+                low &= ~(1 << 7);
+
+            high >>= 1;
+
+            uint16_t joined;
+            joined = high;
+            joined <<= 8;
+            joined |= low;
+
+            _value = joined;
+        }
+
+        uint16_t value() const
+        {
+            return _value;
+        }
+
+        private:
+        uint16_t _value;
+    };
+
+    ///
+    /// \brief Helper class used to convert single 14-bit value to high and low bytes (7-bit each).
+    /// @param [in]     value   14-bit value to split.
+    ///
+    class Split14bit
+    {
+        public:
+        Split14bit(uint16_t value)
+        {
+            uint8_t newHigh = (value >> 8) & 0xFF;
+            uint8_t newLow  = value & 0xFF;
+            newHigh         = (newHigh << 1) & 0x7F;
+
+            if ((newLow >> 7) & 0x01)
+                newHigh |= 0x01;
+            else
+                newHigh &= ~0x01;
+
+            newLow &= 0x7F;
+            _high = newHigh;
+            _low  = newLow;
+        }
+
+        uint8_t high() const
+        {
+            return _high;
+        }
+
+        uint8_t low() const
+        {
+            return _low;
+        }
+
+        private:
+        uint8_t _high;
+        uint8_t _low;
+    };
 
     private:
     bool     addToResponse(uint16_t value);
