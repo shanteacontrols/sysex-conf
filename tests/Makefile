@@ -42,7 +42,10 @@ C_FLAGS := \
 -std=c11
 
 #linker
-LDFLAGS :=
+LDFLAGS := \
+-lglog \
+-pthread \
+-lgtest
 
 $(BUILD_DIR)/%.c.o $(BUILD_DIR_BASE)/%.c.o: %.c
 	@mkdir -p $(@D)
@@ -56,7 +59,7 @@ $(BUILD_DIR)/%.cpp.o $(BUILD_DIR_BASE)/%.cpp.o: %.cpp
 
 define LINK_OBJECTS
 	@echo Creating executable: $@
-	@$(CPP_COMPILER) $(LDFLAGS) $(COMMON_FLAGS) $(CPP_FLAGS) $^ -o $@
+	@$(CPP_COMPILER) $(COMMON_FLAGS) $(CPP_FLAGS) $^ -o $@ $(LDFLAGS)
 endef
 
 pre-build:
