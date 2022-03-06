@@ -38,9 +38,9 @@ namespace
         }
     };
 
-    std::vector<SysExConf::block_t> sysExLayout = {
+    std::vector<SysExConf::Block> sysExLayout = {
         {
-            .section = testSections,
+            testSections,
         }
     };
 

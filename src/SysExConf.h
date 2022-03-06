@@ -99,9 +99,16 @@ class SysExConf
     ///
     /// \brief Structure holding data for single SysEx block.
     ///
-    struct block_t
+    class Block
     {
-        std::vector<Section> section;
+        public:
+        Block(std::vector<Section>& sections)
+            : _sections(sections)
+        {}
+
+        private:
+        friend class SysExConf;
+        std::vector<Section>& _sections;
     };
 
     ///
@@ -253,7 +260,7 @@ class SysExConf
     {}
 
     void    reset();
-    bool    setLayout(std::vector<block_t>& layout);
+    bool    setLayout(std::vector<Block>& layout);
     bool    setupCustomRequests(std::vector<customRequest_t>& customRequests);
     void    handleMessage(const uint8_t* array, uint16_t size);
     bool    isConfigurationEnabled();
@@ -408,7 +415,7 @@ class SysExConf
     ///
     /// \brief SysEx layout.
     ///
-    std::vector<block_t> _layout = {};
+    std::vector<Block> _layout = {};
 
     ///
     /// \brief Structure containing decoded data from SysEx request for easier access.

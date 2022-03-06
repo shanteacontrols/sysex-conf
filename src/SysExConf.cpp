@@ -39,7 +39,7 @@ void SysExConf::reset()
 /// @param [in] sections     Vector containing all sections.
 /// \returns True on success, false otherwise.
 ///
-bool SysExConf::setLayout(std::vector<block_t>& layout)
+bool SysExConf::setLayout(std::vector<Block>& layout)
 {
     _sysExEnabled = false;
 
@@ -315,7 +315,7 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
         {
             // when parts 127 or 126 are specified, protocol will loop over all message parts and
             // deliver as many messages as there are parts as response
-            msgPartsLoop = _layout[_decodedMessage.block].section[_decodedMessage.section].parts();
+            msgPartsLoop = _layout[_decodedMessage.block]._sections[_decodedMessage.section].parts();
             allPartsLoop = true;
 
             // when part is set to 126 (0x7E), status_t::ack message will be sent as the last message
@@ -354,9 +354,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
             startIndex = PARAMS_PER_MESSAGE * _decodedMessage.part;
             endIndex   = startIndex + PARAMS_PER_MESSAGE;
 
-            if (endIndex > _layout[_decodedMessage.block].section[_decodedMessage.section].numberOfParameters())
+            if (endIndex > _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters())
             {
-                endIndex = _layout[_decodedMessage.block].section[_decodedMessage.section].numberOfParameters();
+                endIndex = _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters();
             }
         }
 
@@ -721,13 +721,13 @@ uint16_t SysExConf::generateMessageLenght()
 
         default:
             // case wish_t::set:
-            size = _layout[_decodedMessage.block].section[_decodedMessage.section].numberOfParameters();
+            size = _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters();
 
             if (size > PARAMS_PER_MESSAGE)
             {
-                if ((_decodedMessage.part + 1) == _layout[_decodedMessage.block].section[_decodedMessage.section].parts())
+                if ((_decodedMessage.part + 1) == _layout[_decodedMessage.block]._sections[_decodedMessage.section].parts())
                 {
-                    size = size - ((_layout[_decodedMessage.block].section[_decodedMessage.section].parts() - 1) * PARAMS_PER_MESSAGE);
+                    size = size - ((_layout[_decodedMessage.block]._sections[_decodedMessage.section].parts() - 1) * PARAMS_PER_MESSAGE);
                 }
                 else
                 {
@@ -780,7 +780,7 @@ bool SysExConf::checkBlock()
 ///
 bool SysExConf::checkSection()
 {
-    return (_decodedMessage.section < _layout[_decodedMessage.block].section.size());
+    return (_decodedMessage.section < _layout[_decodedMessage.block]._sections.size());
 }
 
 ///
@@ -801,7 +801,7 @@ bool SysExConf::checkPart()
 
     if (_decodedMessage.amount == amount_t::all)
     {
-        if (_decodedMessage.part >= _layout[_decodedMessage.block].section[_decodedMessage.section].parts())
+        if (_decodedMessage.part >= _layout[_decodedMessage.block]._sections[_decodedMessage.section].parts())
         {
             return false;
         }
@@ -825,7 +825,7 @@ bool SysExConf::checkPart()
 bool SysExConf::checkParameterIndex()
 {
     // block and section passed validation, check parameter index
-    return (_decodedMessage.index < _layout[_decodedMessage.block].section[_decodedMessage.section].numberOfParameters());
+    return (_decodedMessage.index < _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters());
 }
 
 ///
@@ -834,8 +834,8 @@ bool SysExConf::checkParameterIndex()
 ///
 bool SysExConf::checkNewValue()
 {
-    uint16_t minValue = _layout[_decodedMessage.block].section[_decodedMessage.section].newValueMin();
-    uint16_t maxValue = _layout[_decodedMessage.block].section[_decodedMessage.section].newValueMax();
+    uint16_t minValue = _layout[_decodedMessage.block]._sections[_decodedMessage.section].newValueMin();
+    uint16_t maxValue = _layout[_decodedMessage.block]._sections[_decodedMessage.section].newValueMax();
 
     if (minValue != maxValue)
     {
@@ -939,5 +939,5 @@ uint8_t SysExConf::blocks() const
 
 uint8_t SysExConf::sections(uint8_t blockID) const
 {
-    return _layout[blockID].section.size();
+    return _layout[blockID]._sections.size();
 }
