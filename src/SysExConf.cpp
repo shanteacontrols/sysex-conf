@@ -114,31 +114,45 @@ void SysExConf::setSilentMode(bool state)
 void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
 {
     if (!_layout.size())
+    {
         return;
+    }
 
     if (size < SPECIAL_REQ_MSG_SIZE)
+    {
         return;    // ignore small messages
+    }
 
     if (array[0] != 0xF0)
+    {
         return;
+    }
 
     if (array[size - 1] != 0xF7)
+    {
         return;
+    }
 
     if (size > MAX_MESSAGE_SIZE)
+    {
         return;
+    }
 
     resetDecodedMessage();
 
     // copy entire incoming message to internal buffer
     for (uint16_t i = 0; i < size; i++)
+    {
         _responseArray[i] = array[i];
+    }
 
     // for now, set the response counter to last position in request
     _responseCounter = size - 1;
 
     if (!checkID())
+    {
         return;    // don't send response to wrong ID
+    }
 
     bool sendResponse_var = true;
 
@@ -178,7 +192,9 @@ void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
     }
 
     if (sendResponse_var)
+    {
         sendResponse(false);
+    }
 }
 
 ///
@@ -207,76 +223,75 @@ bool SysExConf::decode(const uint8_t* receivedArray, uint16_t receivedArraySize)
         // special request
         return true;    // checked in processSpecialRequest
     }
-    else if (receivedArraySize < (STD_REQ_MIN_MSG_SIZE - BYTES_PER_VALUE))    // no index here
+
+    if (receivedArraySize < (STD_REQ_MIN_MSG_SIZE - BYTES_PER_VALUE))    // no index here
     {
         setStatus(status_t::errorMessageLength);
         return false;
     }
-    else
+
+    if (!_sysExEnabled)
     {
-        if (!_sysExEnabled)
+        // connection open request hasn't been received
+        setStatus(status_t::errorConnection);
+        return false;
+    }
+
+    // don't try to request these parameters if the size is too small
+    _decodedMessage.part    = receivedArray[static_cast<uint8_t>(byteOrder_t::partByte)];
+    _decodedMessage.wish    = static_cast<wish_t>(receivedArray[static_cast<uint8_t>(byteOrder_t::wishByte)]);
+    _decodedMessage.amount  = static_cast<amount_t>(receivedArray[static_cast<uint8_t>(byteOrder_t::amountByte)]);
+    _decodedMessage.block   = receivedArray[static_cast<uint8_t>(byteOrder_t::blockByte)];
+    _decodedMessage.section = receivedArray[static_cast<uint8_t>(byteOrder_t::sectionByte)];
+
+    if (!checkWish())
+    {
+        setStatus(status_t::errorWish);
+        return false;
+    }
+
+    if (!checkBlock())
+    {
+        setStatus(status_t::errorBlock);
+        return false;
+    }
+
+    if (!checkSection())
+    {
+        setStatus(status_t::errorSection);
+        return false;
+    }
+
+    if (!checkAmount())
+    {
+        setStatus(status_t::errorAmount);
+        return false;
+    }
+
+    if (!checkPart())
+    {
+        setStatus(status_t::errorPart);
+        return false;
+    }
+
+    if (receivedArraySize != generateMessageLenght())
+    {
+        setStatus(status_t::errorMessageLength);
+        return false;
+    }
+
+    // start building response
+    setStatus(status_t::ack);
+
+    if (_decodedMessage.amount == amount_t::single)
+    {
+        auto mergedIndex      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte)], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + 1]);
+        _decodedMessage.index = mergedIndex.value();
+
+        if (_decodedMessage.wish == wish_t::set)
         {
-            // connection open request hasn't been received
-            setStatus(status_t::errorConnection);
-            return false;
-        }
-
-        // don't try to request these parameters if the size is too small
-        _decodedMessage.part    = receivedArray[static_cast<uint8_t>(byteOrder_t::partByte)];
-        _decodedMessage.wish    = static_cast<wish_t>(receivedArray[static_cast<uint8_t>(byteOrder_t::wishByte)]);
-        _decodedMessage.amount  = static_cast<amount_t>(receivedArray[static_cast<uint8_t>(byteOrder_t::amountByte)]);
-        _decodedMessage.block   = receivedArray[static_cast<uint8_t>(byteOrder_t::blockByte)];
-        _decodedMessage.section = receivedArray[static_cast<uint8_t>(byteOrder_t::sectionByte)];
-
-        if (!checkWish())
-        {
-            setStatus(status_t::errorWish);
-            return false;
-        }
-
-        if (!checkBlock())
-        {
-            setStatus(status_t::errorBlock);
-            return false;
-        }
-
-        if (!checkSection())
-        {
-            setStatus(status_t::errorSection);
-            return false;
-        }
-
-        if (!checkAmount())
-        {
-            setStatus(status_t::errorAmount);
-            return false;
-        }
-
-        if (!checkPart())
-        {
-            setStatus(status_t::errorPart);
-            return false;
-        }
-
-        if (receivedArraySize != generateMessageLenght())
-        {
-            setStatus(status_t::errorMessageLength);
-            return false;
-        }
-
-        // start building response
-        setStatus(status_t::ack);
-
-        if (_decodedMessage.amount == amount_t::single)
-        {
-            auto mergedIndex      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte)], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + 1]);
-            _decodedMessage.index = mergedIndex.value();
-
-            if (_decodedMessage.wish == wish_t::set)
-            {
-                auto mergedNewValue      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE + 1]);
-                _decodedMessage.newValue = mergedNewValue.value();
-            }
+            auto mergedNewValue      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::indexByte) + BYTES_PER_VALUE + 1]);
+            _decodedMessage.newValue = mergedNewValue.value();
         }
     }
 
@@ -306,7 +321,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
             // when part is set to 126 (0x7E), status_t::ack message will be sent as the last message
             // indicating that all messages have been sent as response to specific request
             if (_decodedMessage.part == 126)
+            {
                 allPartsAck = true;
+            }
         }
 
         if (_decodedMessage.wish == wish_t::backup)
@@ -338,7 +355,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
             endIndex   = startIndex + PARAMS_PER_MESSAGE;
 
             if (endIndex > _layout[_decodedMessage.block].section[_decodedMessage.section].numberOfParameters())
+            {
                 endIndex = _layout[_decodedMessage.block].section[_decodedMessage.section].numberOfParameters();
+            }
         }
 
         for (uint16_t i = startIndex; i < endIndex; i++)
@@ -353,25 +372,30 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                         setStatus(status_t::errorIndex);
                         return false;
                     }
-                    else
+
+                    uint16_t value  = 0;
+                    uint8_t  result = _dataHandler.get(_decodedMessage.block, _decodedMessage.section, _decodedMessage.index, value);
+
+                    switch (result)
                     {
-                        uint16_t value  = 0;
-                        uint8_t  result = _dataHandler.get(_decodedMessage.block, _decodedMessage.section, _decodedMessage.index, value);
+                    case static_cast<uint8_t>(status_t::ack):
+                    {
+                        addToResponse(value);
+                    }
+                    break;
 
-                        switch (result)
-                        {
-                        case static_cast<uint8_t>(status_t::ack):
-                            addToResponse(value);
-                            break;
+                    case static_cast<uint8_t>(status_t::request):
+                    {
+                        setStatus(status_t::errorStatus);
+                    }
+                    break;
 
-                        case static_cast<uint8_t>(status_t::request):
-                            setStatus(status_t::errorStatus);
-                            break;
-
-                        default:
-                            setStatus(result);
-                            return false;
-                        }
+                    default:
+                    {
+                        setStatus(result);
+                        return false;
+                    }
+                    break;
                     }
                 }
                 else
@@ -383,16 +407,23 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     switch (result)
                     {
                     case static_cast<uint8_t>(status_t::ack):
+                    {
                         addToResponse(value);
-                        break;
+                    }
+                    break;
 
                     case static_cast<uint8_t>(status_t::request):
+                    {
                         setStatus(status_t::errorStatus);
-                        break;
+                    }
+                    break;
 
                     default:
+                    {
                         setStatus(result);
                         return false;
+                    }
+                    break;
                     }
                 }
                 break;
@@ -421,12 +452,17 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                         break;
 
                     case static_cast<uint8_t>(status_t::request):
+                    {
                         setStatus(status_t::errorStatus);
-                        break;
+                    }
+                    break;
 
                     default:
+                    {
                         setStatus(result);
                         return false;
+                    }
+                    break;
                     }
                 }
                 else
@@ -453,12 +489,17 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                         break;
 
                     case static_cast<uint8_t>(status_t::request):
+                    {
                         setStatus(status_t::errorStatus);
-                        break;
+                    }
+                    break;
 
                     default:
+                    {
                         setStatus(result);
                         return false;
+                    }
+                    break;
                     }
                 }
                 break;
@@ -523,44 +564,53 @@ bool SysExConf::processSpecialRequest()
     switch (_responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)])
     {
     case static_cast<uint8_t>(specialRequest_t::connClose):
+    {
         if (!_sysExEnabled)
         {
             // connection can't be closed if it isn't opened
             setStatus(status_t::errorConnection);
             return true;
         }
-        else
-        {
-            // close sysex connection
-            _sysExEnabled = false;
-            setStatus(status_t::ack);
 
-            if (_silentModeEnabled)
-            {
-                // also disable silent mode
-                _silentModeEnabled = false;
-            }
-            return true;
+        // close sysex connection
+        _sysExEnabled = false;
+        setStatus(status_t::ack);
+
+        if (_silentModeEnabled)
+        {
+            // also disable silent mode
+            _silentModeEnabled = false;
         }
-        break;
+        return true;
+    }
+    break;
 
     case static_cast<uint8_t>(specialRequest_t::connOpen):
     case static_cast<uint8_t>(specialRequest_t::connOpenSilent):
+    {
         // necessary to allow the configuration
         _sysExEnabled = true;
 
         if (_responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)] == static_cast<uint8_t>(specialRequest_t::connOpenSilent))
+        {
             _silentModeEnabled = true;
+        }
 
         setStatus(status_t::ack);
         return true;
+    }
+    break;
 
     case static_cast<uint8_t>(specialRequest_t::connSilentDisable):
+    {
         _silentModeEnabled = false;
         setStatus(status_t::ack);
         return true;
+    }
+    break;
 
     case static_cast<uint8_t>(specialRequest_t::bytesPerValue):
+    {
         if (_sysExEnabled)
         {
             setStatus(status_t::ack);
@@ -573,8 +623,11 @@ bool SysExConf::processSpecialRequest()
             setStatus(status_t::errorConnection);
         }
         return true;
+    }
+    break;
 
     case static_cast<uint8_t>(specialRequest_t::paramsPerMessage):
+    {
         if (_sysExEnabled)
         {
             setStatus(status_t::ack);
@@ -586,15 +639,21 @@ bool SysExConf::processSpecialRequest()
         {
             setStatus(status_t::errorConnection);
         }
+
         return true;
+    }
+    break;
 
     default:
+    {
         // check for custom value
         for (size_t i = 0; i < _sysExCustomRequest.size(); i++)
         {
             // check only current wish/request
             if (_sysExCustomRequest[i].requestID != _responseArray[static_cast<uint8_t>(byteOrder_t::wishByte)])
+            {
                 continue;
+            }
 
             if (_sysExEnabled || !_sysExCustomRequest[i].connOpenCheck)
             {
@@ -609,12 +668,17 @@ bool SysExConf::processSpecialRequest()
                     break;
 
                 case static_cast<uint8_t>(status_t::request):
+                {
                     setStatus(status_t::errorStatus);
-                    break;
+                }
+                break;
 
                 default:
+                {
                     setStatus(result);
                     return false;
+                }
+                break;
                 }
             }
             else
@@ -628,6 +692,8 @@ bool SysExConf::processSpecialRequest()
         // custom string not found
         setStatus(status_t::errorWish);
         return true;
+    }
+    break;
     }
 }
 
@@ -645,6 +711,7 @@ uint16_t SysExConf::generateMessageLenght()
         return STD_REQ_MIN_MSG_SIZE;
 
     default:
+    {
         // case amount_t::all:
         switch (_decodedMessage.wish)
         {
@@ -659,9 +726,13 @@ uint16_t SysExConf::generateMessageLenght()
             if (size > PARAMS_PER_MESSAGE)
             {
                 if ((_decodedMessage.part + 1) == _layout[_decodedMessage.block].section[_decodedMessage.section].parts())
+                {
                     size = size - ((_layout[_decodedMessage.block].section[_decodedMessage.section].parts() - 1) * PARAMS_PER_MESSAGE);
+                }
                 else
+                {
                     size = PARAMS_PER_MESSAGE;
+                }
             }
 
             size *= BYTES_PER_VALUE;
@@ -669,6 +740,8 @@ uint16_t SysExConf::generateMessageLenght()
 
             return size;
         }
+    }
+    break;
     }
 
     return size;
@@ -719,28 +792,30 @@ bool SysExConf::checkPart()
     if ((_decodedMessage.part == 127) || (_decodedMessage.part == 126))
     {
         if ((_decodedMessage.wish == wish_t::get) || (_decodedMessage.wish == wish_t::backup))
+        {
             return true;
-        else
-            return false;
-    }
-    else
-    {
-        if (_decodedMessage.amount == amount_t::all)
-        {
-            if (_decodedMessage.part >= _layout[_decodedMessage.block].section[_decodedMessage.section].parts())
-                return false;
-            else
-                return true;
         }
-        else
-        {
-            // do not allow part other than 0 in single mode
-            if (_decodedMessage.part)
-                return false;
 
-            return true;
-        }
+        return false;
     }
+
+    if (_decodedMessage.amount == amount_t::all)
+    {
+        if (_decodedMessage.part >= _layout[_decodedMessage.block].section[_decodedMessage.section].parts())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // do not allow part other than 0 in single mode
+    if (_decodedMessage.part)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 ///
@@ -763,9 +838,11 @@ bool SysExConf::checkNewValue()
     uint16_t maxValue = _layout[_decodedMessage.block].section[_decodedMessage.section].newValueMax();
 
     if (minValue != maxValue)
+    {
         return ((_decodedMessage.newValue >= minValue) && (_decodedMessage.newValue <= maxValue));
-    else
-        return true;    // don't check new value if min and max are the same
+    }
+
+    return true;    // don't check new value if min and max are the same
 }
 
 ///
@@ -785,14 +862,20 @@ void SysExConf::sendCustomMessage(const uint16_t* values, uint16_t size, bool ac
     _responseArray[_responseCounter++] = _mID.id3;
 
     if (ack)
+    {
         _responseArray[_responseCounter++] = static_cast<uint8_t>(status_t::ack);
+    }
     else
+    {
         _responseArray[_responseCounter++] = static_cast<uint8_t>(status_t::request);
+    }
 
     _responseArray[_responseCounter++] = 0;    // message part
 
     for (uint16_t i = 0; i < size; i++)
+    {
         _responseArray[_responseCounter++] = values[i];
+    }
 
     sendResponse(false, true);
 }
@@ -814,11 +897,15 @@ void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
         // don't report any errors in silent mode
         if ((_responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] != static_cast<uint8_t>(status_t::ack)) &&
             (_responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] != static_cast<uint8_t>(status_t::request)))
+        {
             return;
+        }
 
         // respond only to get messages
         if (_decodedMessage.wish != wish_t::get)
+        {
             return;
+        }
     }
 
     _dataHandler.sendResponse(_responseArray, _responseCounter);
@@ -835,7 +922,9 @@ bool SysExConf::addToResponse(uint16_t value)
     auto split = Split14bit(value);
 
     if (_responseCounter >= (MAX_MESSAGE_SIZE - 1))
+    {
         return false;
+    }
 
     _responseArray[_responseCounter++] = split.high();
     _responseArray[_responseCounter++] = split.low();

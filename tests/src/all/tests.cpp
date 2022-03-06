@@ -746,8 +746,7 @@ namespace
     class SysExConfDataHandlerValid : public SysExConf::DataHandler
     {
         public:
-        SysExConfDataHandlerValid()
-        {}
+        SysExConfDataHandlerValid() = default;
 
         uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value) override
         {
@@ -766,16 +765,17 @@ namespace
             {
             case CUSTOM_REQUEST_ID_VALID:
             case CUSTOM_REQUEST_ID_NO_CONN_CHECK:
+            {
                 for (int i = 0; i < customReqArray.size(); i++)
                     customResponse.append(customReqArray[i]);
 
                 return static_cast<uint8_t>(SysExConf::status_t::ack);
-                break;
+            }
+            break;
 
             case CUSTOM_REQUEST_ID_ERROR_READ:
             default:
                 return static_cast<uint8_t>(SysExConf::status_t::errorRead);
-                break;
             }
         }
 
@@ -795,7 +795,9 @@ namespace
         std::vector<uint8_t> response(uint8_t index)
         {
             if (index >= _response.size())
+            {
                 return {};
+            }
 
             return _response.at(index);
         }
@@ -805,7 +807,9 @@ namespace
             std::vector<uint8_t> tempResponse;
 
             for (uint16_t i = 0; i < size; i++)
+            {
                 tempResponse.push_back(array[i]);
+            }
 
             _response.push_back(tempResponse);
         }

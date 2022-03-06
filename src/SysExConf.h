@@ -39,12 +39,12 @@ class SysExConf
     ///
     /// \brief Structure holding SysEx manufacturer ID bytes.
     ///
-    typedef struct
+    struct manufacturerID_t
     {
         uint8_t id1;
         uint8_t id2;
         uint8_t id3;
-    } manufacturerID_t;
+    };
 
     ///
     /// \brief Structure holding data for single SysEx section within block.
@@ -64,7 +64,9 @@ class SysExConf
             _parts = numberOfParameters / SysExConf::PARAMS_PER_MESSAGE;
 
             if (numberOfParameters % SysExConf::PARAMS_PER_MESSAGE)
+            {
                 _parts++;
+            }
         }
 
         uint16_t numberOfParameters() const
@@ -97,19 +99,19 @@ class SysExConf
     ///
     /// \brief Structure holding data for single SysEx block.
     ///
-    typedef struct
+    struct block_t
     {
         std::vector<Section> section;
-    } block_t;
+    };
 
     ///
     /// \brief Structure containing data for single custom request.
     ///
-    typedef struct
+    struct customRequest_t
     {
         uint16_t requestID;        ///< ID byte representing specific request.
         bool     connOpenCheck;    ///< Flag indicating whether or not SysEx connection should be enabled before processing request.
-    } customRequest_t;
+    };
 
     ///
     /// \brief Descriptive list of SysEx wish bytes.
@@ -171,7 +173,7 @@ class SysExConf
     ///
     /// \brief Structure holding decoded request data.
     ///
-    typedef struct
+    struct decodedMessage_t
     {
         status_t status;
         wish_t   wish;
@@ -181,7 +183,7 @@ class SysExConf
         uint8_t  part;
         uint16_t index;
         uint16_t newValue;
-    } decodedMessage_t;
+    };
 
     ///
     /// \brief Descriptive list of bytes in SysEx message.
@@ -232,7 +234,7 @@ class SysExConf
             uint16_t& _responseCounter;
         };
 
-        DataHandler() {}
+        DataHandler() = default;
 
         virtual uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value)   = 0;
         virtual uint8_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) = 0;
@@ -253,7 +255,7 @@ class SysExConf
     void    reset();
     bool    setLayout(std::vector<block_t>& layout);
     bool    setupCustomRequests(std::vector<customRequest_t>& customRequests);
-    void    handleMessage(const uint8_t* sysExArray, uint16_t size);
+    void    handleMessage(const uint8_t* array, uint16_t size);
     bool    isConfigurationEnabled();
     bool    isSilentModeEnabled();
     void    setSilentMode(bool state);
@@ -274,9 +276,13 @@ class SysExConf
         Merge14bit(uint8_t high, uint8_t low)
         {
             if (high & 0x01)
+            {
                 low |= (1 << 7);
+            }
             else
+            {
                 low &= ~(1 << 7);
+            }
 
             high >>= 1;
 
@@ -311,9 +317,13 @@ class SysExConf
             newHigh         = (newHigh << 1) & 0x7F;
 
             if ((newLow >> 7) & 0x01)
+            {
                 newHigh |= 0x01;
+            }
             else
+            {
                 newHigh &= ~0x01;
+            }
 
             newLow &= 0x7F;
             _high = newHigh;
