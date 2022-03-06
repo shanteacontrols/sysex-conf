@@ -415,7 +415,7 @@ class SysExConf
     ///
     /// \brief SysEx layout.
     ///
-    std::vector<Block> _layout = {};
+    std::vector<Block>* _layout = {};
 
     ///
     /// \brief Structure containing decoded data from SysEx request for easier access.

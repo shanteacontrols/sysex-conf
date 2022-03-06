@@ -21,6 +21,8 @@
 
 #include "SysExConf.h"
 
+#define LAYOUT_ACCESS (*_layout)
+
 ///
 /// \brief Resets all variables to their default values.
 ///
@@ -30,7 +32,7 @@ void SysExConf::reset()
     _silentModeEnabled = false;
     _decodedMessage    = {};
     _responseCounter   = 0;
-    _layout.clear();
+    LAYOUT_ACCESS.clear();
     _sysExCustomRequest.clear();
 }
 
@@ -45,7 +47,7 @@ bool SysExConf::setLayout(std::vector<Block>& layout)
 
     if (layout.size())
     {
-        _layout = std::move(layout);
+        _layout = &layout;
         return true;
     }
 
@@ -113,7 +115,7 @@ void SysExConf::setSilentMode(bool state)
 ///
 void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
 {
-    if (!_layout.size())
+    if (!LAYOUT_ACCESS.size())
     {
         return;
     }
@@ -315,7 +317,7 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
         {
             // when parts 127 or 126 are specified, protocol will loop over all message parts and
             // deliver as many messages as there are parts as response
-            msgPartsLoop = _layout[_decodedMessage.block]._sections[_decodedMessage.section].parts();
+            msgPartsLoop = LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].parts();
             allPartsLoop = true;
 
             // when part is set to 126 (0x7E), status_t::ack message will be sent as the last message
@@ -354,9 +356,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
             startIndex = PARAMS_PER_MESSAGE * _decodedMessage.part;
             endIndex   = startIndex + PARAMS_PER_MESSAGE;
 
-            if (endIndex > _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters())
+            if (endIndex > LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters())
             {
-                endIndex = _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters();
+                endIndex = LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters();
             }
         }
 
@@ -365,6 +367,7 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
             switch (_decodedMessage.wish)
             {
             case wish_t::get:
+            {
                 if (_decodedMessage.amount == amount_t::single)
                 {
                     if (!checkParameterIndex())
@@ -426,9 +429,11 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     break;
                     }
                 }
-                break;
+            }
+            break;
 
             default:
+            {
                 // case wish_t::set:
                 if (_decodedMessage.amount == amount_t::single)
                 {
@@ -502,7 +507,8 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     break;
                     }
                 }
-                break;
+            }
+            break;
             }
         }
 
@@ -721,13 +727,13 @@ uint16_t SysExConf::generateMessageLenght()
 
         default:
             // case wish_t::set:
-            size = _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters();
+            size = LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters();
 
             if (size > PARAMS_PER_MESSAGE)
             {
-                if ((_decodedMessage.part + 1) == _layout[_decodedMessage.block]._sections[_decodedMessage.section].parts())
+                if ((_decodedMessage.part + 1) == LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].parts())
                 {
-                    size = size - ((_layout[_decodedMessage.block]._sections[_decodedMessage.section].parts() - 1) * PARAMS_PER_MESSAGE);
+                    size = size - ((LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].parts() - 1) * PARAMS_PER_MESSAGE);
                 }
                 else
                 {
@@ -771,7 +777,7 @@ bool SysExConf::checkAmount()
 ///
 bool SysExConf::checkBlock()
 {
-    return _decodedMessage.block < _layout.size();
+    return _decodedMessage.block < LAYOUT_ACCESS.size();
 }
 
 ///
@@ -780,7 +786,7 @@ bool SysExConf::checkBlock()
 ///
 bool SysExConf::checkSection()
 {
-    return (_decodedMessage.section < _layout[_decodedMessage.block]._sections.size());
+    return (_decodedMessage.section < LAYOUT_ACCESS[_decodedMessage.block]._sections.size());
 }
 
 ///
@@ -801,7 +807,7 @@ bool SysExConf::checkPart()
 
     if (_decodedMessage.amount == amount_t::all)
     {
-        if (_decodedMessage.part >= _layout[_decodedMessage.block]._sections[_decodedMessage.section].parts())
+        if (_decodedMessage.part >= LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].parts())
         {
             return false;
         }
@@ -825,7 +831,7 @@ bool SysExConf::checkPart()
 bool SysExConf::checkParameterIndex()
 {
     // block and section passed validation, check parameter index
-    return (_decodedMessage.index < _layout[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters());
+    return (_decodedMessage.index < LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].numberOfParameters());
 }
 
 ///
@@ -834,8 +840,8 @@ bool SysExConf::checkParameterIndex()
 ///
 bool SysExConf::checkNewValue()
 {
-    uint16_t minValue = _layout[_decodedMessage.block]._sections[_decodedMessage.section].newValueMin();
-    uint16_t maxValue = _layout[_decodedMessage.block]._sections[_decodedMessage.section].newValueMax();
+    uint16_t minValue = LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].newValueMin();
+    uint16_t maxValue = LAYOUT_ACCESS[_decodedMessage.block]._sections[_decodedMessage.section].newValueMax();
 
     if (minValue != maxValue)
     {
@@ -934,10 +940,10 @@ bool SysExConf::addToResponse(uint16_t value)
 
 uint8_t SysExConf::blocks() const
 {
-    return _layout.size();
+    return LAYOUT_ACCESS.size();
 }
 
 uint8_t SysExConf::sections(uint8_t blockID) const
 {
-    return _layout[blockID]._sections.size();
+    return LAYOUT_ACCESS[blockID]._sections.size();
 }
