@@ -56,9 +56,9 @@ class SysExConf
             uint16_t numberOfParameters,
             uint16_t newValueMin,
             uint16_t newValueMax)
-            : _numberOfParameters(numberOfParameters)
-            , _newValueMin(newValueMin)
-            , _newValueMax(newValueMax)
+            : NUMBER_OF_PARAMETERS(numberOfParameters)
+            , NEW_VALUE_MIN(newValueMin)
+            , NEW_VALUE_MAX(newValueMax)
         {
             // based on number of parameters, calculate how many parts message has in case of set/all request and get/all response
             _parts = numberOfParameters / SysExConf::PARAMS_PER_MESSAGE;
@@ -71,17 +71,17 @@ class SysExConf
 
         uint16_t numberOfParameters() const
         {
-            return _numberOfParameters;
+            return NUMBER_OF_PARAMETERS;
         }
 
         uint16_t newValueMin() const
         {
-            return _newValueMin;
+            return NEW_VALUE_MIN;
         }
 
         uint16_t newValueMax() const
         {
-            return _newValueMax;
+            return NEW_VALUE_MAX;
         }
 
         uint8_t parts() const
@@ -90,9 +90,9 @@ class SysExConf
         }
 
         private:
-        const uint16_t _numberOfParameters;
-        const uint16_t _newValueMin;
-        const uint16_t _newValueMax;
+        const uint16_t NUMBER_OF_PARAMETERS;
+        const uint16_t NEW_VALUE_MIN;
+        const uint16_t NEW_VALUE_MAX;
         uint8_t        _parts;
     };
 
@@ -125,10 +125,10 @@ class SysExConf
     ///
     enum class wish_t : uint8_t
     {
-        get,
-        set,
-        backup,
-        invalid
+        GET,
+        SET,
+        BACKUP,
+        INVALID
     };
 
     ///
@@ -136,9 +136,9 @@ class SysExConf
     ///
     enum class amount_t : uint8_t
     {
-        single,
-        all,
-        invalid
+        SINGLE,
+        ALL,
+        INVALID
     };
 
     ///
@@ -146,21 +146,21 @@ class SysExConf
     ///
     enum class status_t : uint8_t
     {
-        request,               // 0x00
-        ack,                   // 0x01
-        errorStatus,           // 0x02
-        errorConnection,       // 0x03
-        errorWish,             // 0x04
-        errorAmount,           // 0x05
-        errorBlock,            // 0x06
-        errorSection,          // 0x07
-        errorPart,             // 0x08
-        errorIndex,            // 0x09
-        errorNewValue,         // 0x0A
-        errorMessageLength,    // 0x0B
-        errorWrite,            // 0x0C
-        errorNotSupported,     // 0x0D
-        errorRead,             // 0x0E
+        REQUEST,                 // 0x00
+        ACK,                     // 0x01
+        ERROR_STATUS,            // 0x02
+        ERROR_CONNECTION,        // 0x03
+        ERROR_WISH,              // 0x04
+        ERROR_AMOUNT,            // 0x05
+        ERROR_BLOCK,             // 0x06
+        ERROR_SECTION,           // 0x07
+        ERROR_PART,              // 0x08
+        ERROR_INDEX,             // 0x09
+        ERROR_NEW_VALUE,         // 0x0A
+        ERROR_MESSAGE_LENGTH,    // 0x0B
+        ERROR_WRITE,             // 0x0C
+        ERROR_NOT_SUPPORTED,     // 0x0D
+        ERROR_READ,              // 0x0E
     };
 
     ///
@@ -168,12 +168,12 @@ class SysExConf
     ///
     enum class specialRequest_t : uint8_t
     {
-        connClose,            // 0x00
-        connOpen,             // 0x01
-        bytesPerValue,        // 0x02
-        paramsPerMessage,     // 0x03
-        connOpenSilent,       // 0x04
-        connSilentDisable,    // 0x05
+        CONN_CLOSE,             // 0x00
+        CONN_OPEN,              // 0x01
+        BYTES_PER_VALUE,        // 0x02
+        PARAMS_PER_MESSAGE,     // 0x03
+        CONN_OPEN_SILENT,       // 0x04
+        CONN_SILENT_DISABLE,    // 0x05
         AMOUNT
     };
 
@@ -197,17 +197,17 @@ class SysExConf
     ///
     enum class byteOrder_t : uint8_t
     {
-        startByte,      // 0
-        idByte_1,       // 1
-        idByte_2,       // 2
-        idByte_3,       // 3
-        statusByte,     // 4
-        partByte,       // 5
-        wishByte,       // 6
-        amountByte,     // 7
-        blockByte,      // 8
-        sectionByte,    // 9
-        indexByte,      // 10
+        START_BYTE,      // 0
+        ID_BYTE_1,       // 1
+        ID_BYTE_2,       // 2
+        ID_BYTE_3,       // 3
+        STATUS_BYTE,     // 4
+        PART_BYTE,       // 5
+        WISH_BYTE,       // 6
+        AMOUNT_BYTE,     // 7
+        BLOCK_BYTE,      // 8
+        SECTION_BYTE,    // 9
+        INDEX_BYTE,      // 10
     };
 
     class DataHandler
@@ -249,8 +249,8 @@ class SysExConf
         virtual void    sendResponse(uint8_t* array, uint16_t size)                            = 0;
     };
 
-    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (static_cast<uint8_t>(byteOrder_t::wishByte) + 1) + 1;    // extra byte for end
-    static constexpr uint8_t  STD_REQ_MIN_MSG_SIZE = static_cast<uint8_t>(byteOrder_t::indexByte) + (BYTES_PER_VALUE * 2) + 1;
+    static constexpr uint8_t  SPECIAL_REQ_MSG_SIZE = (static_cast<uint8_t>(byteOrder_t::WISH_BYTE) + 1) + 1;    // extra byte for end
+    static constexpr uint8_t  STD_REQ_MIN_MSG_SIZE = static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + (BYTES_PER_VALUE * 2) + 1;
     static constexpr uint16_t MAX_MESSAGE_SIZE     = STD_REQ_MIN_MSG_SIZE + (PARAMS_PER_MESSAGE * BYTES_PER_VALUE);
 
     SysExConf(DataHandler&            dataHandler,
@@ -376,7 +376,7 @@ class SysExConf
         uint8_t status_uint8 = static_cast<uint8_t>(status);
         status_uint8 &= 0x7F;
 
-        _responseArray[static_cast<uint8_t>(byteOrder_t::statusByte)] = status_uint8;
+        _responseArray[static_cast<uint8_t>(byteOrder_t::STATUS_BYTE)] = status_uint8;
     }
 
     void sendResponse(bool containsLastByte, bool customMessage = false);
