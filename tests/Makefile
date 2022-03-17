@@ -1,32 +1,27 @@
-ifeq ($(shell uname), Linux)
-    FIND := find
-else ifeq ($(shell uname), Darwin)
-    FIND := gfind
-else
-    $(error Unsupported platform)
-endif
+TARGET         := sysexconf
+BUILD_DIR_BASE := ./build
+BUILD_DIR      := $(BUILD_DIR_BASE)/$(TARGET)
+SCRIPTS_DIR    := ../scripts
+CLANG_TIDY_OUT := $(BUILD_DIR_BASE)/clang-tidy-fixes.yaml
+TEST_BINARIES  := $(addprefix -object ,$(shell $(FIND) $(BUILD_DIR_BASE) -name "*.out" 2>/dev/null))
 
 .DEFAULT_GOAL := test
-
-BUILD_DIR_BASE := ./build
-TARGET := sysex
-BUILD_DIR := $(BUILD_DIR_BASE)/$(TARGET)
-TEST_BINARIES := $(addprefix -object ,$(shell $(FIND) $(BUILD_DIR_BASE) -name "*.out" 2>/dev/null))
-FW_ROOT_DIR := ../src
-SCRIPTS_DIR := ../scripts
 
 include Defines.mk
 include Sources.mk
 -include Objects.mk
 
-C_COMPILER ?= clang
-CPP_COMPILER ?= clang++
-LLVM_PROFDATA ?= llvm-profdata
-LLVM_COV ?= llvm-cov
-CLANG_FORMAT ?= clang-format
+CC  := clang
+CXX := clang++
+
+# when set to 1, format target will fail if there are any changes to the repository after formatting
+CF_FAIL_ON_DIFF := 0
+
+# when set to 1, lint target will fail if there are any changes to the repository after linting
+CL_FAIL_ON_DIFF := 0
 
 #passed to both c and c++ compiler
-COMMON_FLAGS := \
+CPPFLAGS := \
 -fprofile-instr-generate \
 -fcoverage-mapping \
 -O0 \
@@ -50,16 +45,16 @@ LDFLAGS := \
 $(BUILD_DIR)/%.c.o $(BUILD_DIR_BASE)/%.c.o: %.c
 	@mkdir -p $(@D)
 	@echo Building: $<
-	@$(C_COMPILER) $(COMMON_FLAGS) $(C_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+	@$(CC) $(CPPFLAGS) $(C_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
 
 $(BUILD_DIR)/%.cpp.o $(BUILD_DIR_BASE)/%.cpp.o: %.cpp
 	@mkdir -p $(@D)
 	@echo Building: $<
-	@$(CPP_COMPILER) $(COMMON_FLAGS) $(CPP_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+	@$(CXX) $(CPPFLAGS) $(CPP_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
 
 define LINK_OBJECTS
 	@echo Creating executable: $@
-	@$(CPP_COMPILER) $(COMMON_FLAGS) $(CPP_FLAGS) $^ -o $@ $(LDFLAGS)
+	@$(CXX) $(CPPFLAGS) $(CPP_FLAGS) $^ -o $@ $(LDFLAGS)
 endef
 
 pre-build:
@@ -71,17 +66,27 @@ exec:
 
 coverage:
 	@echo Creating coverage report.
-	@$(LLVM_PROFDATA) merge $(wildcard $(BUILD_DIR_BASE)/*.profraw) -o $(BUILD_DIR_BASE)/tests.profdata
-	@$(LLVM_COV) report $(TEST_BINARIES) -instr-profile=$(BUILD_DIR_BASE)/tests.profdata -ignore-filename-regex="test|modules" -use-color
-	@$(LLVM_COV) show $(TEST_BINARIES) -instr-profile=$(BUILD_DIR_BASE)/tests.profdata -ignore-filename-regex="test|modules" -use-color --format html > $(BUILD_DIR_BASE)/coverage.html
+	@llvm-profdata merge $(wildcard $(BUILD_DIR_BASE)/*.profraw) -o $(BUILD_DIR_BASE)/tests.profdata
+	@llvm-cov report $(TEST_BINARIES) -instr-profile=$(BUILD_DIR_BASE)/tests.profdata -ignore-filename-regex="test|modules" -use-color
+	@llvm-cov show $(TEST_BINARIES) -instr-profile=$(BUILD_DIR_BASE)/tests.profdata -ignore-filename-regex="test|modules" -use-color --format html > $(BUILD_DIR_BASE)/coverage.html
 	@echo ***Generated HTML coverage report in $(BUILD_DIR_BASE)/coverage.html***
 
 format:
 	@echo Checking code formatting...
-	@$(FIND) . -regex '.*\.\(cpp\|hpp\|h\|cc\|cxx\)' \
-	-exec $(CLANG_FORMAT) -style=file -i {} \;
+	@find . -regex '.*\.\(cpp\|hpp\|h\|cc\|cxx\)' \
+	-exec clang-format -style=file -i {} \;
 ifeq ($(CF_FAIL_ON_DIFF), 1)
 	git diff -s --exit-code
+endif
+
+lint:
+	@$(SCRIPTS_DIR)/tidy.sh $(CLANG_TIDY_OUT)
+ifeq ($(CL_FAIL_ON_DIFF), 1)
+	@if [ -s $(CLANG_TIDY_OUT) ]; then \
+		echo Lint issues found:; \
+		cat $(CLANG_TIDY_OUT); \
+		false; \
+	fi
 endif
 
 clean:
