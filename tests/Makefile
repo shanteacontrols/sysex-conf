@@ -26,14 +26,16 @@ CPPFLAGS := \
 -fcoverage-mapping \
 -O0 \
 -g \
--Wall
+-Wall \
+-fdata-sections \
+-ffunction-sections
 
 #c++ compiler only
-CPP_FLAGS := \
+CXXFLAGS := \
 -std=c++17
 
 #c compiler only
-C_FLAGS := \
+CFLAGS := \
 -std=c11
 
 #linker
@@ -45,16 +47,16 @@ LDFLAGS := \
 $(BUILD_DIR)/%.c.o $(BUILD_DIR_BASE)/%.c.o: %.c
 	@mkdir -p $(@D)
 	@echo Building: $<
-	@$(CC) $(CPPFLAGS) $(C_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+	@ccache $(CC) $(CPPFLAGS) $(CFLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
 
 $(BUILD_DIR)/%.cpp.o $(BUILD_DIR_BASE)/%.cpp.o: %.cpp
 	@mkdir -p $(@D)
 	@echo Building: $<
-	@$(CXX) $(CPPFLAGS) $(CPP_FLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
+	@ccache $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(addprefix -D,$(DEFINES)) $(INCLUDE_DIRS_COMMON) $(INCLUDE_FILES_COMMON) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"
 
 define LINK_OBJECTS
 	@echo Creating executable: $@
-	@$(CXX) $(CPPFLAGS) $(CPP_FLAGS) $^ -o $@ $(LDFLAGS)
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 endef
 
 pre-build:

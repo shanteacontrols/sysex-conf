@@ -25,7 +25,6 @@ tests=$(find ./src -type f -name Makefile | rev | cut -d / -f 2 | rev | tr "\n" 
 for test in $tests
 do
     test_dir=$(find src -type d -name "*${test}")
-    # echo "test dir is $test_dir"
 
     {
         printf '%s\n' '-include '${test_dir}'/Makefile'
@@ -36,15 +35,15 @@ do
         printf '%s\n' 'OBJECTS_'${test}' := $(addsuffix .o,$(OBJECTS_'${test}'))'
         printf '%s\n\n' '-include $(OBJECTS_'${test}':%.o=%.d)'
 
-        printf '%s\n' '$(BUILD_DIR)/$(TEST_DIR_'${test}')/%.cpp.o: %.cpp'
-        printf '\t%s\n' '@mkdir -p $(@D)'
-        printf '\t%s\n' '@echo Building $<'
-        printf '\t%s\n' '@$(CXX) $(CXXFLAGS) $(CPP_FLAGS) $(INCLUDE_FILES_COMMON) $(INCLUDE_DIRS_COMMON) $(addprefix -I$(FW_ROOT_DIR)/,$(INCLUDE_DIRS_'${test}')) $(addprefix -D,$(DEFINES)) $(addprefix -D,$(DEFINES_'${test}')) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"'
-
         printf '%s\n' '$(BUILD_DIR)/$(TEST_DIR_'${test}')/%.c.o: %.c'
         printf '\t%s\n' '@mkdir -p $(@D)'
         printf '\t%s\n' '@echo Building $<'
-        printf '\t%s\n' '@$(CC) $(CXXFLAGS) $(CFLAGS) $(INCLUDE_FILES_COMMON) $(INCLUDE_DIRS_COMMON) $(addprefix -I$(FW_ROOT_DIR)/,$(INCLUDE_DIRS_'${test}')) $(addprefix -D,$(DEFINES)) $(addprefix -D,$(DEFINES_'${test}')) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"'
+        printf '\t%s\n' '@$(CC) $(CPPFLAGS) $(CFLAGS) $(INCLUDE_FILES_COMMON) $(INCLUDE_DIRS_COMMON) $(INCLUDE_DIRS_'${test}') $(addprefix -D,$(DEFINES)) $(addprefix -D,$(DEFINES_'${test}')) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"'
+
+        printf '%s\n' '$(BUILD_DIR)/$(TEST_DIR_'${test}')/%.cpp.o: %.cpp'
+        printf '\t%s\n' '@mkdir -p $(@D)'
+        printf '\t%s\n' '@echo Building $<'
+        printf '\t%s\n' '@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDE_FILES_COMMON) $(INCLUDE_DIRS_COMMON) $(INCLUDE_DIRS_'${test}') $(addprefix -D,$(DEFINES)) $(addprefix -D,$(DEFINES_'${test}')) -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -c "$<" -o "$@"'
 
         printf '\n%s\n' 'ifeq ($(findstring '${test}',$(TESTS)), '${test}')'
         printf '    %s\n' 'TESTS_EXPANDED += $(BUILD_DIR)/$(TEST_DIR_'${test}')/'${test}'.out'
