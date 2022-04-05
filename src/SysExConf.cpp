@@ -28,10 +28,11 @@
 ///
 void SysExConf::reset()
 {
-    _sysExEnabled      = false;
-    _silentModeEnabled = false;
-    _decodedMessage    = {};
-    _responseCounter   = 0;
+    _sysExEnabled               = false;
+    _silentModeEnabled          = false;
+    _userErrorIgnoreModeEnabled = false;
+    _decodedMessage             = {};
+    _responseCounter            = 0;
     LAYOUT_ACCESS.clear();
     _sysExCustomRequest.clear();
 }
