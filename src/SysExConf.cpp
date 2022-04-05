@@ -900,7 +900,7 @@ void SysExConf::sendCustomMessage(const uint16_t* values, uint16_t size, bool ac
 
 ///
 /// \brief Used to send SysEx response.
-/// @param [in] containsLastByte If set to true, last SysEx byte (0x07) won't be appended.
+/// @param [in] containsLastByte If set to true, last SysEx byte (0xF7) won't be appended.
 /// @param [in] customMessage    If set to true, custom user-specified message is being sent and silent mode is being ignored.
 ///
 void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
