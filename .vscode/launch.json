@@ -8,19 +8,13 @@
             "name": "Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/build/sysex/src/all/all.out",
+            "program": "${workspaceFolder}/tests/build/test.out",
             "args": [],
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "environment": [],
             "externalConsole": false,
-            "linux": {
-                "cwd": "${workspaceFolder}",
-                "MIMode": "gdb"
-            },
-            "osx": {
-                "cwd": "${workspaceFolder}",
-                "MIMode": "lldb"
-            },
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -28,7 +22,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "[Test] Build all tests"
+            "preLaunchTask": "[Test] Build single test"
         }
     ]
 }

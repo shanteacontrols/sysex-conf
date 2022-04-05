@@ -2,24 +2,23 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "[Test] Build all tests",
-            "command": "cd tests && make pre-build && make",
+            "label": "[Test] Build single test",
+            "command": "cd tests && make pre-build && make TESTS=${input:test} && cp build/$(make print-TARGET)/src/${input:test}/${input:test}.out build/test.out",
             "type": "shell",
             "problemMatcher": [
                 "$gcc"
             ]
         },
+    ],
+    "inputs": [
         {
-            "label": "[Test] Clean",
-            "command": "cd tests && make clean",
-            "type": "shell",
-            "problemMatcher": []
-        },
-        {
-            "label": "[Tests] Run compiled",
-            "command": "cd tests && make exec",
-            "type": "shell",
-            "problemMatcher": []
+            "id": "test",
+            "description": "Select test to compile",
+            "default": "ble",
+            "type": "pickString",
+            "options": [
+                "all",
+            ]
         }
     ]
 }
