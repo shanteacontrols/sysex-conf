@@ -82,12 +82,29 @@ namespace
             uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value) override
             {
                 value = TEST_VALUE_GET;
-                return getResult;
+
+                if (getResults.empty())
+                {
+                    return static_cast<uint8_t>(SysExConf::status_t::ACK);
+                }
+
+                auto retVal = getResults.at(0);
+                getResults.erase(getResults.begin());
+
+                return retVal;
             }
 
             uint8_t set(uint8_t block, uint8_t section, uint16_t index, uint16_t newValue) override
             {
-                return setResult;
+                if (setResults.empty())
+                {
+                    return static_cast<uint8_t>(SysExConf::status_t::ACK);
+                }
+
+                auto retVal = setResults.at(0);
+                setResults.erase(setResults.begin());
+
+                return retVal;
             }
 
             uint8_t customRequest(uint16_t request, CustomResponse& customResponse) override
@@ -116,8 +133,8 @@ namespace
             {
                 _responseCounter = 0;
                 _response.clear();
-                setResult = static_cast<uint8_t>(SysExConf::status_t::ACK);
-                getResult = static_cast<uint8_t>(SysExConf::status_t::ACK);
+                getResults.clear();
+                setResults.clear();
             }
 
             size_t responseCounter()
@@ -147,8 +164,8 @@ namespace
                 _response.push_back(tempResponse);
             }
 
-            uint8_t setResult = static_cast<uint8_t>(SysExConf::status_t::ACK);
-            uint8_t getResult = static_cast<uint8_t>(SysExConf::status_t::ACK);
+            std::vector<uint8_t> getResults = {};
+            std::vector<uint8_t> setResults = {};
 
             private:
             std::vector<std::vector<uint8_t>> _response;
@@ -1237,10 +1254,10 @@ TEST_F(SysExTest, ErrorWrite)
 {
     openConn();
 
-    // configure set function to always return error
+    // configure set function to return error
     // check if status byte is SysExConf::status_t::ERROR_WRITE
 
-    dataHandler.setResult = static_cast<uint8_t>(SysExConf::status_t::ERROR_WRITE);
+    dataHandler.setResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_WRITE));
 
     // send valid set message
     handleMessage(SET_SINGLE_VALID);
@@ -1253,7 +1270,7 @@ TEST_F(SysExTest, ErrorWrite)
 
     // reset number of received messages
     dataHandler.reset();
-    dataHandler.setResult = static_cast<uint8_t>(SysExConf::status_t::ERROR_WRITE);
+    dataHandler.setResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_WRITE));
 
     handleMessage(SET_ALL_VALID);
 
@@ -1268,10 +1285,10 @@ TEST_F(SysExTest, ErrorRead)
 {
     openConn();
 
-    // configure get function to always return error
+    // configure get function to return error
     // check if status byte is SysExConf::status_t::ERROR_READ
 
-    dataHandler.getResult = static_cast<uint8_t>(SysExConf::status_t::ERROR_READ);
+    dataHandler.getResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_READ));
 
     handleMessage(GET_SINGLE_VALID);
 
@@ -1283,7 +1300,7 @@ TEST_F(SysExTest, ErrorRead)
 
     // reset message count
     dataHandler.reset();
-    dataHandler.getResult = static_cast<uint8_t>(SysExConf::status_t::ERROR_READ);
+    dataHandler.getResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_READ));
 
     // test get with all parameters
     // SysExConf::status_t::ERROR_READ should be reported again
@@ -1300,25 +1317,27 @@ TEST_F(SysExTest, ErrorCustom)
 {
     openConn();
 
-    // configure set function to always return custom error
-    dataHandler.setResult = 63;
+    // configure set function to return custom error
+    uint8_t error = 63;
+    dataHandler.setResults.push_back(error);
 
     // send valid set message
     handleMessage(SET_SINGLE_VALID);
 
     // check response
-    verifyMessage(SET_SINGLE_VALID, dataHandler.setResult);
+    verifyMessage(SET_SINGLE_VALID, error);
 
     // check number of received messages
     ASSERT_EQ(1, dataHandler.responseCounter());
 
     // reset number of received messages
     dataHandler.reset();
+    dataHandler.setResults.push_back(error);
 
     handleMessage(SET_ALL_VALID);
 
     // check response
-    verifyMessage(SET_ALL_VALID, dataHandler.setResult);
+    verifyMessage(SET_ALL_VALID, error);
 
     // check number of received messages
     ASSERT_EQ(1, dataHandler.responseCounter());
