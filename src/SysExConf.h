@@ -266,6 +266,7 @@ class SysExConf
     bool    isConfigurationEnabled();
     bool    isSilentModeEnabled();
     void    setSilentMode(bool state);
+    void    setUserErrorIgnoreMode(bool state);
     void    sendCustomMessage(const uint16_t* values, uint16_t size, bool ack = true);
     uint8_t blocks() const;
     uint8_t sections(uint8_t blockID) const;
@@ -411,6 +412,14 @@ class SysExConf
     /// When silent mode is active, protocol won't return any error or status_t:ack messages.
     ///
     bool _silentModeEnabled = false;
+
+    ///
+    /// \brief Flag indicating whether or not user error ignore mode is active.
+    /// When user error ignore mode is active, protocol will always return ACK
+    /// status for get/set messages ignoring the user status. For get requests,
+    /// retrieved value will be set to 0 and appended to response.
+    ///
+    bool _userErrorIgnoreModeEnabled = false;
 
     ///
     /// \brief SysEx layout.

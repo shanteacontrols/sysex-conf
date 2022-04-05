@@ -109,6 +109,17 @@ void SysExConf::setSilentMode(bool state)
 }
 
 ///
+/// \brief Enables or disables user error ignore mode.
+/// When user error ignore mode is active, protocol will always return ACK
+/// status for get/set messages ignoring the user status. For get requests,
+/// retrieved value will be set to 0 and appended to response.
+///
+void SysExConf::setUserErrorIgnoreMode(bool state)
+{
+    _userErrorIgnoreModeEnabled = state;
+}
+
+///
 /// \brief Handles incoming SysEx message.
 /// @param [in] array   SysEx array.
 /// @param [in] size    Array size.
@@ -387,16 +398,18 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     }
                     break;
 
-                    case static_cast<uint8_t>(status_t::REQUEST):
-                    {
-                        setStatus(status_t::ERROR_STATUS);
-                    }
-                    break;
-
                     default:
                     {
-                        setStatus(result);
-                        return false;
+                        if (_userErrorIgnoreModeEnabled)
+                        {
+                            value = 0;
+                            addToResponse(value);
+                        }
+                        else
+                        {
+                            setStatus(result);
+                            return false;
+                        }
                     }
                     break;
                     }
@@ -415,16 +428,18 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     }
                     break;
 
-                    case static_cast<uint8_t>(status_t::REQUEST):
-                    {
-                        setStatus(status_t::ERROR_STATUS);
-                    }
-                    break;
-
                     default:
                     {
-                        setStatus(result);
-                        return false;
+                        if (_userErrorIgnoreModeEnabled)
+                        {
+                            value = 0;
+                            addToResponse(value);
+                        }
+                        else
+                        {
+                            setStatus(result);
+                            return false;
+                        }
                     }
                     break;
                     }
@@ -456,16 +471,13 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     case static_cast<uint8_t>(status_t::ACK):
                         break;
 
-                    case static_cast<uint8_t>(status_t::REQUEST):
-                    {
-                        setStatus(status_t::ERROR_STATUS);
-                    }
-                    break;
-
                     default:
                     {
-                        setStatus(result);
-                        return false;
+                        if (!_userErrorIgnoreModeEnabled)
+                        {
+                            setStatus(result);
+                            return false;
+                        }
                     }
                     break;
                     }
@@ -493,16 +505,13 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     case static_cast<uint8_t>(status_t::ACK):
                         break;
 
-                    case static_cast<uint8_t>(status_t::REQUEST):
-                    {
-                        setStatus(status_t::ERROR_STATUS);
-                    }
-                    break;
-
                     default:
                     {
-                        setStatus(result);
-                        return false;
+                        if (!_userErrorIgnoreModeEnabled)
+                        {
+                            setStatus(result);
+                            return false;
+                        }
                     }
                     break;
                     }
