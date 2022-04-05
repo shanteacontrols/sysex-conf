@@ -1281,6 +1281,38 @@ TEST_F(SysExTest, ErrorWrite)
     ASSERT_EQ(1, dataHandler.responseCounter());
 }
 
+TEST_F(SysExTest, ErrorWriteIgnoreUserErrorMode)
+{
+    openConn();
+    sysEx.setUserErrorIgnoreMode(true);
+
+    // configure set function to return error
+    // check if status byte is SysExConf::status_t::ACK due to the ignore mode being on
+
+    dataHandler.setResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_WRITE));
+
+    // send valid set message
+    handleMessage(SET_SINGLE_VALID);
+
+    // check response
+    verifyMessage(SET_SINGLE_VALID, SysExConf::status_t::ACK);
+
+    // check number of received messages
+    ASSERT_EQ(1, dataHandler.responseCounter());
+
+    // reset number of received messages
+    dataHandler.reset();
+    dataHandler.setResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_WRITE));
+
+    handleMessage(SET_ALL_VALID);
+
+    // check response
+    verifyMessage(SET_ALL_VALID, SysExConf::status_t::ACK);
+
+    // check number of received messages
+    ASSERT_EQ(1, dataHandler.responseCounter());
+}
+
 TEST_F(SysExTest, ErrorRead)
 {
     openConn();
@@ -1308,6 +1340,59 @@ TEST_F(SysExTest, ErrorRead)
 
     // check response
     verifyMessage(GET_ALL_VALID_1PART, SysExConf::status_t::ERROR_READ);
+
+    // check number of received messages
+    ASSERT_EQ(1, dataHandler.responseCounter());
+}
+
+TEST_F(SysExTest, ErrorReadIgnoreUserErrorMode)
+{
+    openConn();
+    sysEx.setUserErrorIgnoreMode(true);
+
+    // configure get function to return error
+    // check if status byte is SysExConf::status_t::ACK due to the ignore mode being on
+
+    // user error should be ignored
+    dataHandler.getResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_READ));
+
+    handleMessage(GET_SINGLE_VALID);
+
+    // read value should be set to 0
+    std::vector<uint8_t> DATA = {
+        SYSEX_PARAM(0)
+    };
+
+    // check response
+    verifyMessage(GET_SINGLE_VALID, SysExConf::status_t::ACK, &DATA);
+
+    // check number of received messages
+    ASSERT_EQ(1, dataHandler.responseCounter());
+
+    // reset message count
+    dataHandler.reset();
+    dataHandler.getResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_READ));
+    dataHandler.getResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ACK));
+    dataHandler.getResults.push_back(static_cast<uint8_t>(SysExConf::status_t::ERROR_READ));
+
+    // test get with all parameters
+    handleMessage(GET_ALL_VALID_1PART);
+
+    DATA = {
+        SYSEX_PARAM(0),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(0),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(TEST_VALUE_GET),
+        SYSEX_PARAM(TEST_VALUE_GET)
+    };
+
+    // check response
+    verifyMessage(GET_ALL_VALID_1PART, SysExConf::status_t::ACK, &DATA);
 
     // check number of received messages
     ASSERT_EQ(1, dataHandler.responseCounter());
