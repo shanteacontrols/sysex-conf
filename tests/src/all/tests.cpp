@@ -183,12 +183,12 @@ namespace
 
             if ((data != nullptr) && source.size())
             {
-                size--;
+                size--;    // skip last byte (0xF7) - custom data starts here
             }
 
             for (int i = 0; i < size; i++)
             {
-                if (i != 4)
+                if (i != 4)    // status byte
                 {
                     ASSERT_EQ(source.at(i), dataHandler.response(dataHandler.responseCounter() - 1).at(i));
                 }
