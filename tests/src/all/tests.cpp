@@ -74,10 +74,10 @@ namespace
             }
         };
 
-        class SysExConfDataHandlerValid : public SysExConf::DataHandler
+        class SysExConfDataHandler : public SysExConf::DataHandler
         {
             public:
-            SysExConfDataHandlerValid() = default;
+            SysExConfDataHandler() = default;
 
             uint8_t get(uint8_t block, uint8_t section, uint16_t index, uint16_t& value) override
             {
@@ -891,8 +891,8 @@ namespace
             0xF7
         };
 
-        SysExConfDataHandlerValid dataHandler;
-        SysExConf                 sysEx = SysExConf(dataHandler, M_ID);
+        SysExConfDataHandler dataHandler;
+        SysExConf            sysEx = SysExConf(dataHandler, M_ID);
     };
 
 }    // namespace
