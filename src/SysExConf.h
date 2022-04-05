@@ -168,12 +168,10 @@ class SysExConf
     ///
     enum class specialRequest_t : uint8_t
     {
-        CONN_CLOSE,             // 0x00
-        CONN_OPEN,              // 0x01
-        BYTES_PER_VALUE,        // 0x02
-        PARAMS_PER_MESSAGE,     // 0x03
-        CONN_OPEN_SILENT,       // 0x04
-        CONN_SILENT_DISABLE,    // 0x05
+        CONN_CLOSE,            // 0x00
+        CONN_OPEN,             // 0x01
+        BYTES_PER_VALUE,       // 0x02
+        PARAMS_PER_MESSAGE,    // 0x03
         AMOUNT
     };
 
@@ -264,8 +262,6 @@ class SysExConf
     bool    setupCustomRequests(std::vector<customRequest_t>& customRequests);
     void    handleMessage(const uint8_t* array, uint16_t size);
     bool    isConfigurationEnabled();
-    bool    isSilentModeEnabled();
-    void    setSilentMode(bool state);
     void    setUserErrorIgnoreMode(bool state);
     void    sendCustomMessage(const uint16_t* values, uint16_t size, bool ack = true);
     uint8_t blocks() const;
@@ -406,12 +402,6 @@ class SysExConf
     /// \brief Flag indicating whether or not configuration is possible.
     ///
     bool _sysExEnabled = false;
-
-    ///
-    /// \brief Flag indicating whether or not silent mode is active.
-    /// When silent mode is active, protocol won't return any error or status_t:ack messages.
-    ///
-    bool _silentModeEnabled = false;
 
     ///
     /// \brief Flag indicating whether or not user error ignore mode is active.

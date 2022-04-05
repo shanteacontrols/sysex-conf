@@ -29,7 +29,6 @@
 void SysExConf::reset()
 {
     _sysExEnabled               = false;
-    _silentModeEnabled          = false;
     _userErrorIgnoreModeEnabled = false;
     _decodedMessage             = {};
     _responseCounter            = 0;
@@ -89,24 +88,6 @@ bool SysExConf::setupCustomRequests(std::vector<customRequest_t>& customRequests
 bool SysExConf::isConfigurationEnabled()
 {
     return _sysExEnabled;
-}
-
-///
-/// \brief Checks whether silent mode is enabled or not.
-/// \returns True if enabled, false otherwise.
-///
-bool SysExConf::isSilentModeEnabled()
-{
-    return _silentModeEnabled;
-}
-
-///
-/// \brief Enables or disables silent protocol mode.
-/// When enabled, only GET and BACKUP requests will return response.
-///
-void SysExConf::setSilentMode(bool state)
-{
-    _silentModeEnabled = state;
 }
 
 ///
@@ -592,35 +573,16 @@ bool SysExConf::processSpecialRequest()
         _sysExEnabled = false;
         setStatus(status_t::ACK);
 
-        if (_silentModeEnabled)
-        {
-            // also disable silent mode
-            _silentModeEnabled = false;
-        }
         return true;
     }
     break;
 
     case static_cast<uint8_t>(specialRequest_t::CONN_OPEN):
-    case static_cast<uint8_t>(specialRequest_t::CONN_OPEN_SILENT):
     {
         // necessary to allow the configuration
         _sysExEnabled = true;
-
-        if (_responseArray[static_cast<uint8_t>(byteOrder_t::WISH_BYTE)] == static_cast<uint8_t>(specialRequest_t::CONN_OPEN_SILENT))
-        {
-            _silentModeEnabled = true;
-        }
-
         setStatus(status_t::ACK);
-        return true;
-    }
-    break;
 
-    case static_cast<uint8_t>(specialRequest_t::CONN_SILENT_DISABLE):
-    {
-        _silentModeEnabled = false;
-        setStatus(status_t::ACK);
         return true;
     }
     break;
@@ -902,29 +864,13 @@ void SysExConf::sendCustomMessage(const uint16_t* values, uint16_t size, bool ac
 ///
 /// \brief Used to send SysEx response.
 /// @param [in] containsLastByte If set to true, last SysEx byte (0xF7) won't be appended.
-/// @param [in] customMessage    If set to true, custom user-specified message is being sent and silent mode is being ignored.
+/// @param [in] customMessage    If set to true, custom user-specified message is being sent.
 ///
 void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
 {
     if (!containsLastByte)
     {
         _responseArray[_responseCounter++] = 0xF7;
-    }
-
-    if (_silentModeEnabled && !customMessage)
-    {
-        // don't report any errors in silent mode
-        if ((_responseArray[static_cast<uint8_t>(byteOrder_t::STATUS_BYTE)] != static_cast<uint8_t>(status_t::ACK)) &&
-            (_responseArray[static_cast<uint8_t>(byteOrder_t::STATUS_BYTE)] != static_cast<uint8_t>(status_t::REQUEST)))
-        {
-            return;
-        }
-
-        // respond only to get messages
-        if (_decodedMessage.wish != wish_t::GET)
-        {
-            return;
-        }
     }
 
     _dataHandler.sendResponse(_responseArray, _responseCounter);
