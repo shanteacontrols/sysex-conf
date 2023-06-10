@@ -149,7 +149,7 @@ void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
         return;    // don't send response to wrong ID
     }
 
-    bool sendResponse_var = true;
+    bool sendResponseVar = true;
 
     if (!checkStatus())
     {
@@ -170,7 +170,7 @@ void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
                     // in this case, processStandardRequest will internally call
                     // sendResponse function, which means it's not necessary to call
                     // it again here
-                    sendResponse_var = false;
+                    sendResponseVar = false;
                 }
                 else
                 {
@@ -186,7 +186,7 @@ void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
         }
     }
 
-    if (sendResponse_var)
+    if (sendResponseVar)
     {
         sendResponse(false);
     }

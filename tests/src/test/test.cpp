@@ -1215,12 +1215,12 @@ TEST_F(SysExTest, ErrorReadIgnoreUserErrorMode)
     handleMessage(GET_SINGLE_VALID);
 
     // read value should be set to 0
-    std::vector<uint8_t> DATA = {
+    std::vector<uint8_t> data = {
         SYSEX_PARAM(0)
     };
 
     // check response
-    verifyMessage(GET_SINGLE_VALID, SysExConf::status_t::ACK, &DATA);
+    verifyMessage(GET_SINGLE_VALID, SysExConf::status_t::ACK, &data);
 
     // check number of received messages
     ASSERT_EQ(1, dataHandler.responseCounter());
@@ -1234,7 +1234,7 @@ TEST_F(SysExTest, ErrorReadIgnoreUserErrorMode)
     // test get with all parameters
     handleMessage(GET_ALL_VALID_1PART);
 
-    DATA = {
+    data = {
         SYSEX_PARAM(0),
         SYSEX_PARAM(TEST_VALUE_GET),
         SYSEX_PARAM(0),
@@ -1248,7 +1248,7 @@ TEST_F(SysExTest, ErrorReadIgnoreUserErrorMode)
     };
 
     // check response
-    verifyMessage(GET_ALL_VALID_1PART, SysExConf::status_t::ACK, &DATA);
+    verifyMessage(GET_ALL_VALID_1PART, SysExConf::status_t::ACK, &data);
 
     // check number of received messages
     ASSERT_EQ(1, dataHandler.responseCounter());
@@ -1617,7 +1617,7 @@ TEST_F(SysExTest, CustomReq)
     ASSERT_EQ(1, dataHandler.responseCounter());
 
     // try defining illegal custom requests
-    std::vector<SysExConf::customRequest_t> customRequests_invalid = {
+    std::vector<SysExConf::customRequest_t> customRequestsInvalid = {
         {
             .requestID     = 0,
             .connOpenCheck = true,
@@ -1651,7 +1651,7 @@ TEST_F(SysExTest, CustomReq)
 
     // setupCustomRequests should return false because special requests which
     // are already used internally are defined in pointed structure
-    ASSERT_FALSE(sysEx.setupCustomRequests(customRequests_invalid));
+    ASSERT_FALSE(sysEx.setupCustomRequests(customRequestsInvalid));
 }
 
 TEST_F(SysExTest, IgnoreMessage)
