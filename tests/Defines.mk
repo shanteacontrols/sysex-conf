@@ -1,2 +1,0 @@
-#common defines
-DEFINES += TEST
