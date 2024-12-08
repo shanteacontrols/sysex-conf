@@ -4,34 +4,34 @@ project(SysExConf)
 
 include(CTest)
 
-add_library(sysexconf-lib STATIC)
+add_library(libsysexconf STATIC)
 
-target_sources(sysexconf-lib
+target_sources(libsysexconf
     PRIVATE
-    src/SysExConf.cpp
+    src/sysexconf.cpp
 )
 
-target_include_directories(sysexconf-lib
+target_include_directories(libsysexconf
     PUBLIC
     include
 )
 
-add_custom_target(sysexconf-format
+add_custom_target(libsysexconf-format
     COMMAND echo Checking code formatting...
     COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/code_format.sh
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 )
 
-set_target_properties(sysexconf-format PROPERTIES EXCLUDE_FROM_ALL TRUE)
+set_target_properties(libsysexconf-format PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 if (CMAKE_EXPORT_COMPILE_COMMANDS STREQUAL ON)
-    add_custom_target(sysexconf-lint
+    add_custom_target(libsysexconf-lint
         COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/clang_tidy_wrapper.sh --output=${CMAKE_CURRENT_BINARY_DIR}/clang-tidy-fixes.yml
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
-    set_target_properties(sysexconf-lint PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    add_dependencies(sysexconf-lint sysexconf-lib)
+    set_target_properties(libsysexconf-lint PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    add_dependencies(libsysexconf-lint libsysexconf)
 endif()
 
 if (BUILD_TESTING_SYS_EX_CONF STREQUAL ON)

@@ -20,16 +20,16 @@ all: cmake_config
 	@cmake --build $(LIB_BUILD_DIR)
 
 lib: cmake_config
-	@cmake --build $(LIB_BUILD_DIR) --target sysexconf-lib
+	@cmake --build $(LIB_BUILD_DIR) --target libsysexconf
 
 test: cmake_config
 	@cmake --build $(LIB_BUILD_DIR) --target test
 
 format: cmake_config
-	@cmake --build $(LIB_BUILD_DIR) --target sysexconf-format
+	@cmake --build $(LIB_BUILD_DIR) --target libsysexconf-format
 
 lint: cmake_config
-	@cmake --build $(LIB_BUILD_DIR) --target sysexconf-lint
+	@cmake --build $(LIB_BUILD_DIR) --target libsysexconf-lint
 
 clean:
 	@echo Cleaning up.

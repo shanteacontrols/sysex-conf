@@ -8,7 +8,7 @@
             "name": "Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/tests/src/test/sysexconf-test",
+            "program": "${workspaceFolder}/build/tests/src/test/libsysexconf-test",
             "args": [],
             "stopAtEntry": true,
             "environment": [],

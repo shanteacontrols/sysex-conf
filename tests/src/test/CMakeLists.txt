@@ -1,21 +1,16 @@
-add_executable(sysexconf-test
+add_executable(libsysexconf-test
     test.cpp
 )
 
-target_link_libraries(sysexconf-test
+target_link_libraries(libsysexconf-test
     PRIVATE
-    sysexconf-test-common
-    sysexconf-lib
+    libsysexconf-test-common
+    libsysexconf
 )
 
-target_compile_definitions(sysexconf-test
+target_compile_definitions(libsysexconf-test
     PRIVATE
     TEST
-)
-
-target_compile_definitions(sysexconf-lib
-    PUBLIC
-    EMU_EEPROM_PAGE_SIZE=128
 )
 
 add_test(
@@ -24,7 +19,7 @@ add_test(
     "${CMAKE_COMMAND}"
     --build "${CMAKE_BINARY_DIR}"
     --config "$<CONFIG>"
-    --target sysexconf-test
+    --target libsysexconf-test
 )
 
 set_tests_properties(test_build
@@ -35,7 +30,7 @@ set_tests_properties(test_build
 
 add_test(
     NAME test
-    COMMAND $<TARGET_FILE:sysexconf-test>
+    COMMAND $<TARGET_FILE:libsysexconf-test>
 )
 
 set_tests_properties(test

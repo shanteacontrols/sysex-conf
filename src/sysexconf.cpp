@@ -19,9 +19,11 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "SysExConf/SysExConf.h"
+#include "lib/sysexconf/sysexconf.h"
 
 #define LAYOUT_ACCESS (*_layout)
+
+using namespace lib::sysexconf;
 
 ///
 /// \brief Resets all variables to their default values.
@@ -60,7 +62,7 @@ bool SysExConf::setLayout(std::vector<Block>& layout)
 /// @param [in] numberOfCustomRequests  Total number of requests stored in specified structure.
 /// \returns True on success, false otherwise.
 ///
-bool SysExConf::setupCustomRequests(std::vector<customRequest_t>& customRequests)
+bool SysExConf::setupCustomRequests(std::vector<CustomRequest>& customRequests)
 {
     if (customRequests.size())
     {
@@ -68,7 +70,7 @@ bool SysExConf::setupCustomRequests(std::vector<customRequest_t>& customRequests
 
         for (size_t i = 0; i < _sysExCustomRequest.size(); i++)
         {
-            if (_sysExCustomRequest[i].requestID < static_cast<uint8_t>(specialRequest_t::AMOUNT))
+            if (_sysExCustomRequest[i].requestId < static_cast<uint8_t>(specialRequest_t::AMOUNT))
             {
                 _sysExCustomRequest = {};
                 return false;    // id already used internally
@@ -144,7 +146,7 @@ void SysExConf::handleMessage(const uint8_t* array, uint16_t size)
     // for now, set the response counter to last position in request
     _responseCounter = size - 1;
 
-    if (!checkID())
+    if (!checkManufacturerId())
     {
         return;    // don't send response to wrong ID
     }
@@ -280,12 +282,12 @@ bool SysExConf::decode(const uint8_t* receivedArray, uint16_t receivedArraySize)
 
     if (_decodedMessage.amount == amount_t::SINGLE)
     {
-        auto mergedIndex      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE)], receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + 1]);
+        auto mergedIndex      = Merge14Bit(receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE)], receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + 1]);
         _decodedMessage.index = mergedIndex.value();
 
         if (_decodedMessage.wish == wish_t::SET)
         {
-            auto mergedNewValue      = Merge14bit(receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + BYTES_PER_VALUE + 1]);
+            auto mergedNewValue      = Merge14Bit(receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + BYTES_PER_VALUE], receivedArray[static_cast<uint8_t>(byteOrder_t::INDEX_BYTE) + BYTES_PER_VALUE + 1]);
             _decodedMessage.newValue = mergedNewValue.value();
         }
     }
@@ -471,7 +473,7 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
                     arrayIndex *= BYTES_PER_VALUE;
                     arrayIndex += static_cast<uint8_t>(byteOrder_t::INDEX_BYTE);
 
-                    auto merge               = Merge14bit(_responseArray[arrayIndex], _responseArray[arrayIndex + 1]);
+                    auto merge               = Merge14Bit(_responseArray[arrayIndex], _responseArray[arrayIndex + 1]);
                     _decodedMessage.newValue = merge.value();
 
                     if (!checkNewValue())
@@ -511,9 +513,9 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
         // send status_t::ack message at the end
         _responseCounter                   = 0;
         _responseArray[_responseCounter++] = 0xF0;
-        _responseArray[_responseCounter++] = _mID.id1;
-        _responseArray[_responseCounter++] = _mID.id2;
-        _responseArray[_responseCounter++] = _mID.id3;
+        _responseArray[_responseCounter++] = _manufacturerId.id1;
+        _responseArray[_responseCounter++] = _manufacturerId.id2;
+        _responseArray[_responseCounter++] = _manufacturerId.id3;
         _responseArray[_responseCounter++] = static_cast<uint8_t>(status_t::ACK);
         _responseArray[_responseCounter++] = 0x7E;
         _responseArray[_responseCounter++] = static_cast<uint8_t>(_decodedMessage.wish);
@@ -535,12 +537,12 @@ bool SysExConf::processStandardRequest(uint16_t receivedArraySize)
 /// \brief Checks whether the manufacturer ID in message is correct.
 /// @returns    True if valid, false otherwise.
 ///
-bool SysExConf::checkID()
+bool SysExConf::checkManufacturerId()
 {
     return (
-        (_responseArray[static_cast<uint8_t>(byteOrder_t::ID_BYTE_1)] == _mID.id1) &&
-        (_responseArray[static_cast<uint8_t>(byteOrder_t::ID_BYTE_2)] == _mID.id2) &&
-        (_responseArray[static_cast<uint8_t>(byteOrder_t::ID_BYTE_3)] == _mID.id3));
+        (_responseArray[static_cast<uint8_t>(byteOrder_t::ID_BYTE_1)] == _manufacturerId.id1) &&
+        (_responseArray[static_cast<uint8_t>(byteOrder_t::ID_BYTE_2)] == _manufacturerId.id2) &&
+        (_responseArray[static_cast<uint8_t>(byteOrder_t::ID_BYTE_3)] == _manufacturerId.id3));
 }
 
 ///
@@ -628,7 +630,7 @@ bool SysExConf::processSpecialRequest()
         for (size_t i = 0; i < _sysExCustomRequest.size(); i++)
         {
             // check only current wish/request
-            if (_sysExCustomRequest[i].requestID != _responseArray[static_cast<uint8_t>(byteOrder_t::WISH_BYTE)])
+            if (_sysExCustomRequest[i].requestId != _responseArray[static_cast<uint8_t>(byteOrder_t::WISH_BYTE)])
             {
                 continue;
             }
@@ -638,7 +640,7 @@ bool SysExConf::processSpecialRequest()
                 setStatus(status_t::ACK);
 
                 DataHandler::CustomResponse customResponse(_responseArray, _responseCounter);
-                uint8_t                     result = _dataHandler.customRequest(_sysExCustomRequest[i].requestID, customResponse);
+                uint8_t                     result = _dataHandler.customRequest(_sysExCustomRequest[i].requestId, customResponse);
 
                 switch (result)
                 {
@@ -838,9 +840,9 @@ void SysExConf::sendCustomMessage(const uint16_t* values, uint16_t size, bool ac
     _responseCounter = 0;
 
     _responseArray[_responseCounter++] = 0xF0;
-    _responseArray[_responseCounter++] = _mID.id1;
-    _responseArray[_responseCounter++] = _mID.id2;
-    _responseArray[_responseCounter++] = _mID.id3;
+    _responseArray[_responseCounter++] = _manufacturerId.id1;
+    _responseArray[_responseCounter++] = _manufacturerId.id2;
+    _responseArray[_responseCounter++] = _manufacturerId.id3;
 
     if (ack)
     {
@@ -884,7 +886,7 @@ void SysExConf::sendResponse(bool containsLastByte, bool customMessage)
 ///
 bool SysExConf::addToResponse(uint16_t value)
 {
-    auto split = Split14bit(value);
+    auto split = Split14Bit(value);
 
     if (_responseCounter >= (MAX_MESSAGE_SIZE - 1))
     {
@@ -902,7 +904,7 @@ uint8_t SysExConf::blocks() const
     return LAYOUT_ACCESS.size();
 }
 
-uint8_t SysExConf::sections(uint8_t blockID) const
+uint8_t SysExConf::sections(uint8_t blockIndex) const
 {
-    return LAYOUT_ACCESS[blockID]._sections.size();
+    return LAYOUT_ACCESS[blockIndex]._sections.size();
 }
